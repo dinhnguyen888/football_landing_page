@@ -31,7 +31,7 @@ pipeline {
 
         stage('Docker Login GHCR') {
             environment {
-                GITHUB_CICD_TOKEN = credentials('GITHUB_CICD_TOKEN')
+                GITHUB_TOKEN = credentials('github-cicd-token')
             }
             steps {
                 echo 'Logging into GitHub Container Registry...'
