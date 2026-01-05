@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME     = 'football_landing_page'
-        GITHUB_USER  = 'dinhnguyen888'
-        IMAGE_NAME   = "ghcr.io/${GITHUB_USER}/${APP_NAME}"
-        IMAGE_TAG    = 'latest'
-        CI           = 'false'
+        APP_NAME    = 'football_landing_page'
+        GITHUB_USER = 'dinhnguyen888'
+        IMAGE_NAME  = "ghcr.io/${GITHUB_USER}/${APP_NAME}"
+        IMAGE_TAG   = 'latest'
+        CI          = 'false'
     }
 
     stages {
@@ -15,7 +15,7 @@ pipeline {
             steps {
                 echo 'Installing npm dependencies...'
                 bat '''
-                npm install
+                    npm install
                 '''
             }
         }
@@ -24,20 +24,21 @@ pipeline {
             steps {
                 echo 'Building React application...'
                 bat '''
-                npm run build
+                    npm run build
                 '''
             }
         }
 
         stage('Docker Login GHCR') {
-            environment {
-                GITHUB_TOKEN = credentials('github-cicd-token')
-            }
             steps {
                 echo 'Logging into GitHub Container Registry...'
-                bat '''
-                echo %GITHUB_CICD_TOKEN% | docker login ghcr.io -u %GITHUB_USER% --password-stdin
-                '''
+                withCredentials([
+                    string(credentialsId: 'github-cicd-token', variable: 'GITHUB_TOKEN')
+                ]) {
+                    bat '''
+                        echo %GITHUB_TOKEN% | docker login ghcr.io -u %GITHUB_USER% --password-stdin
+                    '''
+                }
             }
         }
 
@@ -45,7 +46,7 @@ pipeline {
             steps {
                 echo 'Building Docker image...'
                 bat '''
-                docker build -t %IMAGE_NAME%:%IMAGE_TAG% .
+                    docker build -t %IMAGE_NAME%:%IMAGE_TAG% .
                 '''
             }
         }
@@ -54,7 +55,7 @@ pipeline {
             steps {
                 echo 'Pushing Docker image to GHCR...'
                 bat '''
-                docker push %IMAGE_NAME%:%IMAGE_TAG%
+                    docker push %IMAGE_NAME%:%IMAGE_TAG%
                 '''
             }
         }
@@ -68,7 +69,7 @@ pipeline {
             echo '❌ Pipeline failed!'
         }
         cleanup {
-            echo '🧹 Cleanup workspace'
+            echo '🧹 Cleaning workspace...'
             cleanWs()
         }
     }
