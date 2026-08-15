@@ -1,18 +1,10 @@
-import React, { useState } from "react";
+import React from "react";
 import Banner from "../components/banner";
 import Footer from "../components/footer";
 import Body from "../components/body";
 import CardSection from "../components/cardsection";
 
 const Dieukien: React.FC = () => {
-  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedAccount(id);
-    setTimeout(() => setCopiedAccount(null), 2000);
-  };
-
   return (
     <>
       <Banner

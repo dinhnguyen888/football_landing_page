@@ -14,7 +14,6 @@ import {
   buildFIFABracketFromGroups,
   Team,
   Group,
-  KnockoutMatch,
 } from '../utils/tournamentEngine';
 
 const SECRET_PIN = '020604';
