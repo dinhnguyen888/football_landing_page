@@ -4,21 +4,20 @@
 
 @layer base {
   body {
-    @apply bg-[#06111f] text-slate-100 font-sans antialiased min-h-screen relative selection:bg-emerald-500 selection:text-white;
-    /* Authentic Garena FC Online Dark Stadium Aesthetic */
-    background-color: #050d18;
+    @apply bg-[#f2f6fa] text-slate-800 font-sans antialiased min-h-screen relative selection:bg-emerald-500 selection:text-white;
+    /* FC Online Event Clean Bright Atmosphere (Sáng Tươi, Năng Động & Mềm Mại) */
+    background-color: #f1f5f9;
     background-image: 
-      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 229, 117, 0.12), transparent 70%),
+      radial-gradient(ellipse 70% 40% at 50% 0%, rgba(0, 229, 117, 0.12), transparent 70%),
       radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.08), transparent 60%),
-      radial-gradient(circle at 0% 50%, rgba(245, 158, 11, 0.05), transparent 50%),
-      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      radial-gradient(circle at 10% 40%, rgba(245, 158, 11, 0.06), transparent 50%),
+      /* Soft stadium turf pattern */
+      repeating-linear-gradient(90deg, transparent 0px, transparent 48px, rgba(15, 23, 42, 0.015) 48px, rgba(15, 23, 42, 0.015) 96px);
     background-attachment: fixed;
   }
   
   h1, h2, h3, h4, .font-heading {
-    @apply font-fco tracking-wide uppercase text-white;
+    @apply font-fco tracking-wide uppercase text-slate-900;
   }
 }
 
@@ -28,26 +27,25 @@
   height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #06111f;
+  background: #f1f5f9;
 }
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #cbd5e1;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #00e575;
 }
 
-/* FC Online Garena Esports Content Card Style (Dark Mode Glassmorphic Stadium Card) */
+/* FC Online Event Style Content Card (Crisp White, 3D Soft Elevation & Emerald Accent) */
 .portal-card {
-  background: linear-gradient(180deg, rgba(13, 27, 44, 0.95) 0%, rgba(7, 17, 30, 0.98) 100%);
-  border: 1px solid rgba(0, 229, 117, 0.25);
-  border-radius: 1.25rem;
-  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 0 20px -2px rgba(0, 229, 117, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.06), 0 4px 12px -2px rgba(0, 0, 0, 0.03);
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(12px);
-  color: #e2e8f0;
+  color: #334155;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -57,25 +55,24 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 3.5px;
   background: linear-gradient(90deg, #00e575 0%, #0ea5e9 50%, #f59e0b 100%);
-  box-shadow: 0 0 12px rgba(0, 229, 117, 0.6);
   opacity: 1;
 }
 
 .portal-card:hover {
-  border-color: rgba(0, 229, 117, 0.5);
-  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 117, 0.18);
+  border-color: #cbd5e1;
+  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.10), 0 6px 16px -3px rgba(0, 229, 117, 0.12);
   transform: translateY(-2px);
 }
 
-/* Typography styles inside cards for dark theme readability */
-.portal-card p, .portal-card li, .portal-card span {
-  color: #cbd5e1;
+/* Typography styles inside cards for crisp high-contrast readability */
+.portal-card p, .portal-card li {
+  color: #334155 !important;
 }
 
-.portal-card strong, .portal-card h3, .portal-card h4 {
-  color: #ffffff;
+.portal-card h1, .portal-card h2, .portal-card h3, .portal-card h4, .portal-card strong {
+  color: #0f172a !important;
 }
 
 /* FC Online Cyber Neon Accents */
