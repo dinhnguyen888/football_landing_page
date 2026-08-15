@@ -7,7 +7,7 @@ const Cacnhomgiai: React.FC = () => {
   const groups = [
     {
       title: "GROUP GIẢI ĐẤU TRÊN FACEBOOK",
-      name: "GREAT MATES (FC ONLINE) | FACEBOOK",
+      name: "SAO VÀNG CUP (FC ONLINE) | FACEBOOK",
       desc: "Nơi đăng tải thông báo giải đấu, lịch thi đấu, bảng kết quả và trao đổi giữa các thành viên.",
       link: "https://www.facebook.com/groups/939885034118607",
       btnText: "Vào Group Facebook",

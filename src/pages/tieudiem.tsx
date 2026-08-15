@@ -12,7 +12,7 @@ const Tieudiem: React.FC = () => {
     },
     {
       title: "KHOẢNH KHẮC VÔ ĐỊCH MÙA 1",
-      desc: "Trận chung kết lịch sử mở màn giải đấu Great Mates Cup mùa đầu tiên với nhà vô địch Nguyễn Duy Anh.",
+      desc: "Trận chung kết lịch sử mở màn giải đấu Sao Vàng Cup ™ mùa đầu tiên với nhà vô địch Nguyễn Duy Anh.",
       img: require("../img/mua1.jpg"),
     },
     {

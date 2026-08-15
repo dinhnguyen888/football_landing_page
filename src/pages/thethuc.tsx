@@ -10,7 +10,7 @@ const Thethuc: React.FC = () => {
       <Banner
         title="THỂ THỨC THI ĐẤU"
         subtitle="Chi tiết thể thức thi đấu vòng bảng, vòng loại trực tiếp và hệ thống điểm Fair-play"
-        badge="GM GROUP CUP FORMAT"
+        badge="SAO VÀNG CUP FORMAT"
       />
 
       <Body>

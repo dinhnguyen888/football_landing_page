@@ -17,7 +17,7 @@ const Taogiaidau: React.FC = () => {
 
   // Step 1: Configuration
   const [step, setStep] = useState<1 | 2>(1);
-  const [tournamentName, setTournamentName] = useState('GREAT MATES CUP');
+  const [tournamentName, setTournamentName] = useState('SAO VÀNG CUP ™');
   const [season, setSeason] = useState('MÙA 2');
   const [numGroups, setNumGroups] = useState<number>(4);
   const [teamsPerGroup, setTeamsPerGroup] = useState<number>(5);
@@ -48,7 +48,7 @@ const Taogiaidau: React.FC = () => {
   const handleFillSampleData = () => {
     const sampleData = createDefaultTournament();
     saveTournamentData(sampleData);
-    alert('Đã tạo giải đấu mẫu Great Mates Cup (4 Bảng, 20 Đội) thành công!');
+    alert('Đã tạo giải đấu mẫu Sao Vàng Cup ™ (4 Bảng, 20 Đội) thành công!');
     navigate('/ltd');
   };
 

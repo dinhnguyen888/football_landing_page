@@ -54,7 +54,7 @@ const Ltd: React.FC = () => {
       <>
         <Banner
           title="LỊCH THI ĐẤU & BẢNG XẾP HẠNG"
-          subtitle="Cổng thông tin bảng điểm và lịch trình giải đấu FC Online Great Mates Cup"
+          subtitle="Cổng thông tin bảng điểm và lịch trình giải đấu FC Online Sao Vàng Cup ™"
           badge="TOURNAMENT NOTICE"
         />
 
@@ -74,7 +74,7 @@ const Ltd: React.FC = () => {
             </div>
 
             <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs text-slate-500 max-w-lg mx-auto">
-              📢 Vui lòng theo dõi các thông báo chính thức và lịch đăng ký tham gia trên <strong>Group Facebook</strong> & <strong>Box Messenger</strong> của Great Mates!
+              📢 Vui lòng theo dõi các thông báo chính thức và lịch đăng ký tham gia trên <strong>Group Facebook</strong> & <strong>Box Messenger</strong> của Sao Vàng Cup!
             </div>
 
             <div className="pt-2 flex items-center justify-center space-x-3">
@@ -127,7 +127,7 @@ const Ltd: React.FC = () => {
     <>
       <Banner
         title="LỊCH THI ĐẤU & BẢNG XẾP HẠNG"
-        subtitle="Bảng điểm trực tiếp và lịch thi đấu các bảng đấu của giải Great Mates Cup"
+        subtitle="Bảng điểm trực tiếp và lịch thi đấu các bảng đấu của giải Sao Vàng Cup ™"
         badge="STANDINGS & FIXTURES"
       />
 
