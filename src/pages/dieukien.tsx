@@ -1,71 +1,87 @@
-import React from "react" 
-
-
-import Navbar from "../components/navbar";
-import BigText from "../components/bigtext";
-import Footer from "../components/footer";
-import TextMain from "../components/text";
+import React, { useState } from "react";
 import Banner from "../components/banner";
+import Footer from "../components/footer";
 import Body from "../components/body";
+import CardSection from "../components/cardsection";
 
+const Dieukien: React.FC = () => {
+  const [copiedAccount, setCopiedAccount] = useState<string | null>(null);
 
-const Dieukien = () => {
-	return (
-		<>
-			<Navbar />
-			<Banner text="ĐIỀU KIỆN THAM DỰ" />
-			<Body>
-				<div className="w-full">
-					<BigText customClass=" container text-red-600 text-2xl mx-28 my-7 " string="A.Điều kiện tham dự"/>
-					<BigText customClass=" container font-bold text-xl mx-28 text-blue-700 my-9  " string="1. CHẤP NHẬN CÁC QUY ĐỊNH THUỘC ĐIỀU LUẬT GIẢI ĐẤU BÁN CHUYÊN QBFC GROUP"/>
-					<TextMain customClass="mx-28 my-5 text-base" string="
-					    1.Điều Kiện Tham Gia:<br>
-						Tất cả các đội bóng muốn tham gia giải đấu phải đăng ký theo quy định của tổ chức.<br>
-						Mỗi đội bóng cần tuân thủ các quy định về thành phần, độ tuổi, và bất kỳ quy tắc nào khác được quy định trước đó.<br><br>
-				
-					2.Hình Thức Thi Đấu:<br>
-						Giải đấu có thể được tổ chức dưới nhiều hình thức khác nhau, bao gồm đấu loại trực tiếp, vòng tròn, hay theo thể thức giai đoạn vòng loại và vòng chung kết.<br>
-						Các trận đấu diễn ra theo hình thức online<br><br>
-				
-					3.Quy Định Về Trò Chơi:<br>
-						Các trận đấu phải tuân thủ các quy tắc cụ thể về thời gian, luật chơi và bất kỳ quy định nào khác liên quan đến trò chơi được quy định trước giải đấu.<br><br>
-				
-					4.Tính Công Bằng và Fair Play:<br>
-						Mọi đội bóng và cầu thủ phải thể hiện tinh thần công bằng và fair play trong suốt quá trình thi đấu.<br>
-						Các hành vi không đúng mực hoặc vi phạm quy định sẽ bị xử lý nghiêm khắc.<br> <br>
-				
-					5.Phần Thưởng:<br>
-						Các phần thưởng cho các đội và cá nhân xuất sắc nhất sẽ được công bố trước giải đấu và phải tuân thủ các quy định liên quan.<br>
-				<br>
-					6.Quy Định Phụ Cấp:<br>
-						Các quy định về phí đăng ký, phí tham gia và các khoản phí khác có thể áp dụng và phải được thanh toán đầy đủ và đúng hạn.<br>
-				<br>
-					7.Quy Định Đặc Biệt:<br>
-						Bất kỳ quy định đặc biệt nào khác liên quan đến tổ chức và quản lý giải đấu sẽ được công bố và áp dụng tùy theo tình hình cụ thể của từng giải đấu.<br>
-				<br>
-				Những quy định này nhằm mục đích đảm bảo sự công bằng, minh bạch và cạnh tranh lành mạnh trong giải đấu của FC Online, tạo điều kiện thuận lợi cho sự phát triển của cộng đồng game thủ và người yêu bóng đá trên nền tảng trực tuyến.<br>
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedAccount(id);
+    setTimeout(() => setCopiedAccount(null), 2000);
+  };
 
-					"/>
+  return (
+    <>
+      <Banner
+        title="ĐIỀU KIỆN THAM DỰ & LỆ PHÍ"
+        subtitle="Quy định đăng ký, chấp nhận điều lệ và các cổng đóng lệ phí giải đấu"
+        badge="REGISTRATION TERMS"
+      />
 
-<BigText customClass=" container font-bold text-xl mx-28 text-blue-700 my-9  " string="2. PHÍ ĐIỀU LỆ GIẢI ĐẤU"/>
-					<TextMain customClass="mx-28 my-5 text-base" string="
-					A) MỖI VẬN ĐỘNG VIÊN ĐÓNG PHÍ 50.000 VNĐ QUA CÁC CỔNG THANH TOÁN SAU ĐÂY.<br>
-					B) VIETINBANK: 0886200436 CHỦ TÀI KHOẢN: PHAN DINH LONG<br>
-					C) MOMO HOẶC THẺ CÀO VIETTEL: 0886200436 - CHỦ SĐT: PHAN DINH LONG<br>
-					"/>
+      <Body>
+        <div className="max-w-4xl mx-auto space-y-8">
+          {/* Terms */}
+          <CardSection title="A. ĐIỀU KIỆN THAM DỰ GIẢI ĐẤU">
+            <div className="space-y-3 text-slate-700 text-sm leading-relaxed">
+              <p><strong>1. Điều kiện tham gia:</strong> Tất cả các đội bóng / HLV muốn tham gia phải đăng ký theo biểu mẫu của BTC. Tuân thủ đầy đủ các quy định về thành phần, sơ đồ và luật chơi.</p>
+              <p><strong>2. Hình thức thi đấu:</strong> Các trận đấu diễn ra theo hình thức thi đấu trực tuyến (Online) trên nền tảng game FC Online.</p>
+              <p><strong>3. Quy định về trò chơi:</strong> Các trận đấu tuân thủ quy tắc thời gian, giới hạn lương 255 và sơ đồ tối đa 5 hậu vệ.</p>
+              <p><strong>4. Tính công bằng và Fair-play:</strong> Mọi đội bóng phải thể hiện tinh thần thể thao văn minh. Các hành vi gian lận sẽ bị xử lý nghiêm khắc.</p>
+              <p><strong>5. Phần thưởng:</strong> Phần thưởng cho các đội xuất sắc nhất sẽ được trao sau khi kết thúc giải đấu.</p>
+            </div>
+          </CardSection>
 
-				</div>	
+          {/* Fees & Payment */}
+          <CardSection title="B. PHÍ ĐIỀU LỆ GIẢI ĐẤU (50.000 VNĐ / VĐV)">
+            <p className="text-slate-700 text-sm mb-3">
+              Mỗi vận động viên tham gia đóng phí điều lệ <strong>50.000 VNĐ</strong> qua các cổng thanh toán sau:
+            </p>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                <span className="font-oswald font-bold text-sm text-emerald-800 uppercase block">
+                  1. NGÂN HÀNG VIETINBANK
+                </span>
+                <p className="text-xs text-slate-600">STK: <strong className="font-mono text-slate-900 text-sm">0886200436</strong></p>
+                <p className="text-xs text-slate-600">Chủ tài khoản: <strong>PHAN DINH LONG</strong></p>
+                <button
+                  onClick={() => copyToClipboard("0886200436", "vietin")}
+                  className="mt-2 px-3 py-1 text-xs rounded bg-white border border-slate-300 hover:bg-slate-100 font-medium text-slate-700 flex items-center space-x-1"
+                >
+                  <i className="fa-solid fa-copy"></i>
+                  <span>{copiedAccount === "vietin" ? "Đã sao chép!" : "Sao chép STK"}</span>
+                </button>
+              </div>
 
+              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
+                <span className="font-oswald font-bold text-sm text-pink-800 uppercase block">
+                  2. VÍ MOMO / THẺ CÀO VIETTEL
+                </span>
+                <p className="text-xs text-slate-600">SĐT / Momo: <strong className="font-mono text-slate-900 text-sm">0886200436</strong></p>
+                <p className="text-xs text-slate-600">Chủ SĐT: <strong>PHAN DINH LONG</strong></p>
+                <button
+                  onClick={() => copyToClipboard("0886200436", "momo")}
+                  className="mt-2 px-3 py-1 text-xs rounded bg-white border border-slate-300 hover:bg-slate-100 font-medium text-slate-700 flex items-center space-x-1"
+                >
+                  <i className="fa-solid fa-copy"></i>
+                  <span>{copiedAccount === "momo" ? "Đã sao chép!" : "Sao chép SĐT"}</span>
+                </button>
+              </div>
+            </div>
 
-			</Body>
+            <p className="text-xs text-slate-500 italic pt-2">
+              * Sau khi chuyển khoản, HLV vui lòng gửi ảnh chụp biên lai cho Admin Phan Long để hoàn tất thủ tục.
+            </p>
+          </CardSection>
+        </div>
+      </Body>
 
-			<Footer />
-		
-		</>	
-	)
-}
-
-
+      <Footer />
+    </>
+  );
+};
 
 export default Dieukien;

@@ -1,6 +1,5 @@
-import React from "react"
-import { ReactDOM } from "react"
-import { Routes,Route } from "react-router-dom"
+import React from "react";
+import { Routes, Route } from "react-router-dom";
 import Trangchu from "./pages/trangchu"
 
 import Navbar from "./components/navbar"
@@ -16,13 +15,13 @@ import Danhsachhlv from "./pages/danhsachhlv"
 import Ltd from "./pages/ltd"
 import Thethuc from "./pages/thethuc"
 import Giaithuong from "./pages/giaithuong"
+import Quanlygiaidau from "./pages/quanlygiaidau"
+
 export default function App() {
   return (
 	  <>
 	  <Navbar />
 		  <Routes>
-
-
 			  <Route path="/" element={<Trangchu />} />
 			  <Route path="/dieukienthamdu" element ={<Dieukien />} />
 			  <Route path="/noiquy" element = {<NoiQuy />} />
@@ -37,9 +36,8 @@ export default function App() {
 			  <Route path="/ltd" element = {<Ltd/>} />
 			  <Route path="/thethuc" element = {<Thethuc/>} />
 			  <Route path="/giaithuong" element = {<Giaithuong/>} />
+			  <Route path="/quanlygiaidau" element = {<Quanlygiaidau/>} />
 		  </Routes>	
-
 	  </>
-
   )
 }
