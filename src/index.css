@@ -4,20 +4,21 @@
 
 @layer base {
   body {
-    @apply bg-[#f4f7fa] text-slate-800 font-sans antialiased min-h-screen relative selection:bg-emerald-500 selection:text-white;
-    /* Subtle geometric tactical pitch pattern background with esports hex touch */
-    background-color: #f6f8fb;
+    @apply bg-[#06111f] text-slate-100 font-sans antialiased min-h-screen relative selection:bg-emerald-500 selection:text-white;
+    /* Authentic Garena FC Online Dark Stadium Aesthetic */
+    background-color: #050d18;
     background-image: 
-      radial-gradient(at 0% 0%, rgba(0, 229, 117, 0.06) 0px, transparent 50%),
-      radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.06) 0px, transparent 50%),
-      radial-gradient(at 50% 50%, rgba(245, 158, 11, 0.03) 0px, transparent 60%),
-      linear-gradient(rgba(226, 232, 240, 0.5) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(226, 232, 240, 0.5) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+      radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 229, 117, 0.12), transparent 70%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.08), transparent 60%),
+      radial-gradient(circle at 0% 50%, rgba(245, 158, 11, 0.05), transparent 50%),
+      linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+    background-attachment: fixed;
   }
   
   h1, h2, h3, h4, .font-heading {
-    @apply font-fco tracking-wide uppercase;
+    @apply font-fco tracking-wide uppercase text-white;
   }
 }
 
@@ -27,25 +28,27 @@
   height: 7px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #06111f;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #1e293b;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #00e575;
 }
 
-/* FC Online Esports Content Card Style (Crisp Pure White, High Contrast & Sharp Separation) */
+/* FC Online Garena Esports Content Card Style (Dark Mode Glassmorphic Stadium Card) */
 .portal-card {
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: linear-gradient(180deg, rgba(13, 27, 44, 0.95) 0%, rgba(7, 17, 30, 0.98) 100%);
+  border: 1px solid rgba(0, 229, 117, 0.25);
   border-radius: 1.25rem;
-  box-shadow: 0 10px 30px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.5), 0 0 20px -2px rgba(0, 229, 117, 0.08);
   position: relative;
   overflow: hidden;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  color: #e2e8f0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .portal-card::before {
@@ -54,15 +57,25 @@
   top: 0;
   left: 0;
   right: 0;
-  height: 3.5px;
+  height: 3px;
   background: linear-gradient(90deg, #00e575 0%, #0ea5e9 50%, #f59e0b 100%);
+  box-shadow: 0 0 12px rgba(0, 229, 117, 0.6);
   opacity: 1;
 }
 
 .portal-card:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 16px 36px -6px rgba(15, 23, 42, 0.12), 0 6px 16px -3px rgba(0, 229, 117, 0.08);
+  border-color: rgba(0, 229, 117, 0.5);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 117, 0.18);
   transform: translateY(-2px);
+}
+
+/* Typography styles inside cards for dark theme readability */
+.portal-card p, .portal-card li, .portal-card span {
+  color: #cbd5e1;
+}
+
+.portal-card strong, .portal-card h3, .portal-card h4 {
+  color: #ffffff;
 }
 
 /* FC Online Cyber Neon Accents */

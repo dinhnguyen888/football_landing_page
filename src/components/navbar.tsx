@@ -46,11 +46,11 @@ const Navbar: React.FC = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+    <header className="sticky top-0 z-50 bg-[#071322]/95 border-b border-emerald-500/30 backdrop-blur-md shadow-lg shadow-black/40">
       {/* Top Brand Banner */}
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center space-x-3.5 group flex-shrink-0">
-          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0 drop-shadow-[0_0_8px_rgba(0,229,117,0.5)]">
             <img 
               src={require("../img/Logo.svg").default} 
               alt="Sao Vàng Logo" 
@@ -58,10 +58,10 @@ const Navbar: React.FC = () => {
             />
           </div>
           <div className="whitespace-nowrap">
-            <span className="font-oswald text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-900 block leading-tight group-hover:text-emerald-700 transition-colors whitespace-nowrap">
-              SAO VÀNG <span className="text-amber-500">CUP™</span>
+            <span className="font-oswald text-xl sm:text-2xl font-bold uppercase tracking-wider text-white block leading-tight group-hover:text-[#00e575] transition-colors whitespace-nowrap drop-shadow">
+              SAO VÀNG <span className="text-amber-400">CUP™</span>
             </span>
-            <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase block whitespace-nowrap">
+            <span className="text-[10px] text-emerald-400 font-medium tracking-widest uppercase block whitespace-nowrap">
               Giải Đấu Cộng Đồng FC Online
             </span>
           </div>
@@ -71,13 +71,13 @@ const Navbar: React.FC = () => {
         <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
           <Link
             to="/"
-            className={`px-3 py-1.5 rounded-md font-oswald text-sm font-semibold uppercase tracking-wider transition-colors ${
+            className={`px-3 py-1.5 rounded-lg font-oswald text-sm font-semibold uppercase tracking-wider transition-all ${
               location.pathname === "/"
-                ? "bg-emerald-50 text-emerald-800 font-bold border-b-2 border-emerald-700"
-                : "text-slate-700 hover:text-emerald-700 hover:bg-slate-50"
+                ? "bg-emerald-500 text-slate-950 font-black shadow-md shadow-emerald-500/30"
+                : "text-slate-300 hover:text-white hover:bg-slate-800/80"
             }`}
           >
-            TRANG CHỦ
+            Trang Chủ
           </Link>
 
           {navGroups.map((group, idx) => {
@@ -90,10 +90,10 @@ const Navbar: React.FC = () => {
                 <Link
                   key={idx}
                   to={targetPath}
-                  className={`px-3 py-1.5 rounded-md font-oswald text-sm font-semibold uppercase tracking-wider transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg font-oswald text-sm font-semibold uppercase tracking-wider transition-all ${
                     isActive
-                      ? "bg-emerald-50 text-emerald-800 font-bold border-b-2 border-emerald-700"
-                      : "text-slate-700 hover:text-emerald-700 hover:bg-slate-50"
+                      ? "text-[#00e575] bg-emerald-950/60 border border-emerald-500/40"
+                      : "text-slate-300 hover:text-white hover:bg-slate-800/80"
                   }`}
                 >
                   {group.title}
@@ -102,32 +102,32 @@ const Navbar: React.FC = () => {
             }
 
             return (
-              <div key={idx} className="relative nav-dropdown-group py-1">
+              <div key={idx} className="relative nav-dropdown-group py-1 group/menu">
                 <Link
                   to={targetPath}
-                  className={`flex items-center space-x-1 px-3 py-1.5 rounded-md font-oswald text-sm font-semibold uppercase tracking-wider transition-colors ${
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-oswald text-sm font-semibold uppercase tracking-wider transition-all ${
                     isActive
-                      ? "bg-emerald-50 text-emerald-800 font-bold border-b-2 border-emerald-700"
-                      : "text-slate-700 hover:text-emerald-700 hover:bg-slate-50"
+                      ? "text-[#00e575] bg-emerald-950/60 border border-emerald-500/40"
+                      : "text-slate-300 hover:text-white hover:bg-slate-800/80"
                   }`}
                 >
                   <span>{group.title}</span>
-                  <i className="fa-solid fa-chevron-down text-[9px] opacity-60 ml-0.5"></i>
+                  <i className="fa-solid fa-chevron-down text-[9px] opacity-70 ml-0.5 transition-transform group-hover/menu:rotate-180"></i>
                 </Link>
 
                 {/* Dropdown Menu */}
-                <div className="nav-dropdown-menu absolute top-full left-0 w-60 pt-1 z-50">
-                  <div className="p-1.5 rounded-lg bg-white border border-slate-200 shadow-lg space-y-0.5">
+                <div className="absolute top-full left-0 pt-1.5 w-56 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-50">
+                  <div className="p-1.5 rounded-xl bg-[#09182b] border border-emerald-500/40 shadow-2xl space-y-0.5 backdrop-blur-xl">
                     {group.items.map((item, itemIdx) => {
                       const isItemActive = location.pathname === item.path;
                       return (
                         <Link
                           key={itemIdx}
                           to={item.path}
-                          className={`block px-3 py-2 rounded font-oswald text-xs uppercase tracking-wider font-semibold transition-colors ${
+                          className={`block px-3.5 py-2 rounded-lg font-oswald text-xs uppercase tracking-wider font-semibold transition-colors ${
                             isItemActive
-                              ? "bg-emerald-50 text-emerald-800 font-bold"
-                              : "text-slate-700 hover:bg-slate-100 hover:text-emerald-700"
+                              ? "bg-emerald-500 text-slate-950 font-bold"
+                              : "text-slate-200 hover:bg-slate-800/90 hover:text-[#00e575]"
                           }`}
                         >
                           {item.label}
@@ -139,13 +139,23 @@ const Navbar: React.FC = () => {
               </div>
             );
           })}
+
+          {/* Quick Access to Tournament Management */}
+          <Link
+            to="/quanlygiaidau"
+            className="ml-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-oswald text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/20 hover:scale-105 flex items-center space-x-1.5"
+            title="Quản trị giải đấu"
+          >
+            <i className="fa-solid fa-lock text-[11px]"></i>
+            <span>BTC Portal</span>
+          </Link>
         </nav>
 
         {/* Mobile menu toggle */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle Menu"
-          className="md:hidden p-2 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"
+          className="md:hidden p-2 rounded-lg bg-slate-800 text-slate-300 hover:text-white"
         >
           <i className={`fa-solid ${mobileMenuOpen ? "fa-xmark" : "fa-bars"} text-lg`}></i>
         </button>
@@ -153,11 +163,11 @@ const Navbar: React.FC = () => {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-white border-t border-slate-200 px-4 py-3 space-y-3">
+        <div className="md:hidden bg-[#071322] border-t border-slate-800 px-4 py-4 space-y-3 shadow-2xl">
           <Link
             to="/"
-            className={`block px-3 py-2 rounded font-oswald text-sm font-bold uppercase ${
-              location.pathname === "/" ? "bg-emerald-50 text-emerald-700" : "text-slate-700"
+            className={`block px-3 py-2 rounded-lg font-oswald text-sm font-bold uppercase ${
+              location.pathname === "/" ? "bg-emerald-500 text-slate-950 font-bold" : "text-slate-200"
             }`}
           >
             TRANG CHỦ
@@ -172,10 +182,10 @@ const Navbar: React.FC = () => {
                 <Link
                   key={idx}
                   to={targetPath}
-                  className={`block px-3 py-2 rounded font-oswald text-sm font-bold uppercase border-t border-slate-100 pt-2 ${
+                  className={`block px-3 py-2 rounded-lg font-oswald text-sm font-bold uppercase border-t border-slate-800 pt-2 ${
                     location.pathname === targetPath
-                      ? "bg-emerald-50 text-emerald-700"
-                      : "text-slate-700"
+                      ? "text-[#00e575] bg-emerald-950/40"
+                      : "text-slate-200"
                   }`}
                 >
                   {g.title}
@@ -184,21 +194,18 @@ const Navbar: React.FC = () => {
             }
 
             return (
-              <div key={idx} className="space-y-1 pt-1 border-t border-slate-100">
-                <Link
-                  to={targetPath}
-                  className="px-3 text-[11px] font-oswald font-bold uppercase tracking-wider text-slate-500 hover:text-emerald-700 block"
-                >
-                  {g.title} →
-                </Link>
+              <div key={idx} className="space-y-1 pt-2 border-t border-slate-800">
+                <span className="px-3 text-[10px] font-oswald font-bold uppercase tracking-widest text-emerald-400 block">
+                  {g.title}
+                </span>
                 {g.items.map((item, iIdx) => (
                   <Link
                     key={iIdx}
                     to={item.path}
-                    className={`block px-4 py-1.5 rounded font-oswald text-xs uppercase font-medium ${
+                    className={`block px-4 py-2 rounded-lg font-oswald text-xs uppercase font-medium ${
                       location.pathname === item.path
-                        ? "bg-emerald-50 text-emerald-700 font-bold"
-                        : "text-slate-600 hover:bg-slate-50"
+                        ? "bg-emerald-500 text-slate-950 font-bold"
+                        : "text-slate-300 hover:bg-slate-800"
                     }`}
                   >
                     {item.label}
@@ -207,6 +214,14 @@ const Navbar: React.FC = () => {
               </div>
             );
           })}
+
+          <Link
+            to="/quanlygiaidau"
+            className="block text-center py-2.5 rounded-lg bg-amber-500 text-slate-950 font-oswald text-xs font-black uppercase tracking-wider mt-2"
+          >
+            <i className="fa-solid fa-lock mr-1.5"></i>
+            BTC Portal (Quản trị)
+          </Link>
         </div>
       )}
     </header>

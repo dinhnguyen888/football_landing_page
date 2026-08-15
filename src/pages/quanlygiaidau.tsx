@@ -374,19 +374,19 @@ const Quanlygiaidau: React.FC = () => {
           {/* ================= TAB 1: DANH SÁCH GIẢI & BẬT TẮT ================= */}
           {managerTab === 'LIST' && (
             <div className="p-6 sm:p-8 rounded-xl portal-card space-y-6">
-              <div className="border-b border-slate-200 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="border-b border-slate-700/60 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                  <h2 className="font-oswald text-xl font-bold uppercase text-slate-900">
+                  <h2 className="font-oswald text-xl font-bold uppercase text-white">
                     DANH SÁCH GIẢI ĐẤU & CÔNG TẮC BẬT/TẮT HIỂN THỊ
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-emerald-400 mt-0.5">
                     Gạt nút BẬT để chọn giải đấu xuất hiện trên trang Lịch thi đấu & BXH. Nếu TẮT HẾT, web sẽ hiện thông báo chờ giải tiếp theo.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setManagerTab('CREATE')}
-                  className="px-3.5 py-1.5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-oswald font-bold uppercase flex items-center space-x-1.5"
+                  className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-black text-xs font-oswald uppercase flex items-center space-x-1.5 shadow-md shadow-emerald-500/20"
                 >
                   <i className="fa-solid fa-plus"></i>
                   <span>Tạo Giải Mới</span>
@@ -394,8 +394,8 @@ const Quanlygiaidau: React.FC = () => {
               </div>
 
               {savedTournaments.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  <i className="fa-solid fa-folder-open text-4xl text-slate-300 mb-2 block"></i>
+                <div className="text-center py-12 text-slate-400">
+                  <i className="fa-solid fa-folder-open text-4xl text-slate-600 mb-2 block"></i>
                   <p className="font-oswald text-sm uppercase">Chưa có giải đấu nào</p>
                 </div>
               ) : (
@@ -406,29 +406,29 @@ const Quanlygiaidau: React.FC = () => {
                     return (
                       <div
                         key={tour.id}
-                        className={`p-5 rounded-xl border transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
+                        className={`p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
                           isVisible
-                            ? 'bg-emerald-50/70 border-emerald-500 shadow-sm'
-                            : 'bg-slate-50 border-slate-200 opacity-80'
+                            ? 'bg-gradient-to-r from-emerald-950/80 to-slate-900/90 border-emerald-500 shadow-md shadow-emerald-950/50'
+                            : 'bg-slate-900/90 border-slate-700/80 hover:border-slate-600'
                         }`}
                       >
-                        <div className="space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <h3 className="font-oswald font-bold text-lg text-slate-900 uppercase">
+                        <div className="space-y-1.5">
+                          <div className="flex items-center space-x-2.5">
+                            <h3 className="font-oswald font-black text-lg sm:text-xl text-white uppercase tracking-wide">
                               {tour.tournamentName} - {tour.season}
                             </h3>
                             {isVisible ? (
-                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-600 text-white text-[10px] font-bold font-oswald uppercase tracking-wider flex items-center space-x-1">
-                                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black font-oswald uppercase tracking-wider flex items-center space-x-1 shadow-xs shadow-emerald-500/40">
+                                <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
                                 <span>ĐANG HIỂN THỊ TRÊN WEB</span>
                               </span>
                             ) : (
-                              <span className="px-2 py-0.5 rounded-full bg-slate-300 text-slate-700 text-[10px] font-bold font-oswald uppercase">
-                                ĐANG ẨN
+                              <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold font-oswald uppercase">
+                                ĐANG TẮT
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-500">
+                          <p className="text-xs text-slate-300">
                             {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/bảng •{' '}
                             {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt'}
                           </p>
@@ -437,44 +437,47 @@ const Quanlygiaidau: React.FC = () => {
                         {/* Actions & Switch */}
                         <div className="flex items-center space-x-4">
                           {/* Toggle Switch */}
-                          <div className="flex items-center space-x-2">
-                            <span className="text-xs font-oswald font-bold uppercase text-slate-600">
+                          <div className="flex items-center space-x-2.5">
+                            <span className={`text-xs font-oswald font-bold uppercase ${isVisible ? 'text-[#00e575]' : 'text-slate-400'}`}>
                               {isVisible ? 'ĐANG BẬT' : 'ĐANG TẮT'}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleToggleVisibility(tour.id, isVisible)}
                               className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${
-                                isVisible ? 'bg-emerald-600' : 'bg-slate-300'
+                                isVisible ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-slate-700'
                               }`}
                             >
-                              <span
-                                className={`block w-5 h-5 rounded-full bg-white shadow-md transform transition-transform ${
+                              <div
+                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
                                   isVisible ? 'translate-x-6' : 'translate-x-0'
                                 }`}
                               />
                             </button>
                           </div>
 
+                          {/* Quick Score Edit */}
                           <button
                             type="button"
-                            onClick={() => handleSelectTournament(tour)}
-                            className="px-3.5 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-oswald font-bold uppercase tracking-wider transition-colors shadow-sm"
+                            onClick={() => {
+                              handleSelectTournament(tour);
+                              setManagerTab('SCORES');
+                            }}
+                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-slate-950 border border-emerald-500/40 text-xs font-oswald font-bold uppercase flex items-center space-x-1.5 transition-all"
                           >
-                            <i className="fa-solid fa-pen-to-square mr-1"></i>
-                            Chỉnh Tỉ Số
+                            <i className="fa-solid fa-pen-to-square"></i>
+                            <span>Chỉnh Tỉ Số</span>
                           </button>
 
-                          {savedTournaments.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteTournament(tour.id)}
-                              className="p-2 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-800 text-xs transition-colors"
-                              title="Xóa giải đấu"
-                            >
-                              <i className="fa-solid fa-trash"></i>
-                            </button>
-                          )}
+                          {/* Delete Tournament */}
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteTournament(tour.id)}
+                            className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 transition-colors"
+                            title="Xóa giải đấu"
+                          >
+                            <i className="fa-solid fa-trash text-sm"></i>
+                          </button>
                         </div>
                       </div>
                     );
