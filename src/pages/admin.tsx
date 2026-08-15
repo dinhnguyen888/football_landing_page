@@ -14,10 +14,10 @@ const Admin: React.FC = () => {
     },
     {
       role: "PHÓ BAN TỔ CHỨC",
-      name: "DŨNG HUYỀN",
-      facebook: "https://www.facebook.com/levandung.sla",
+      name: "BẠCH MINH QUANG",
+      facebook: "https://www.facebook.com/minhquang.bach.18",
       phone: "Liên hệ qua Messenger",
-      desc: "Giám sát kỹ thuật 5 hậu vệ, quỹ lương 255 và hỗ trợ cập nhật bảng điểm Google Sheet.",
+      desc: "Giám sát kỹ thuật sơ đồ thi đấu, quỹ lương và hỗ trợ cập nhật kết quả bảng điểm giải đấu.",
     },
   ];
 

@@ -33,9 +33,6 @@ const Navbar: React.FC = () => {
       pathRoot: "/xephang",
       items: [
         { label: "BẢNG VÀNG VÔ ĐỊCH", path: "/xephang" },
-        { label: "TOP 3 CÁC MÙA", path: "/topcacmua" },
-        { label: "DANH SÁCH HLV", path: "/danhsachhlv" },
-        { label: "TIÊU ĐIỂM GIẢI ĐẤU", path: "/tieudiem" },
       ],
     },
     {
@@ -52,15 +49,19 @@ const Navbar: React.FC = () => {
     <header className="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
       {/* Top Brand Banner */}
       <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-3">
-          <div className="w-9 h-9 rounded-lg bg-emerald-700 flex items-center justify-center text-white">
-            <i className="fa-solid fa-futbol text-lg"></i>
+        <Link to="/" className="flex items-center space-x-3.5 group flex-shrink-0">
+          <div className="w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+            <img 
+              src={require("../img/Logo.svg").default} 
+              alt="Sao Vàng Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
-          <div>
-            <span className="font-oswald text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-900 block leading-tight">
-              SAO VÀNG <span className="text-amber-500">CUP ™</span>
+          <div className="whitespace-nowrap">
+            <span className="font-oswald text-xl sm:text-2xl font-bold uppercase tracking-wider text-slate-900 block leading-tight group-hover:text-emerald-700 transition-colors whitespace-nowrap">
+              SAO VÀNG <span className="text-amber-500">CUP™</span>
             </span>
-            <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase block">
+            <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase block whitespace-nowrap">
               Giải Đấu Cộng Đồng FC Online
             </span>
           </div>
@@ -80,13 +81,30 @@ const Navbar: React.FC = () => {
           </Link>
 
           {navGroups.map((group, idx) => {
-            const isActive = group.items.some((i) => i.path === location.pathname);
-            const firstItemPath = group.items[0]?.path || "/";
+            const hasMultipleItems = group.items.length > 1;
+            const isActive = group.items.some((i) => i.path === location.pathname) || group.pathRoot === location.pathname;
+            const targetPath = group.items[0]?.path || group.pathRoot;
+
+            if (!hasMultipleItems) {
+              return (
+                <Link
+                  key={idx}
+                  to={targetPath}
+                  className={`px-3 py-1.5 rounded-md font-oswald text-sm font-semibold uppercase tracking-wider transition-colors ${
+                    isActive
+                      ? "bg-emerald-50 text-emerald-800 font-bold border-b-2 border-emerald-700"
+                      : "text-slate-700 hover:text-emerald-700 hover:bg-slate-50"
+                  }`}
+                >
+                  {group.title}
+                </Link>
+              );
+            }
 
             return (
               <div key={idx} className="relative nav-dropdown-group py-1">
                 <Link
-                  to={firstItemPath}
+                  to={targetPath}
                   className={`flex items-center space-x-1 px-3 py-1.5 rounded-md font-oswald text-sm font-semibold uppercase tracking-wider transition-colors ${
                     isActive
                       ? "bg-emerald-50 text-emerald-800 font-bold border-b-2 border-emerald-700"
@@ -146,11 +164,29 @@ const Navbar: React.FC = () => {
           </Link>
 
           {navGroups.map((g, idx) => {
-            const firstItemPath = g.items[0]?.path || "/";
+            const hasMultiple = g.items.length > 1;
+            const targetPath = g.items[0]?.path || g.pathRoot;
+
+            if (!hasMultiple) {
+              return (
+                <Link
+                  key={idx}
+                  to={targetPath}
+                  className={`block px-3 py-2 rounded font-oswald text-sm font-bold uppercase border-t border-slate-100 pt-2 ${
+                    location.pathname === targetPath
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "text-slate-700"
+                  }`}
+                >
+                  {g.title}
+                </Link>
+              );
+            }
+
             return (
               <div key={idx} className="space-y-1 pt-1 border-t border-slate-100">
                 <Link
-                  to={firstItemPath}
+                  to={targetPath}
                   className="px-3 text-[11px] font-oswald font-bold uppercase tracking-wider text-slate-500 hover:text-emerald-700 block"
                 >
                   {g.title} →

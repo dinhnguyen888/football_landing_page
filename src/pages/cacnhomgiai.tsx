@@ -35,12 +35,17 @@ const Cacnhomgiai: React.FC = () => {
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {groups.map((g, idx) => (
-              <div key={idx} className="p-6 rounded-xl portal-card space-y-4">
-                <div className="border-b border-slate-200 pb-2">
-                  <h2 className="font-oswald text-lg font-bold uppercase text-slate-900">
-                    {g.title}
-                  </h2>
-                  <span className="text-xs text-emerald-800 font-bold block mt-0.5">{g.name}</span>
+              <div key={idx} className="p-6 sm:p-7 rounded-2xl bg-white border border-slate-200/90 shadow-sm space-y-4 hover:shadow-md transition-all group">
+                <div className="border-b border-slate-100 pb-3">
+                  <div className="flex items-center space-x-2.5 mb-1.5">
+                    <span className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-sm">
+                      <i className={idx === 0 ? "fa-brands fa-facebook-f" : "fa-brands fa-facebook-messenger"}></i>
+                    </span>
+                    <h2 className="font-fco text-base sm:text-lg font-black uppercase text-slate-900">
+                      {g.title}
+                    </h2>
+                  </div>
+                  <span className="text-xs text-emerald-800 font-bold font-fco block mt-0.5">{g.name}</span>
                 </div>
 
                 <p className="text-slate-600 text-xs sm:text-sm leading-relaxed">
@@ -52,7 +57,7 @@ const Cacnhomgiai: React.FC = () => {
                     href={g.link}
                     target="_blank"
                     rel="noreferrer"
-                    className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg ${g.btnColor} text-white font-oswald text-xs font-bold uppercase tracking-wider transition-colors`}
+                    className={`inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl ${g.btnColor} text-white font-fco text-xs font-bold uppercase tracking-wider shadow-sm transition-all group-hover:scale-102`}
                   >
                     <span>{g.btnText}</span>
                     <i className="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
