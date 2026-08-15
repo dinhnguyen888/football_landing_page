@@ -35,6 +35,35 @@ export interface Group {
   matches: Match[];
 }
 
+export interface KnockoutMatch {
+  id: string;
+  roundName: string; // 'VÒNG 1/8' | 'TỨ KẾT' | 'BÁN KẾT' | 'CHUNG KẾT' | 'TRANH HẠNG BA'
+  matchOrder: number; // 1, 2, 3...
+  homeTeamName: string;
+  homeTeamClub?: string;
+  homeSourceText?: string; // 'Nhất Bảng A'
+  awayTeamName: string;
+  awayTeamClub?: string;
+  awaySourceText?: string; // 'Nhì Bảng B'
+  homeScore: number | null;
+  awayScore: number | null;
+  homePenScore?: number | null;
+  awayPenScore?: number | null;
+  played: boolean;
+  winnerTeamName?: string;
+  nextMatchId?: string;
+  nextMatchSlot?: 'home' | 'away';
+}
+
+export interface KnockoutStage {
+  isCompletedGroupStage: boolean;
+  rounds: {
+    name: string; // 'VÒNG 1/8' | 'TỨ KẾT' | 'BÁN KẾT' | 'CHUNG KẾT'
+    matches: KnockoutMatch[];
+  }[];
+  thirdPlaceMatch?: KnockoutMatch;
+}
+
 export interface TournamentData {
   id: string;
   tournamentName: string;
@@ -43,6 +72,7 @@ export interface TournamentData {
   teamsPerGroup: number;
   legType: 'single' | 'double';
   groups: Group[];
+  knockoutStage?: KnockoutStage;
   createdAt: string;
   isVisible?: boolean; // Toggle display on public page
 }
@@ -231,7 +261,273 @@ export function loadArchiveTournaments(): TournamentData[] {
   return [];
 }
 
-// Generate default preset data for Great Mates Cup Mùa 2
+// Generate FIFA Knockout Bracket depending on number of groups (2, 4, or 8)
+export function buildFIFABracketFromGroups(groups: Group[]): KnockoutStage {
+  // Step 1: calculate top 2 teams for each group
+  const topTeams: { [groupLetter: string]: { first: Team; second: Team } } = {};
+
+  groups.forEach((grp, idx) => {
+    const letter = String.fromCharCode(65 + idx); // 'A', 'B', 'C', 'D'...
+    const standings = calculateGroupStandings(grp);
+    const firstTeamStat = standings[0];
+    const secondTeamStat = standings[1];
+
+    const firstTeam = grp.teams.find((t) => t.id === firstTeamStat?.teamId) || {
+      id: `top1_${letter}`,
+      name: `Nhất ${grp.name}`,
+    };
+    const secondTeam = grp.teams.find((t) => t.id === secondTeamStat?.teamId) || {
+      id: `top2_${letter}`,
+      name: `Nhì ${grp.name}`,
+    };
+
+    topTeams[letter] = { first: firstTeam, second: secondTeam };
+  });
+
+  const numGroups = groups.length;
+
+  // CASE 1: 4 GROUPS (Standard World Cup 8-team Quarterfinals)
+  if (numGroups === 4) {
+    // Round 1: TỨ KẾT (4 matches)
+    const qfMatches: KnockoutMatch[] = [
+      {
+        id: 'qf_1',
+        roundName: 'TỨ KẾT',
+        matchOrder: 1,
+        homeTeamName: topTeams['A']?.first.name || 'Nhất Bảng A',
+        homeTeamClub: topTeams['A']?.first.club,
+        homeSourceText: 'Nhất Bảng A',
+        awayTeamName: topTeams['B']?.second.name || 'Nhì Bảng B',
+        awayTeamClub: topTeams['B']?.second.club,
+        awaySourceText: 'Nhì Bảng B',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_1',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'qf_2',
+        roundName: 'TỨ KẾT',
+        matchOrder: 2,
+        homeTeamName: topTeams['C']?.first.name || 'Nhất Bảng C',
+        homeTeamClub: topTeams['C']?.first.club,
+        homeSourceText: 'Nhất Bảng C',
+        awayTeamName: topTeams['D']?.second.name || 'Nhì Bảng D',
+        awayTeamClub: topTeams['D']?.second.club,
+        awaySourceText: 'Nhì Bảng D',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_1',
+        nextMatchSlot: 'away',
+      },
+      {
+        id: 'qf_3',
+        roundName: 'TỨ KẾT',
+        matchOrder: 3,
+        homeTeamName: topTeams['B']?.first.name || 'Nhất Bảng B',
+        homeTeamClub: topTeams['B']?.first.club,
+        homeSourceText: 'Nhất Bảng B',
+        awayTeamName: topTeams['A']?.second.name || 'Nhì Bảng A',
+        awayTeamClub: topTeams['A']?.second.club,
+        awaySourceText: 'Nhì Bảng A',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_2',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'qf_4',
+        roundName: 'TỨ KẾT',
+        matchOrder: 4,
+        homeTeamName: topTeams['D']?.first.name || 'Nhất Bảng D',
+        homeTeamClub: topTeams['D']?.first.club,
+        homeSourceText: 'Nhất Bảng D',
+        awayTeamName: topTeams['C']?.second.name || 'Nhì Bảng C',
+        awayTeamClub: topTeams['C']?.second.club,
+        awaySourceText: 'Nhì Bảng C',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_2',
+        nextMatchSlot: 'away',
+      },
+    ];
+
+    // Round 2: BÁN KẾT (2 matches)
+    const sfMatches: KnockoutMatch[] = [
+      {
+        id: 'sf_1',
+        roundName: 'BÁN KẾT',
+        matchOrder: 1,
+        homeTeamName: 'Thắng Tứ Kết 1',
+        awayTeamName: 'Thắng Tứ Kết 2',
+        homeSourceText: 'Thắng TK 1',
+        awaySourceText: 'Thắng TK 2',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'final_1',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'sf_2',
+        roundName: 'BÁN KẾT',
+        matchOrder: 2,
+        homeTeamName: 'Thắng Tứ Kết 3',
+        awayTeamName: 'Thắng Tứ Kết 4',
+        homeSourceText: 'Thắng TK 3',
+        awaySourceText: 'Thắng TK 4',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'final_1',
+        nextMatchSlot: 'away',
+      },
+    ];
+
+    // Round 3: CHUNG KẾT (1 match)
+    const finalMatch: KnockoutMatch = {
+      id: 'final_1',
+      roundName: 'CHUNG KẾT',
+      matchOrder: 1,
+      homeTeamName: 'Thắng Bán Kết 1',
+      awayTeamName: 'Thắng Bán Kết 2',
+      homeSourceText: 'Thắng BK 1',
+      awaySourceText: 'Thắng BK 2',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+    };
+
+    return {
+      isCompletedGroupStage: true,
+      rounds: [
+        { name: 'TỨ KẾT', matches: qfMatches },
+        { name: 'BÁN KẾT', matches: sfMatches },
+        { name: 'CHUNG KẾT', matches: [finalMatch] },
+      ],
+    };
+  }
+
+  // CASE 2: 2 GROUPS (Semifinals -> Final)
+  if (numGroups === 2) {
+    const sfMatches: KnockoutMatch[] = [
+      {
+        id: 'sf_1',
+        roundName: 'BÁN KẾT',
+        matchOrder: 1,
+        homeTeamName: topTeams['A']?.first.name || 'Nhất Bảng A',
+        homeTeamClub: topTeams['A']?.first.club,
+        homeSourceText: 'Nhất Bảng A',
+        awayTeamName: topTeams['B']?.second.name || 'Nhì Bảng B',
+        awayTeamClub: topTeams['B']?.second.club,
+        awaySourceText: 'Nhì Bảng B',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'final_1',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'sf_2',
+        roundName: 'BÁN KẾT',
+        matchOrder: 2,
+        homeTeamName: topTeams['B']?.first.name || 'Nhất Bảng B',
+        homeTeamClub: topTeams['B']?.first.club,
+        homeSourceText: 'Nhất Bảng B',
+        awayTeamName: topTeams['A']?.second.name || 'Nhì Bảng A',
+        awayTeamClub: topTeams['A']?.second.club,
+        awaySourceText: 'Nhì Bảng A',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'final_1',
+        nextMatchSlot: 'away',
+      },
+    ];
+
+    const finalMatch: KnockoutMatch = {
+      id: 'final_1',
+      roundName: 'CHUNG KẾT',
+      matchOrder: 1,
+      homeTeamName: 'Thắng Bán Kết 1',
+      awayTeamName: 'Thắng Bán Kết 2',
+      homeSourceText: 'Thắng BK 1',
+      awaySourceText: 'Thắng BK 2',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+    };
+
+    return {
+      isCompletedGroupStage: true,
+      rounds: [
+        { name: 'BÁN KẾT', matches: sfMatches },
+        { name: 'CHUNG KẾT', matches: [finalMatch] },
+      ],
+    };
+  }
+
+  // DEFAULT / 3+ GROUPS GENERIC BRACKET (Top 2 from each group)
+  const qfMatches: KnockoutMatch[] = [
+    {
+      id: 'qf_1',
+      roundName: 'TỨ KẾT',
+      matchOrder: 1,
+      homeTeamName: topTeams['A']?.first.name || 'Nhất Bảng A',
+      homeTeamClub: topTeams['A']?.first.club,
+      homeSourceText: 'Nhất Bảng A',
+      awayTeamName: topTeams['B']?.second.name || 'Nhì Bảng B',
+      awayTeamClub: topTeams['B']?.second.club,
+      awaySourceText: 'Nhì Bảng B',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'sf_1',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'qf_2',
+      roundName: 'TỨ KẾT',
+      matchOrder: 2,
+      homeTeamName: topTeams['C']?.first.name || topTeams['A']?.second.name || 'Đội 3',
+      homeTeamClub: topTeams['C']?.first.club,
+      homeSourceText: 'Đội 3',
+      awayTeamName: topTeams['D']?.second.name || topTeams['B']?.second.name || 'Đội 4',
+      awayTeamClub: topTeams['D']?.second.club,
+      awaySourceText: 'Đội 4',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'sf_1',
+      nextMatchSlot: 'away',
+    },
+  ];
+
+  const finalMatch: KnockoutMatch = {
+    id: 'final_1',
+    roundName: 'CHUNG KẾT',
+    matchOrder: 1,
+    homeTeamName: 'Thắng Trận 1',
+    awayTeamName: 'Thắng Trận 2',
+    homeScore: null,
+    awayScore: null,
+    played: false,
+  };
+
+  return {
+    isCompletedGroupStage: true,
+    rounds: [
+      { name: 'BÁN KẾT', matches: qfMatches },
+      { name: 'CHUNG KẾT', matches: [finalMatch] },
+    ],
+  };
+}
+
+// Generate default preset data for Sao Vàng Cup Mùa 2
 export function createDefaultTournament(): TournamentData {
   const groupNames = ['BẢNG A', 'BẢNG B', 'BẢNG C', 'BẢNG D'];
   const defaultCoaches = [

@@ -52,7 +52,7 @@ const Navbar: React.FC = () => {
         <Link to="/" className="flex items-center space-x-3 group flex-shrink-0">
           <div className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
             <img 
-              src={require("../img/Logo.svg").default} 
+              src={require("../img/logo02.svg").default} 
               alt="Sao Vàng Logo" 
               className="w-full h-full object-contain"
             />

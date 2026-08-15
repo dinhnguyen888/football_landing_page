@@ -55,8 +55,8 @@ const Footer: React.FC = () => {
             <Link to="/" className="inline-flex items-center space-x-3.5 group flex-shrink-0">
               <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
                 <img 
-                  src={require("../img/Logo.svg").default} 
-                  alt="Sao Vàng Logo" 
+                  src={require("../img/logo02.svg").default} 
+                  alt="Sao Vàng Cup Logo" 
                   className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(0,229,117,0.6)]"
                 />
               </div>

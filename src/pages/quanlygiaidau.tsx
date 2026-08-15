@@ -11,8 +11,10 @@ import {
   generateRoundRobinMatches,
   loadArchiveTournaments,
   saveArchiveTournaments,
+  buildFIFABracketFromGroups,
   Team,
   Group,
+  KnockoutMatch,
 } from '../utils/tournamentEngine';
 
 const SECRET_PIN = '020604';
@@ -394,9 +396,9 @@ const Quanlygiaidau: React.FC = () => {
               </div>
 
               {savedTournaments.length === 0 ? (
-                <div className="text-center py-12 text-slate-400">
-                  <i className="fa-solid fa-folder-open text-4xl text-slate-600 mb-2 block"></i>
-                  <p className="font-oswald text-sm uppercase">Chưa có giải đấu nào</p>
+                <div className="text-center py-12 text-slate-500">
+                  <i className="fa-solid fa-folder-open text-4xl text-slate-300 mb-2 block"></i>
+                  <p className="font-oswald text-sm uppercase font-bold">Chưa có giải đấu nào</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -406,50 +408,50 @@ const Quanlygiaidau: React.FC = () => {
                     return (
                       <div
                         key={tour.id}
-                        className={`p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
+                        className={`p-5 sm:p-6 rounded-2xl border transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
                           isVisible
-                            ? 'bg-gradient-to-r from-emerald-950/80 to-slate-900/90 border-emerald-500 shadow-md shadow-emerald-950/50'
-                            : 'bg-slate-900/90 border-slate-700/80 hover:border-slate-600'
+                            ? 'bg-gradient-to-r from-emerald-50 to-teal-50/50 border-emerald-400 shadow-sm'
+                            : 'bg-slate-50/80 border-slate-200'
                         }`}
                       >
-                        <div className="space-y-1.5">
-                          <div className="flex items-center space-x-2.5">
-                            <h3 className="font-oswald font-black text-lg sm:text-xl text-white uppercase tracking-wide">
+                        <div className="space-y-1.5 text-center sm:text-left">
+                          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5">
+                            <h3 className="font-oswald font-bold text-lg sm:text-xl text-slate-900 uppercase tracking-wide">
                               {tour.tournamentName} - {tour.season}
                             </h3>
                             {isVisible ? (
-                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-500 text-slate-950 text-[10px] font-black font-oswald uppercase tracking-wider flex items-center space-x-1 shadow-xs shadow-emerald-500/40">
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping"></span>
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-700 text-white text-[11px] font-bold font-oswald uppercase tracking-wider flex items-center space-x-1.5 shadow-2xs">
+                                <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
                                 <span>ĐANG HIỂN THỊ TRÊN WEB</span>
                               </span>
                             ) : (
-                              <span className="px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700 text-[10px] font-bold font-oswald uppercase">
-                                ĐANG TẮT
+                              <span className="px-2.5 py-0.5 rounded-full bg-slate-200 text-slate-600 text-[11px] font-bold font-oswald uppercase">
+                                ĐANG TẮT (ẨN)
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-300">
+                          <p className="text-xs text-slate-600 font-medium">
                             {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/bảng •{' '}
                             {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt'}
                           </p>
                         </div>
 
                         {/* Actions & Switch */}
-                        <div className="flex items-center space-x-4">
+                        <div className="flex items-center space-x-4 flex-shrink-0">
                           {/* Toggle Switch */}
-                          <div className="flex items-center space-x-2.5">
-                            <span className={`text-xs font-oswald font-bold uppercase ${isVisible ? 'text-[#00e575]' : 'text-slate-400'}`}>
+                          <div className="flex items-center space-x-2">
+                            <span className={`text-xs font-oswald font-bold uppercase ${isVisible ? 'text-emerald-800' : 'text-slate-500'}`}>
                               {isVisible ? 'ĐANG BẬT' : 'ĐANG TẮT'}
                             </span>
                             <button
                               type="button"
                               onClick={() => handleToggleVisibility(tour.id, isVisible)}
-                              className={`w-12 h-6 rounded-full transition-colors relative p-0.5 ${
-                                isVisible ? 'bg-emerald-500 shadow-sm shadow-emerald-500/50' : 'bg-slate-700'
+                              className={`w-12 h-6 rounded-full transition-colors relative p-0.5 shadow-inner ${
+                                isVisible ? 'bg-emerald-600' : 'bg-slate-300'
                               }`}
                             >
                               <div
-                                className={`w-5 h-5 rounded-full bg-white transition-transform ${
+                                className={`w-5 h-5 rounded-full bg-white transition-transform shadow-xs ${
                                   isVisible ? 'translate-x-6' : 'translate-x-0'
                                 }`}
                               />
@@ -463,7 +465,7 @@ const Quanlygiaidau: React.FC = () => {
                               handleSelectTournament(tour);
                               setManagerTab('SCORES');
                             }}
-                            className="px-3.5 py-1.5 rounded-lg bg-emerald-600/20 hover:bg-emerald-600 text-emerald-300 hover:text-slate-950 border border-emerald-500/40 text-xs font-oswald font-bold uppercase flex items-center space-x-1.5 transition-all"
+                            className="px-3.5 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-oswald font-bold uppercase flex items-center space-x-1.5 transition-all shadow-xs"
                           >
                             <i className="fa-solid fa-pen-to-square"></i>
                             <span>Chỉnh Tỉ Số</span>
@@ -473,7 +475,7 @@ const Quanlygiaidau: React.FC = () => {
                           <button
                             type="button"
                             onClick={() => handleDeleteTournament(tour.id)}
-                            className="p-1.5 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 transition-colors"
+                            className="p-2 rounded-xl text-rose-500 hover:text-white hover:bg-rose-600 transition-colors"
                             title="Xóa giải đấu"
                           >
                             <i className="fa-solid fa-trash text-sm"></i>
@@ -745,6 +747,312 @@ const Quanlygiaidau: React.FC = () => {
                   })}
                 </div>
               </div>
+
+              {/* Action Bar: Hoàn thành vòng bảng / Tạo cây Knockout */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                <div className="space-y-1 text-center sm:text-left">
+                  <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-emerald-800/80 text-emerald-300 text-[10px] font-bold font-oswald uppercase">
+                    <i className="fa-solid fa-sitemap text-amber-400"></i>
+                    <span>THỂ THỨC FIFA WORLD CUP</span>
+                  </div>
+                  <h3 className="font-oswald text-lg font-bold uppercase text-white">
+                    {tournament.knockoutStage?.isCompletedGroupStage
+                      ? '✓ ĐÃ HOÀN THÀNH VÒNG BẢNG – CÂY KNOCKOUT ĐÃ ĐƯỢC TẠO'
+                      : 'KẾT THÚC VÒNG BẢNG & CHUYỂN SANG VÒNG KNOCKOUT'}
+                  </h3>
+                  <p className="text-xs text-slate-300">
+                    Tự động lấy Top 1 & Top 2 mỗi bảng theo điểm, hiệu số và bốc cặp chéo nhánh (Nhất A vs Nhì B, v.v.).
+                  </p>
+                </div>
+
+                <div className="flex items-center space-x-3 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newBracket = buildFIFABracketFromGroups(tournament.groups);
+                      const updatedTour = { ...tournament, knockoutStage: newBracket };
+                      setTournament(updatedTour);
+                      saveTournamentData(updatedTour);
+                      const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
+                      setSavedTournaments(updatedArchive);
+                      saveArchiveTournaments(updatedArchive);
+                      alert('🏆 Đã hoàn thành vòng bảng! Cây sơ đồ Vòng Loại Trực Tiếp (Knockout) chuẩn FIFA đã được tạo và kích hoạt trên web!');
+                    }}
+                    className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-oswald text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/30 hover:scale-105 flex items-center space-x-2"
+                  >
+                    <i className="fa-solid fa-trophy text-slate-950"></i>
+                    <span>{tournament.knockoutStage?.isCompletedGroupStage ? 'Cập Nhật Cây Knockout' : 'Hoàn Thành Vòng Bảng'}</span>
+                  </button>
+
+                  {tournament.knockoutStage?.isCompletedGroupStage && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm('Bạn có chắc chắn muốn mở lại vòng bảng và xóa dữ liệu Knockout?')) {
+                          const updatedTour = { ...tournament, knockoutStage: undefined };
+                          setTournament(updatedTour);
+                          saveTournamentData(updatedTour);
+                          const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
+                          setSavedTournaments(updatedArchive);
+                          saveArchiveTournaments(updatedArchive);
+                        }
+                      }}
+                      className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-oswald uppercase transition-colors"
+                      title="Mở lại vòng bảng"
+                    >
+                      <i className="fa-solid fa-rotate-left"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* KNOCKOUT MANAGEMENT VIEW (If group stage completed) */}
+              {tournament.knockoutStage?.isCompletedGroupStage && (
+                <div className="p-6 sm:p-8 rounded-2xl portal-card space-y-6">
+                  <div className="border-b border-slate-200 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center space-x-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-sm shadow-sm">
+                        <i className="fa-solid fa-trophy"></i>
+                      </div>
+                      <div>
+                        <h3 className="font-oswald text-xl font-bold uppercase text-slate-900">
+                          QUẢN LÝ TỈ SỐ VÒNG LOẠI TRỰC TIẾP (KNOCKOUT BRACKET)
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          Nhập tỉ số trận đấu (và tỉ số Penalty nếu hòa). Đội thắng sẽ tự động nhảy lên vòng tiếp theo!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    {tournament.knockoutStage.rounds.map((rnd, rIdx) => (
+                      <div key={rIdx} className="space-y-3">
+                        <div className="flex items-center space-x-2">
+                          <span className="px-3 py-1 rounded-lg bg-emerald-700 text-white font-oswald text-xs font-bold uppercase tracking-wider">
+                            {rnd.name}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {rnd.matches.map((kMatch) => {
+                            const isDraw = kMatch.homeScore !== null && kMatch.awayScore !== null && kMatch.homeScore === kMatch.awayScore;
+
+                            return (
+                              <div
+                                key={kMatch.id}
+                                className="p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-400 transition-all space-y-3 shadow-2xs"
+                              >
+                                <div className="flex items-center justify-between text-xs font-oswald text-slate-500 border-b border-slate-100 pb-1.5">
+                                  <span className="font-bold text-emerald-800 uppercase">TRẬN #{kMatch.matchOrder}</span>
+                                  <span>{kMatch.roundName}</span>
+                                </div>
+
+                                {/* Teams and Score inputs */}
+                                <div className="flex items-center justify-between gap-2">
+                                  {/* Home Team */}
+                                  <div className="flex-1 text-right">
+                                    <span className={`font-bold text-xs sm:text-sm block leading-tight ${kMatch.winnerTeamName === kMatch.homeTeamName ? 'text-emerald-800 font-black' : 'text-slate-900'}`}>
+                                      {kMatch.homeTeamName}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 block">
+                                      {kMatch.homeTeamClub ? `(${kMatch.homeTeamClub})` : kMatch.homeSourceText}
+                                    </span>
+                                  </div>
+
+                                  {/* Score Box */}
+                                  <div className="flex items-center space-x-1.5 flex-shrink-0">
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="99"
+                                      value={kMatch.homeScore !== null ? kMatch.homeScore : ''}
+                                      onChange={(e) => {
+                                        const val = e.target.value === '' ? null : Number(e.target.value);
+                                        const updatedRounds = [...tournament.knockoutStage!.rounds];
+                                        const curMatch = updatedRounds[rIdx].matches.find((m) => m.id === kMatch.id)!;
+                                        curMatch.homeScore = val;
+                                        curMatch.played = curMatch.homeScore !== null && curMatch.awayScore !== null;
+                                        
+                                        // Determine winner
+                                        if (curMatch.played) {
+                                          if (curMatch.homeScore! > curMatch.awayScore!) {
+                                            curMatch.winnerTeamName = curMatch.homeTeamName;
+                                          } else if (curMatch.awayScore! > curMatch.homeScore!) {
+                                            curMatch.winnerTeamName = curMatch.awayTeamName;
+                                          } else if (curMatch.homePenScore !== undefined && curMatch.awayPenScore !== undefined && curMatch.homePenScore !== null && curMatch.awayPenScore !== null) {
+                                            curMatch.winnerTeamName = curMatch.homePenScore > curMatch.awayPenScore ? curMatch.homeTeamName : curMatch.awayTeamName;
+                                          }
+                                          // Propagate winner to next match
+                                          if (curMatch.nextMatchId && curMatch.winnerTeamName) {
+                                            for (const r of updatedRounds) {
+                                              const nextM = r.matches.find((nm) => nm.id === curMatch.nextMatchId);
+                                              if (nextM) {
+                                                if (curMatch.nextMatchSlot === 'home') nextM.homeTeamName = curMatch.winnerTeamName;
+                                                if (curMatch.nextMatchSlot === 'away') nextM.awayTeamName = curMatch.winnerTeamName;
+                                              }
+                                            }
+                                          }
+                                        }
+                                        const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
+                                        setTournament(updatedTour);
+                                        saveTournamentData(updatedTour);
+                                        const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
+                                        setSavedTournaments(updatedArchive);
+                                        saveArchiveTournaments(updatedArchive);
+                                      }}
+                                      placeholder="-"
+                                      className="w-10 h-9 text-center font-oswald font-bold text-lg border-2 border-emerald-600 rounded bg-white focus:outline-none"
+                                    />
+                                    <span className="font-bold text-slate-400 text-xs">:</span>
+                                    <input
+                                      type="number"
+                                      min="0"
+                                      max="99"
+                                      value={kMatch.awayScore !== null ? kMatch.awayScore : ''}
+                                      onChange={(e) => {
+                                        const val = e.target.value === '' ? null : Number(e.target.value);
+                                        const updatedRounds = [...tournament.knockoutStage!.rounds];
+                                        const curMatch = updatedRounds[rIdx].matches.find((m) => m.id === kMatch.id)!;
+                                        curMatch.awayScore = val;
+                                        curMatch.played = curMatch.homeScore !== null && curMatch.awayScore !== null;
+                                        
+                                        // Determine winner
+                                        if (curMatch.played) {
+                                          if (curMatch.homeScore! > curMatch.awayScore!) {
+                                            curMatch.winnerTeamName = curMatch.homeTeamName;
+                                          } else if (curMatch.awayScore! > curMatch.homeScore!) {
+                                            curMatch.winnerTeamName = curMatch.awayTeamName;
+                                          } else if (curMatch.homePenScore !== undefined && curMatch.awayPenScore !== undefined && curMatch.homePenScore !== null && curMatch.awayPenScore !== null) {
+                                            curMatch.winnerTeamName = curMatch.homePenScore > curMatch.awayPenScore ? curMatch.homeTeamName : curMatch.awayTeamName;
+                                          }
+                                          // Propagate winner to next match
+                                          if (curMatch.nextMatchId && curMatch.winnerTeamName) {
+                                            for (const r of updatedRounds) {
+                                              const nextM = r.matches.find((nm) => nm.id === curMatch.nextMatchId);
+                                              if (nextM) {
+                                                if (curMatch.nextMatchSlot === 'home') nextM.homeTeamName = curMatch.winnerTeamName;
+                                                if (curMatch.nextMatchSlot === 'away') nextM.awayTeamName = curMatch.winnerTeamName;
+                                              }
+                                            }
+                                          }
+                                        }
+                                        const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
+                                        setTournament(updatedTour);
+                                        saveTournamentData(updatedTour);
+                                        const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
+                                        setSavedTournaments(updatedArchive);
+                                        saveArchiveTournaments(updatedArchive);
+                                      }}
+                                      placeholder="-"
+                                      className="w-10 h-9 text-center font-oswald font-bold text-lg border-2 border-emerald-600 rounded bg-white focus:outline-none"
+                                    />
+                                  </div>
+
+                                  {/* Away Team */}
+                                  <div className="flex-1 text-left">
+                                    <span className={`font-bold text-xs sm:text-sm block leading-tight ${kMatch.winnerTeamName === kMatch.awayTeamName ? 'text-emerald-800 font-black' : 'text-slate-900'}`}>
+                                      {kMatch.awayTeamName}
+                                    </span>
+                                    <span className="text-[10px] text-slate-500 block">
+                                      {kMatch.awayTeamClub ? `(${kMatch.awayTeamClub})` : kMatch.awaySourceText}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {/* Penalty Shootout Input if draw */}
+                                {isDraw && (
+                                  <div className="p-2 rounded bg-amber-50 border border-amber-200 flex items-center justify-between text-xs">
+                                    <span className="text-[11px] font-oswald font-bold text-amber-900">
+                                      ⚽ TỈ SỐ PENALTY (LUÂN LƯU):
+                                    </span>
+                                    <div className="flex items-center space-x-1">
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max="20"
+                                        value={kMatch.homePenScore !== undefined && kMatch.homePenScore !== null ? kMatch.homePenScore : ''}
+                                        onChange={(e) => {
+                                          const val = e.target.value === '' ? null : Number(e.target.value);
+                                          const updatedRounds = [...tournament.knockoutStage!.rounds];
+                                          const curMatch = updatedRounds[rIdx].matches.find((m) => m.id === kMatch.id)!;
+                                          curMatch.homePenScore = val;
+                                          if (curMatch.homePenScore !== null && curMatch.awayPenScore !== null && curMatch.homePenScore !== undefined && curMatch.awayPenScore !== undefined) {
+                                            curMatch.winnerTeamName = curMatch.homePenScore > curMatch.awayPenScore ? curMatch.homeTeamName : curMatch.awayTeamName;
+                                            if (curMatch.nextMatchId && curMatch.winnerTeamName) {
+                                              for (const r of updatedRounds) {
+                                                const nextM = r.matches.find((nm) => nm.id === curMatch.nextMatchId);
+                                                if (nextM) {
+                                                  if (curMatch.nextMatchSlot === 'home') nextM.homeTeamName = curMatch.winnerTeamName;
+                                                  if (curMatch.nextMatchSlot === 'away') nextM.awayTeamName = curMatch.winnerTeamName;
+                                                }
+                                              }
+                                            }
+                                          }
+                                          const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
+                                          setTournament(updatedTour);
+                                          saveTournamentData(updatedTour);
+                                          const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
+                                          setSavedTournaments(updatedArchive);
+                                          saveArchiveTournaments(updatedArchive);
+                                        }}
+                                        placeholder="Pen"
+                                        className="w-10 h-7 text-center font-bold font-oswald text-xs border border-amber-400 rounded bg-white"
+                                      />
+                                      <span className="font-bold text-amber-700">-</span>
+                                      <input
+                                        type="number"
+                                        min="0"
+                                        max="20"
+                                        value={kMatch.awayPenScore !== undefined && kMatch.awayPenScore !== null ? kMatch.awayPenScore : ''}
+                                        onChange={(e) => {
+                                          const val = e.target.value === '' ? null : Number(e.target.value);
+                                          const updatedRounds = [...tournament.knockoutStage!.rounds];
+                                          const curMatch = updatedRounds[rIdx].matches.find((m) => m.id === kMatch.id)!;
+                                          curMatch.awayPenScore = val;
+                                          if (curMatch.homePenScore !== null && curMatch.awayPenScore !== null && curMatch.homePenScore !== undefined && curMatch.awayPenScore !== undefined) {
+                                            curMatch.winnerTeamName = curMatch.homePenScore > curMatch.awayPenScore ? curMatch.homeTeamName : curMatch.awayTeamName;
+                                            if (curMatch.nextMatchId && curMatch.winnerTeamName) {
+                                              for (const r of updatedRounds) {
+                                                const nextM = r.matches.find((nm) => nm.id === curMatch.nextMatchId);
+                                                if (nextM) {
+                                                  if (curMatch.nextMatchSlot === 'home') nextM.homeTeamName = curMatch.winnerTeamName;
+                                                  if (curMatch.nextMatchSlot === 'away') nextM.awayTeamName = curMatch.winnerTeamName;
+                                                }
+                                              }
+                                            }
+                                          }
+                                          const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
+                                          setTournament(updatedTour);
+                                          saveTournamentData(updatedTour);
+                                          const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
+                                          setSavedTournaments(updatedArchive);
+                                          saveArchiveTournaments(updatedArchive);
+                                        }}
+                                        placeholder="Pen"
+                                        className="w-10 h-7 text-center font-bold font-oswald text-xs border border-amber-400 rounded bg-white"
+                                      />
+                                    </div>
+                                  </div>
+                                )}
+
+                                {kMatch.winnerTeamName && (
+                                  <div className="text-center pt-1 border-t border-slate-100">
+                                    <span className="text-[11px] font-oswald font-bold text-emerald-700 flex items-center justify-center space-x-1">
+                                      <i className="fa-solid fa-crown text-amber-500"></i>
+                                      <span>ĐỘI ĐI TIẾP: {kMatch.winnerTeamName}</span>
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
