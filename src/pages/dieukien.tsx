@@ -57,49 +57,6 @@ const Dieukien: React.FC = () => {
               </div>
             </div>
           </CardSection>
-
-          {/* Fees & Payment */}
-          <CardSection title="B. PHÍ ĐIỀU LỆ GIẢI ĐẤU (50.000 VNĐ / VĐV)">
-            <p className="text-slate-700 text-sm mb-3">
-              Mỗi vận động viên tham gia đóng phí điều lệ <strong>50.000 VNĐ</strong> qua các cổng thanh toán sau:
-            </p>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                <span className="font-oswald font-bold text-sm text-emerald-800 uppercase block">
-                  1. NGÂN HÀNG VIETINBANK
-                </span>
-                <p className="text-xs text-slate-600">STK: <strong className="font-mono text-slate-900 text-sm">0886200436</strong></p>
-                <p className="text-xs text-slate-600">Chủ tài khoản: <strong>PHAN DINH LONG</strong></p>
-                <button
-                  onClick={() => copyToClipboard("0886200436", "vietin")}
-                  className="mt-2 px-3 py-1 text-xs rounded bg-white border border-slate-300 hover:bg-slate-100 font-medium text-slate-700 flex items-center space-x-1"
-                >
-                  <i className="fa-solid fa-copy"></i>
-                  <span>{copiedAccount === "vietin" ? "Đã sao chép!" : "Sao chép STK"}</span>
-                </button>
-              </div>
-
-              <div className="p-4 rounded-lg bg-slate-50 border border-slate-200 space-y-2">
-                <span className="font-oswald font-bold text-sm text-pink-800 uppercase block">
-                  2. VÍ ĐIỆN TỬ MOMO
-                </span>
-                <p className="text-xs text-slate-600">SĐT / Ví Momo: <strong className="font-mono text-slate-900 text-sm">0886200436</strong></p>
-                <p className="text-xs text-slate-600">Chủ tài khoản: <strong>PHAN DINH LONG</strong></p>
-                <button
-                  onClick={() => copyToClipboard("0886200436", "momo")}
-                  className="mt-2 px-3 py-1 text-xs rounded bg-white border border-slate-300 hover:bg-slate-100 font-medium text-slate-700 flex items-center space-x-1"
-                >
-                  <i className="fa-solid fa-copy"></i>
-                  <span>{copiedAccount === "momo" ? "Đã sao chép!" : "Sao chép SĐT"}</span>
-                </button>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-500 italic pt-2">
-              * Sau khi chuyển khoản, HLV vui lòng gửi ảnh chụp biên lai cho Admin Phan Long để hoàn tất thủ tục.
-            </p>
-          </CardSection>
         </div>
       </Body>
 
