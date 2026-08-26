@@ -78,6 +78,7 @@ export interface TournamentData {
 }
 
 const STORAGE_KEY = 'great_mates_tournament_data';
+const STORAGE_KEY_DTHEN = 'dthen_fco_tournament_data';
 const ARCHIVE_KEY = 'great_mates_tournaments_archive';
 
 // Berger Tables / Round Robin Scheduling Algorithm
@@ -216,7 +217,7 @@ export function calculateGroupStandings(group: Group): TeamStats[] {
   return standings;
 }
 
-// Storage helpers
+// Storage helpers for Sao Vàng Cup
 export function saveTournamentData(data: TournamentData | null): void {
   try {
     if (data) {
@@ -237,6 +238,31 @@ export function loadTournamentData(): TournamentData | null {
     }
   } catch (err) {
     console.error('Error loading tournament data', err);
+  }
+  return null;
+}
+
+// Storage helpers for ĐThén FCO
+export function saveDthenTournamentData(data: TournamentData | null): void {
+  try {
+    if (data) {
+      localStorage.setItem(STORAGE_KEY_DTHEN, JSON.stringify(data));
+    } else {
+      localStorage.removeItem(STORAGE_KEY_DTHEN);
+    }
+  } catch (err) {
+    console.error('Error saving Dthen tournament data', err);
+  }
+}
+
+export function loadDthenTournamentData(): TournamentData | null {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_DTHEN);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error('Error loading Dthen tournament data', err);
   }
   return null;
 }
@@ -584,3 +610,62 @@ export function createDefaultTournament(): TournamentData {
     isVisible: true,
   };
 }
+
+// Generate default preset data for ĐThén FCO Mùa 1
+export function createDefaultDthenTournament(): TournamentData {
+  const groupNames = ['BẢNG A', 'BẢNG B', 'BẢNG C', 'BẢNG D'];
+  const defaultCoaches = [
+    [
+      { id: 'dt1', name: 'HLV ĐThén (BTC)', club: 'Real Madrid' },
+      { id: 'dt2', name: 'HLV Minh Quân', club: 'Man City' },
+      { id: 'dt3', name: 'HLV Hoàng Long', club: 'Chelsea' },
+      { id: 'dt4', name: 'HLV Tuấn Anh', club: 'Arsenal' },
+      { id: 'dt5', name: 'HLV Văn Nam', club: 'Liverpool' },
+    ],
+    [
+      { id: 'dt6', name: 'HLV Hải Đăng', club: 'Bayern Munich' },
+      { id: 'dt7', name: 'HLV Quốc Cường', club: 'Barcelona' },
+      { id: 'dt8', name: 'HLV Thanh Tùng', club: 'Juventus' },
+      { id: 'dt9', name: 'HLV Bảo Long', club: 'Inter Milan' },
+      { id: 'dt10', name: 'HLV Trọng Nghĩa', club: 'PSG' },
+    ],
+    [
+      { id: 'dt11', name: 'HLV Hữu Đạt', club: 'Man United' },
+      { id: 'dt12', name: 'HLV Văn Đức', club: 'Tottenham' },
+      { id: 'dt13', name: 'HLV Thế Anh', club: 'Dortmund' },
+      { id: 'dt14', name: 'HLV Hoàng Phúc', club: 'Atletico' },
+      { id: 'dt15', name: 'HLV Gia Huy', club: 'AS Roma' },
+    ],
+    [
+      { id: 'dt16', name: 'HLV Tấn Tài', club: 'Napoli' },
+      { id: 'dt17', name: 'HLV Quang Minh', club: 'Leverkusen' },
+      { id: 'dt18', name: 'HLV Thành Đạt', club: 'AC Milan' },
+      { id: 'dt19', name: 'HLV Nhật Minh', club: 'Sevilla' },
+      { id: 'dt20', name: 'HLV Văn Khánh', club: 'Aston Villa' },
+    ],
+  ];
+
+  const groups: Group[] = groupNames.map((name, idx) => {
+    const teams = defaultCoaches[idx];
+    const matches = generateRoundRobinMatches(teams, 'double');
+    return {
+      id: `dthen_group_${idx + 1}`,
+      name,
+      teams,
+      matches,
+    };
+  });
+
+  return {
+    id: 'tour_dthen_mua_1',
+    tournamentName: 'ĐTHÉN FCO ™',
+    season: 'MÙA 1',
+    numGroups: 4,
+    teamsPerGroup: 5,
+    legType: 'double',
+    groups,
+    createdAt: new Date().toISOString(),
+    isVisible: true,
+  };
+}
+

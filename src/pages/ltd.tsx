@@ -299,28 +299,33 @@ const Ltd: React.FC = () => {
                         </span>
                       </div>
 
-                      {/* Final Match Card */}
+                      {/* Final Trophy Box with Golden Floating Animation */}
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-amber-500/30 animate-float-slow">
+                        <i className="fa-solid fa-trophy drop-shadow-md"></i>
+                      </div>
+
+                      {/* Final Match Card with Golden Aura */}
                       {tournament.knockoutStage.rounds[2]?.matches.map((m) => (
-                        <div key={m.id} className="w-full p-4 rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50/60 border-2 border-amber-400 shadow-xl space-y-2.5">
+                        <div key={m.id} className="w-full p-4 rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50/70 border-2 border-amber-400 shadow-xl neon-ring-pulse card-hover-fx space-y-2.5">
                           <div className="flex items-center justify-between text-[11px] font-oswald text-amber-900 border-b border-amber-200 pb-1">
                             <span className="font-black flex items-center space-x-1">
-                              <i className="fa-solid fa-trophy text-amber-500"></i>
+                              <i className="fa-solid fa-crown text-amber-500 animate-bounce"></i>
                               <span>TRANH NGÔI VƯƠNG</span>
                             </span>
                             <span className="bg-amber-100 px-2 py-0.5 rounded font-bold">{m.played ? 'KẾT THÚC' : 'SẮP DIỄN RA'}</span>
                           </div>
-                          <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg ${m.winnerTeamName === m.homeTeamName ? 'bg-amber-400 text-slate-950 font-black shadow-xs' : 'bg-white text-slate-800 border border-slate-200'}`}>
+                          <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg transition-all ${m.winnerTeamName === m.homeTeamName ? 'bg-amber-400 text-slate-950 font-black shadow-xs scale-102' : 'bg-white text-slate-800 border border-slate-200'}`}>
                             <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
                             <span className="font-oswald font-bold text-base">{m.homeScore !== null ? m.homeScore : '-'}</span>
                           </div>
-                          <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg ${m.winnerTeamName === m.awayTeamName ? 'bg-amber-400 text-slate-950 font-black shadow-xs' : 'bg-white text-slate-800 border border-slate-200'}`}>
+                          <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg transition-all ${m.winnerTeamName === m.awayTeamName ? 'bg-amber-400 text-slate-950 font-black shadow-xs scale-102' : 'bg-white text-slate-800 border border-slate-200'}`}>
                             <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
                             <span className="font-oswald font-bold text-base">{m.awayScore !== null ? m.awayScore : '-'}</span>
                           </div>
 
                           {m.winnerTeamName && (
                             <div className="text-center pt-2 border-t border-amber-200">
-                              <span className="text-xs font-oswald font-black text-amber-900 block uppercase tracking-wider">
+                              <span className="text-xs font-oswald font-black text-amber-900 block uppercase tracking-wider animate-pulse">
                                 👑 NHÀ VÔ ĐỊCH: {m.winnerTeamName}
                               </span>
                             </div>
@@ -542,7 +547,7 @@ const Ltd: React.FC = () => {
               </div>
             </div>
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredMatches.map((match) => {
                 const home = teamMap[match.homeTeamId] || { name: match.homeTeamId };
                 const away = teamMap[match.awayTeamId] || { name: match.awayTeamId };
@@ -550,65 +555,54 @@ const Ltd: React.FC = () => {
                 return (
                   <div
                     key={match.id}
-                    className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 hover:bg-white transition-all flex flex-col sm:flex-row items-center justify-between gap-4"
+                    className="p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-400 hover:shadow-md card-hover-fx transition-all flex flex-col justify-between space-y-3"
                   >
-                    <span className="px-2.5 py-0.5 rounded bg-slate-200 text-slate-700 font-oswald text-xs font-bold uppercase flex-shrink-0">
-                      VÒNG {match.round}
-                    </span>
+                    <div className="flex items-center justify-between text-[11px] font-fco font-bold uppercase text-slate-400 border-b border-slate-100 pb-1">
+                      <span>VÒNG {match.round}</span>
+                      <span
+                        className={
+                          match.played
+                            ? "text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded"
+                            : "text-slate-400 bg-slate-100 px-2 py-0.5 rounded"
+                        }
+                      >
+                        {match.played ? "ĐÃ KẾT THÚC" : "CHƯA ĐẤU"}
+                      </span>
+                    </div>
 
-                    <div className="flex-1 flex items-center justify-center space-x-3 sm:space-x-6 w-full max-w-xl">
-                      <div className="flex-1 text-right">
-                        <span className="font-bold text-sm text-slate-900 block leading-tight">
-                          {home.name}
-                        </span>
+                    <div className="flex items-center justify-between gap-3 text-xs sm:text-sm font-semibold">
+                      <div className="flex-1 text-right truncate">
+                        <span className="text-slate-900 block truncate">{home.name}</span>
                         {home.club && (
-                          <span className="text-[11px] text-slate-500 font-medium block">
+                          <span className="text-[10px] text-slate-400 font-normal block truncate">
                             {home.club}
                           </span>
                         )}
                       </div>
 
-                      <div className="px-4 py-1.5 rounded-lg bg-white border border-slate-200 shadow-sm text-center min-w-[80px]">
-                        {match.played ? (
-                          <span className="font-oswald font-bold text-xl text-emerald-800">
-                            {match.homeScore} - {match.awayScore}
-                          </span>
-                        ) : (
-                          <span className="text-xs font-oswald font-semibold text-slate-400 uppercase">
-                            VS
-                          </span>
-                        )}
+                      <div className="px-3.5 py-1.5 rounded-xl bg-slate-900 text-white font-black font-oswald text-sm sm:text-base flex-shrink-0 min-w-[64px] text-center shadow-xs">
+                        {match.played
+                          ? `${match.homeScore ?? 0} - ${match.awayScore ?? 0}`
+                          : "VS"}
                       </div>
 
-                      <div className="flex-1 text-left">
-                        <span className="font-bold text-sm text-slate-900 block leading-tight">
-                          {away.name}
-                        </span>
+                      <div className="flex-1 text-left truncate">
+                        <span className="text-slate-900 block truncate">{away.name}</span>
                         {away.club && (
-                          <span className="text-[11px] text-slate-500 font-medium block">
+                          <span className="text-[10px] text-slate-400 font-normal block truncate">
                             {away.club}
                           </span>
                         )}
                       </div>
                     </div>
-
-                    <div className="text-right flex-shrink-0">
-                      {match.played ? (
-                        <span className="text-[11px] text-emerald-700 font-bold flex items-center space-x-1">
-                          <i className="fa-solid fa-circle-check"></i>
-                          <span>Đã đấu</span>
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 font-medium">Chưa đấu</span>
-                      )}
-                    </div>
                   </div>
                 );
               })}
-              </div>
             </div>
-          </>
-        )}
+          </div>
+        </>
+      )}
+
       </div>
     </Body>
 

@@ -9,7 +9,51 @@ const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const navGroups = [
+  // Hide entire navbar when on the Home Hub page (/)
+  if (location.pathname === "/") {
+    return null;
+  }
+
+  const isDthen = location.pathname.startsWith("/dthen");
+
+  // Navigation configuration for ĐThén FCO
+  const dthenNavGroups = [
+    {
+      title: "NỘI QUY GIẢI ĐẤU",
+      pathRoot: "/dthen/noiquy",
+      items: [
+        { label: "NỘI QUY THI ĐẤU", path: "/dthen/noiquy" },
+        { label: "ĐIỀU KIỆN THAM DỰ", path: "/dthen/dieukienthamdu" },
+        { label: "QUY ĐỊNH ĐỘI HÌNH", path: "/dthen/quydinh" },
+      ],
+    },
+    {
+      title: "THỂ THỨC & LỊCH ĐẤU",
+      pathRoot: "/dthen/thethuc",
+      items: [
+        { label: "LỊCH ĐẤU & BXH", path: "/dthen/ltd" },
+        { label: "THỂ THỨC THI ĐẤU", path: "/dthen/thethuc" },
+        { label: "CƠ CẤU GIẢI THƯỞNG", path: "/dthen/giaithuong" },
+      ],
+    },
+    {
+      title: "PHÒNG TRUYỀN THỐNG",
+      pathRoot: "/dthen/xephang",
+      items: [
+        { label: "BẢNG VÀNG VÔ ĐỊCH", path: "/dthen/xephang" },
+      ],
+    },
+    {
+      title: "BAN TỔ CHỨC",
+      pathRoot: "/dthen/admin",
+      items: [
+        { label: "BAN TỔ CHỨC", path: "/dthen/admin" },
+      ],
+    },
+  ];
+
+  // Navigation configuration for Sao Vàng Cup
+  const saoVangNavGroups = [
     {
       title: "NỘI QUY GIẢI ĐẤU",
       pathRoot: "/noiquy",
@@ -33,6 +77,7 @@ const Navbar: React.FC = () => {
       pathRoot: "/xephang",
       items: [
         { label: "BẢNG VÀNG VÔ ĐỊCH", path: "/xephang" },
+        { label: "TOP CÁC MÙA GIẢI", path: "/topcacmua" },
       ],
     },
     {
@@ -45,44 +90,70 @@ const Navbar: React.FC = () => {
     },
   ];
 
+  const currentNavGroups = isDthen ? dthenNavGroups : saoVangNavGroups;
+  const currentHomeLink = isDthen ? "/dthen" : "/saovang";
+  const tournamentTitle = isDthen ? "ĐTHÉN" : "SAO VÀNG";
+  const tournamentSuffix = isDthen ? "FCO™" : "CUP™";
+
   return (
-    <header className="sticky top-0 z-50 bg-white/95 border-b border-slate-200/90 backdrop-blur-md shadow-sm">
-      {/* Top Brand Banner */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex items-center justify-between gap-4">
-        <Link to="/" className="flex items-center space-x-3 group flex-shrink-0">
-          <div className="w-11 h-11 sm:w-13 sm:h-13 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-            <img 
-              src={require("../img/logo02.svg").default} 
-              alt="Sao Vàng Logo" 
-              className="w-full h-full object-contain"
-            />
+    <header className="sticky top-0 z-50 bg-white/95 border-b border-slate-200 backdrop-blur-md shadow-xs">
+      <div className="w-full max-w-[1480px] mx-auto px-3 sm:px-4 lg:px-6 py-2 flex items-center justify-between gap-2 xl:gap-4">
+        {/* Left: Tournament Identity Brand Logo */}
+        <Link
+          to={currentHomeLink}
+          className="flex items-center space-x-2 sm:space-x-2.5 group flex-shrink-0"
+          title="Trang Chủ Giải Đấu"
+        >
+          <div className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
+            {isDthen ? (
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex items-center justify-center text-base shadow-md">
+                <i className="fa-solid fa-trophy text-amber-400"></i>
+              </div>
+            ) : (
+              <img
+                src={require("../img/logo02.svg").default}
+                alt="Sao Vàng Logo"
+                className="w-full h-full object-contain"
+              />
+            )}
           </div>
           <div className="whitespace-nowrap flex-shrink-0">
-            <span className="font-oswald text-lg sm:text-xl font-bold uppercase tracking-wider text-slate-900 block leading-tight group-hover:text-emerald-700 transition-colors whitespace-nowrap">
-              SAO VÀNG <span className="text-amber-500">CUP™</span>
+            <span
+              className={`font-oswald text-sm sm:text-base font-bold uppercase tracking-wider text-slate-900 block leading-tight ${
+                isDthen ? "group-hover:text-blue-700" : "group-hover:text-emerald-700"
+              } transition-colors whitespace-nowrap`}
+            >
+              {tournamentTitle} <span className="text-amber-500">{tournamentSuffix}</span>
             </span>
-            <span className="text-[10px] text-slate-500 font-medium tracking-widest uppercase block whitespace-nowrap">
-              Giải Đấu Cộng Đồng FC Online
+            <span className="text-[8px] sm:text-[9px] text-slate-400 font-semibold tracking-widest uppercase block whitespace-nowrap">
+              GIẢI ĐẤU FC ONLINE
             </span>
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center space-x-1 xl:space-x-2 flex-shrink-0">
+        {/* Center: Main Navigation Menu */}
+        <nav className="hidden lg:flex items-center space-x-0.5 xl:space-x-1 flex-shrink-0">
+          {/* Main Tournament Home Link */}
           <Link
-            to="/"
-            className={`px-3 py-1.5 rounded-lg font-oswald text-xs xl:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center justify-center ${
-              location.pathname === "/"
-                ? "bg-emerald-700 text-white shadow-xs"
-                : "text-slate-700 hover:text-emerald-800 hover:bg-slate-100"
+            to={currentHomeLink}
+            className={`px-2 xl:px-2.5 py-1.5 rounded-xl font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center space-x-1 ${
+              location.pathname === currentHomeLink
+                ? isDthen
+                  ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs"
+                  : "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
+                : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
             }`}
           >
-            TRANG CHỦ
+            <i className={`fa-solid fa-house text-[10px] ${isDthen ? 'text-blue-600' : 'text-emerald-600'}`}></i>
+            <span>TRANG CHỦ</span>
           </Link>
 
-          {navGroups.map((group, idx) => {
+          {/* Navigation Dropdown Groups */}
+          {currentNavGroups.map((group, idx) => {
             const hasMultipleItems = group.items.length > 1;
-            const isActive = group.items.some((i) => i.path === location.pathname) || group.pathRoot === location.pathname;
+            const isActive =
+              group.items.some((i) => i.path === location.pathname) ||
+              group.pathRoot === location.pathname;
             const targetPath = group.items[0]?.path || group.pathRoot;
 
             if (!hasMultipleItems) {
@@ -90,10 +161,12 @@ const Navbar: React.FC = () => {
                 <Link
                   key={idx}
                   to={targetPath}
-                  className={`px-3 py-1.5 rounded-lg font-oswald text-xs xl:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center justify-center ${
+                  className={`px-2 xl:px-2.5 py-1.5 rounded-xl font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center justify-center ${
                     isActive
-                      ? "bg-emerald-700 text-white shadow-xs"
-                      : "text-slate-700 hover:text-emerald-800 hover:bg-slate-100"
+                      ? isDthen
+                        ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs"
+                        : "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
                   {group.title}
@@ -105,20 +178,24 @@ const Navbar: React.FC = () => {
               <div key={idx} className="relative group/menu">
                 <Link
                   to={targetPath}
-                  className={`px-3 py-1.5 rounded-lg font-oswald text-xs xl:text-sm font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center justify-center space-x-1 ${
+                  className={`px-2 xl:px-2.5 py-1.5 rounded-xl font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center justify-center space-x-1 ${
                     isActive
-                      ? "bg-emerald-700 text-white shadow-xs"
-                      : "text-slate-700 hover:text-emerald-800 hover:bg-slate-100"
+                      ? isDthen
+                        ? "bg-blue-50 text-blue-700 border border-blue-200 shadow-2xs"
+                        : "bg-emerald-50 text-emerald-800 border border-emerald-200 shadow-2xs"
+                      : "text-slate-700 hover:text-slate-900 hover:bg-slate-100"
                   }`}
                 >
                   <span className="whitespace-nowrap">{group.title}</span>
-                  <i className={`fa-solid fa-chevron-down text-[8px] ml-0.5 transition-transform group-hover/menu:rotate-180 ${
-                    isActive ? "opacity-90 text-white" : "opacity-60"
-                  }`}></i>
+                  <i
+                    className={`fa-solid fa-chevron-down text-[7px] ml-0.5 transition-transform group-hover/menu:rotate-180 ${
+                      isActive ? "text-emerald-700 opacity-90" : "opacity-50"
+                    }`}
+                  ></i>
                 </Link>
 
-                {/* Dropdown Menu */}
-                <div className="absolute top-full left-0 pt-1.5 w-56 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-200 z-50">
+                {/* Dropdown Menu Popup */}
+                <div className="absolute top-full left-0 pt-1.5 w-52 opacity-0 invisible group-hover/menu:opacity-100 group-hover/menu:visible transition-all duration-180 z-50">
                   <div className="p-1.5 rounded-2xl bg-white border border-slate-200 shadow-xl space-y-0.5">
                     {group.items.map((item, itemIdx) => {
                       const isItemActive = location.pathname === item.path;
@@ -126,10 +203,14 @@ const Navbar: React.FC = () => {
                         <Link
                           key={itemIdx}
                           to={item.path}
-                          className={`block px-3.5 py-2 rounded-xl font-oswald text-xs uppercase tracking-wider font-semibold transition-colors ${
+                          className={`block px-3 py-2 rounded-xl font-oswald text-xs uppercase tracking-wider font-semibold transition-colors ${
                             isItemActive
-                              ? "bg-emerald-700 text-white font-bold"
-                              : "text-slate-700 hover:bg-slate-50 hover:text-emerald-700"
+                              ? isDthen
+                                ? "bg-blue-700 text-white font-bold"
+                                : "bg-emerald-700 text-white font-bold"
+                              : isDthen
+                              ? "text-slate-700 hover:bg-blue-50 hover:text-blue-700"
+                              : "text-slate-700 hover:bg-emerald-50 hover:text-emerald-700"
                           }`}
                         >
                           {item.label}
@@ -141,41 +222,80 @@ const Navbar: React.FC = () => {
               </div>
             );
           })}
+        </nav>
 
-          {/* Quick Access to Tournament Management */}
+        {/* Right: Quick Action - Admin Portal & Return to Hub */}
+        <div className="hidden lg:flex items-center space-x-1.5 flex-shrink-0">
           <Link
             to="/quanlygiaidau"
-            className="ml-2 px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-oswald text-xs xl:text-sm font-black uppercase tracking-wider transition-all shadow-xs hover:scale-105 inline-flex items-center justify-center space-x-1.5 whitespace-nowrap flex-shrink-0"
-            title="Quản trị giải đấu"
+            className="px-2.5 xl:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center space-x-1.5 shadow-sm hover:scale-105 btn-shimmer"
+            title="Quản Trị Giải Đấu BTC"
           >
-            <i className="fa-solid fa-lock text-[10px]"></i>
-            <span>BTC Portal</span>
+            <i className="fa-solid fa-lock text-[9px]"></i>
+            <span>BTC ADMIN</span>
           </Link>
-        </nav>
+
+          <Link
+            to="/"
+            className="px-2.5 xl:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center space-x-1.5 shadow-xs hover:scale-105 btn-shimmer"
+            title="Quay lại Cổng Chọn Giải Đấu (Hub)"
+          >
+            <i className="fa-solid fa-layer-group text-[9px] text-amber-400"></i>
+            <span>HUB GIẢI ĐẤU</span>
+          </Link>
+        </div>
+
 
         {/* Mobile menu toggle */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           aria-label="Toggle Menu"
-          className="lg:hidden p-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none"
+          className="lg:hidden p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none"
         >
           <i className={`fa-solid ${mobileMenuOpen ? "fa-xmark" : "fa-bars"} text-lg`}></i>
         </button>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-3 shadow-lg">
+        <div className="lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-2.5 shadow-lg">
           <Link
             to="/"
-            className={`block px-3 py-2 rounded-lg font-oswald text-sm font-bold uppercase ${
-              location.pathname === "/" ? "bg-emerald-700 text-white" : "text-slate-700"
-            }`}
+            className="block px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-slate-900 flex items-center justify-between"
           >
-            TRANG CHỦ
+            <span className="flex items-center">
+              <i className="fa-solid fa-layer-group mr-2 text-amber-400"></i>
+              HUB CHỌN GIẢI ĐẤU
+            </span>
+            <i className="fa-solid fa-arrow-right text-[10px]"></i>
           </Link>
 
-          {navGroups.map((g, idx) => {
+          <Link
+            to="/quanlygiaidau"
+            className="block px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-between shadow-xs"
+          >
+            <span className="flex items-center">
+              <i className="fa-solid fa-lock mr-2"></i>
+              QUẢN TRỊ BTC (ADMIN PORTAL)
+            </span>
+            <i className="fa-solid fa-arrow-right text-[10px]"></i>
+          </Link>
+
+          <Link
+            to={currentHomeLink}
+            className={`block px-3.5 py-2 rounded-xl font-oswald text-xs font-bold uppercase ${
+              location.pathname === currentHomeLink
+                ? isDthen
+                  ? "bg-blue-700 text-white"
+                  : "bg-emerald-700 text-white"
+                : "text-slate-700 bg-slate-50"
+            }`}
+          >
+            <i className="fa-solid fa-house mr-2 text-amber-500"></i>
+            TRANG CHỦ ({tournamentTitle} {tournamentSuffix})
+          </Link>
+
+          {currentNavGroups.map((g, idx) => {
             const hasMultiple = g.items.length > 1;
             const targetPath = g.items[0]?.path || g.pathRoot;
 
@@ -184,9 +304,11 @@ const Navbar: React.FC = () => {
                 <Link
                   key={idx}
                   to={targetPath}
-                  className={`block px-3 py-2 rounded-lg font-oswald text-sm font-bold uppercase border-t border-slate-100 pt-2 ${
+                  className={`block px-3.5 py-2 rounded-xl font-oswald text-xs font-bold uppercase border-t border-slate-100 pt-2 ${
                     location.pathname === targetPath
-                      ? "text-emerald-700 bg-emerald-50"
+                      ? isDthen
+                        ? "text-blue-700 bg-blue-50"
+                        : "text-emerald-700 bg-emerald-50"
                       : "text-slate-700"
                   }`}
                 >
@@ -204,9 +326,11 @@ const Navbar: React.FC = () => {
                   <Link
                     key={iIdx}
                     to={item.path}
-                    className={`block px-4 py-2 rounded-lg font-oswald text-xs uppercase font-medium ${
+                    className={`block px-4 py-1.5 rounded-lg font-oswald text-xs uppercase font-medium ${
                       location.pathname === item.path
-                        ? "bg-emerald-50 text-emerald-700 font-bold"
+                        ? isDthen
+                          ? "bg-blue-50 text-blue-700 font-bold"
+                          : "bg-emerald-50 text-emerald-700 font-bold"
                         : "text-slate-600 hover:bg-slate-50"
                     }`}
                   >
@@ -216,16 +340,9 @@ const Navbar: React.FC = () => {
               </div>
             );
           })}
-
-          <Link
-            to="/quanlygiaidau"
-            className="block text-center py-2.5 rounded-lg bg-amber-500 text-white font-oswald text-xs font-black uppercase tracking-wider mt-2 shadow-sm"
-          >
-            <i className="fa-solid fa-lock mr-1.5"></i>
-            BTC Portal (Quản trị)
-          </Link>
         </div>
       )}
+
     </header>
   );
 };

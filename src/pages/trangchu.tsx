@@ -84,17 +84,17 @@ const Trangchu: React.FC = () => {
           />
 
           {/* Top Multi-Color Neon LED Beam */}
-          <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-[#00e575] via-[#0ea5e9] to-[#f59e0b]" />
+          <div className="absolute top-0 left-0 right-0 h-[4px] bg-gradient-to-r from-[#00e575] via-[#0ea5e9] to-[#f59e0b] animate-gradient-flow" />
 
           {/* Header */}
           <div className="border-b border-emerald-100 pb-6 space-y-2.5 relative z-10">
-            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-fco font-bold uppercase tracking-wider shadow-2xs">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-emerald-100/80 border border-emerald-300 text-emerald-900 text-xs font-fco font-bold uppercase tracking-wider shadow-2xs transition-transform hover:scale-105">
               <i className="fa-solid fa-crown text-amber-500"></i>
               <span>WELCOME TO SAO VÀNG CUP™</span>
             </div>
             
             <h2 className="font-fco text-2xl sm:text-4xl lg:text-5xl font-black uppercase text-slate-900 tracking-tight">
-              GIỚI THIỆU VỀ <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-teal-600 to-amber-600">SAO VÀNG CUP™</span>
+              GIỚI THIỆU VỀ <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-700 via-teal-600 to-amber-600 animate-gradient-flow">SAO VÀNG CUP™</span>
             </h2>
             
             <p className="text-emerald-800 font-fco font-bold text-xs sm:text-base tracking-widest uppercase">
@@ -105,17 +105,17 @@ const Trangchu: React.FC = () => {
           {/* Main Story Paragraphs */}
           <div className="space-y-4 text-slate-700 text-sm sm:text-base leading-relaxed relative z-10">
             <p>
-              <strong className="text-slate-900 font-bold">GIẢI BÓNG ĐÁ THỂ THAO ĐIỆN TỬ FC ONLINE SAO VÀNG CUP™</strong> là sân chơi thi đấu trực tuyến uy tín dành cho cộng đồng đam mê <strong className="text-emerald-800 font-bold">FC Online</strong>. Đây là nơi các Huấn luyện viên (HLV) cùng nhau so tài chiến thuật, tôi luyện bản lĩnh và chinh phục những trận cầu rực lửa trên sân cỏ ảo.
+              <strong className="text-slate-900 font-bold">GIẢI BÓNG ĐÁ THỂ THAO ĐIỆN TỬ FC ONLINE SAO VÀNG CUP™</strong> là giải đấu giao lưu trực tuyến định kỳ được khởi xướng bởi <strong className="text-emerald-800 font-bold">Admin Phan Long</strong>. Đây là nơi quy tụ những Huấn luyện viên (HLV) tài năng, cùng so tài kỹ năng, thử nghiệm đội hình và khẳng định bản lĩnh chiến thuật trên đấu trường <strong className="text-emerald-800 font-bold">FC Online</strong>.
             </p>
             <p>
-              Không chỉ dừng lại ở một giải đấu thể thao điện tử, <strong className="text-amber-700 font-bold">Sao Vàng Cup™</strong> là nhịp cầu gắn kết cộng đồng game thủ văn minh, đoàn kết và nhiệt huyết. Mỗi trận đấu là một cuộc đấu trí chiến thuật đỉnh cao, nơi từng đường chuyền, pha xử lý và sự quyết đoán đều có thể định đoạt ngôi vương.
+              Hơn cả một sân chơi thể thao điện tử, <strong className="text-emerald-800 font-bold">Sao Vàng Cup™</strong> là không gian kết nối những người có chung tình yêu với trái bóng tròn, xây dựng một cộng đồng game thủ văn minh, đoàn kết và nhiệt huyết. Mỗi trận đấu là một câu chuyện chiến thuật, nơi từng pha xử lý đều có thể viết nên lịch sử.
             </p>
           </div>
 
           {/* 3 Core Pillars - FC Online Event Colorful Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2 relative z-10">
             {/* Card 1 */}
-            <div className="p-6 rounded-2xl bg-white border border-emerald-200/90 shadow-sm space-y-3 hover:border-emerald-400 hover:shadow-md transition-all group">
+            <div className="p-6 rounded-2xl bg-white border border-emerald-200/90 shadow-sm space-y-3 hover:border-emerald-400 hover:shadow-lg card-hover-fx transition-all group">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/20 group-hover:scale-110 transition-transform">
                 <i className="fa-solid fa-scale-balanced"></i>
               </div>
@@ -123,12 +123,12 @@ const Trangchu: React.FC = () => {
                 MINH BẠCH & CÔNG BẰNG
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Hệ thống luật thi đấu chuẩn hóa, trọng tài giám sát trận đấu chặt chẽ và kết quả được công khai tức thì.
+                Hệ thống luật thi đấu rõ ràng, trọng tài giám sát chặt chẽ và kết quả được cập nhật công khai, chính xác theo thời gian thực.
               </p>
             </div>
 
             {/* Card 2 */}
-            <div className="p-6 rounded-2xl bg-white border border-sky-200/90 shadow-sm space-y-3 hover:border-sky-400 hover:shadow-md transition-all group">
+            <div className="p-6 rounded-2xl bg-white border border-sky-200/90 shadow-sm space-y-3 hover:border-sky-400 hover:shadow-lg card-hover-fx transition-all group">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 text-white flex items-center justify-center text-xl shadow-md shadow-sky-500/20 group-hover:scale-110 transition-transform">
                 <i className="fa-solid fa-chess"></i>
               </div>
@@ -136,12 +136,12 @@ const Trangchu: React.FC = () => {
                 CHIẾN THUẬT ĐỈNH CAO
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Sân chơi thể hiện tư duy xây dựng đội hình, vận hành sơ đồ và khả năng điều chỉnh trận đấu sắc bén.
+                Nơi thử thách tư duy sắp xếp đội hình, vận hành chiến thuật và khả năng đọc trận đấu linh hoạt của từng HLV.
               </p>
             </div>
 
             {/* Card 3 */}
-            <div className="p-6 rounded-2xl bg-white border border-amber-200/90 shadow-sm space-y-3 hover:border-amber-400 hover:shadow-md transition-all group">
+            <div className="p-6 rounded-2xl bg-white border border-amber-200/90 shadow-sm space-y-3 hover:border-amber-400 hover:shadow-lg card-hover-fx transition-all group">
               <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-xl shadow-md shadow-amber-500/20 group-hover:scale-110 transition-transform">
                 <i className="fa-solid fa-handshake-angle"></i>
               </div>
@@ -149,26 +149,26 @@ const Trangchu: React.FC = () => {
                 GẮN KẾT CỘNG ĐỒNG
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Xây dựng môi trường giao lưu văn minh, tôn trọng đối thủ và lan tỏa tinh thần Fair-play rực lửa.
+                Giao lưu học hỏi, tôn trọng đối thủ và lan tỏa tinh thần thể thao điện tử đẹp đẽ đến cộng đồng FC Online.
               </p>
             </div>
           </div>
 
           {/* Arena of Champions - Bright Turf Callout */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white p-6 sm:p-8 text-center shadow-md">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#031c15] via-[#052b20] to-[#031a14] border border-emerald-500/30 text-white p-6 sm:p-8 text-center shadow-md card-hover-fx">
             <div className="relative z-10 space-y-2.5 max-w-xl mx-auto">
-              <div className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full bg-emerald-950/80 border border-emerald-400/50 text-emerald-300 text-[11px] font-fco font-bold uppercase tracking-wider">
+              <div className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full bg-emerald-900/80 border border-emerald-400/50 text-emerald-300 text-[11px] font-fco font-bold uppercase tracking-wider">
                 <span className="w-1.5 h-1.5 rounded-full bg-[#00e575] animate-ping"></span>
-                <span>CHINH PHỤC NGÔI VƯƠNG</span>
+                <span>ĐẤU TRƯỜNG VINH QUANG</span>
               </div>
 
               <h3 className="font-fco font-black text-lg sm:text-xl md:text-2xl uppercase tracking-wide text-white drop-shadow">
-                XÂY DỰNG ĐỘI HÌNH – CHINH PHỤC ĐỐI THỦ – VIẾT TÊN MÌNH LÊN BẢNG VÀNG!
+                BƯỚC VÀO SÂN CỎ – THỂ HIỆN BẢN LĨNH – CHẠM TAY VÀO CHIẾC CÚP VÀNG!
               </h3>
 
-              <p className="text-xs sm:text-sm text-emerald-300 font-fco font-semibold tracking-wide flex items-center justify-center space-x-1.5 pt-1">
+              <p className="text-xs sm:text-sm text-emerald-300/90 font-fco font-semibold tracking-wide flex items-center justify-center space-x-1.5 pt-1">
                 <span>🔥</span>
-                <span>Bạn đã sẵn sàng bước vào sân đấu và trở thành nhà vô địch tiếp theo?</span>
+                <span>Bạn đã sẵn sàng để trở thành Nhà vô địch tiếp theo của Sao Vàng Cup?</span>
                 <span>🔥</span>
               </p>
             </div>
@@ -188,7 +188,7 @@ const Trangchu: React.FC = () => {
             {handbookSections.map((item, idx) => (
               <div
                 key={idx}
-                className="p-6 rounded-2xl portal-card flex flex-col justify-between hover:border-emerald-500 hover:shadow-md transition-all group"
+                className="p-6 rounded-2xl portal-card flex flex-col justify-between hover:border-emerald-500 hover:shadow-lg card-hover-fx transition-all group"
               >
                 <div>
                   <div className="flex items-center space-x-3.5 mb-3">
@@ -206,7 +206,7 @@ const Trangchu: React.FC = () => {
 
                 <Link
                   to={item.link}
-                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-oswald text-xs font-bold uppercase tracking-wider text-center transition-all flex items-center justify-center space-x-1.5 shadow-sm shadow-emerald-800/20 group-hover:shadow-emerald-700/40"
+                  className="w-full py-2.5 px-4 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-oswald text-xs font-bold uppercase tracking-wider text-center transition-all flex items-center justify-center space-x-1.5 shadow-sm shadow-emerald-800/20 group-hover:shadow-emerald-700/40 btn-shimmer"
                 >
                   <span>{item.btnText}</span>
                   <i className="fa-solid fa-arrow-right text-[10px] transform group-hover:translate-x-1 transition-transform"></i>

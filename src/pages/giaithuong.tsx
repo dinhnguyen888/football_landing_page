@@ -18,9 +18,9 @@ const Giaithuong: React.FC = () => {
           <CardSection badgeNumber="🏆" title="BẢNG PHÂN PHỐI GIẢI THƯỞNG">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Champion */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-50 to-amber-100/40 border border-amber-300 shadow-sm flex items-center justify-between hover:shadow-md transition-all group">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-amber-500/15 via-amber-50 to-amber-100/50 border-2 border-amber-400 shadow-md flex items-center justify-between hover:shadow-xl card-hover-fx transition-all group">
                 <div className="flex items-center space-x-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-xl shadow-sm shadow-amber-500/40 group-hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-xl shadow-md shadow-amber-500/40 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                     <i className="fa-solid fa-trophy"></i>
                   </div>
                   <div>
@@ -32,9 +32,9 @@ const Giaithuong: React.FC = () => {
               </div>
 
               {/* Runner Up */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-100 via-slate-50 to-slate-200/50 border border-slate-300 shadow-sm flex items-center justify-between hover:shadow-md transition-all group">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-slate-100 via-white to-slate-200/60 border border-slate-300 shadow-sm flex items-center justify-between hover:shadow-xl card-hover-fx transition-all group">
                 <div className="flex items-center space-x-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center text-xl shadow-sm shadow-slate-500/30 group-hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-400 to-slate-600 text-white flex items-center justify-center text-xl shadow-md shadow-slate-500/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                     <i className="fa-solid fa-medal"></i>
                   </div>
                   <div>
@@ -46,9 +46,9 @@ const Giaithuong: React.FC = () => {
               </div>
 
               {/* 3rd Place */}
-              <div className="p-5 rounded-2xl bg-gradient-to-br from-orange-500/10 via-orange-50 to-orange-100/40 border border-orange-300 shadow-sm flex items-center justify-between hover:shadow-md transition-all group">
+              <div className="p-5 rounded-2xl bg-gradient-to-br from-orange-500/15 via-white to-orange-100/50 border border-orange-300 shadow-sm flex items-center justify-between hover:shadow-xl card-hover-fx transition-all group">
                 <div className="flex items-center space-x-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center text-xl shadow-sm shadow-orange-500/40 group-hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-400 to-orange-600 text-white flex items-center justify-center text-xl shadow-md shadow-orange-500/40 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                     <i className="fa-solid fa-award"></i>
                   </div>
                   <div>
@@ -60,9 +60,9 @@ const Giaithuong: React.FC = () => {
               </div>
 
               {/* 4th Place */}
-              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200/90 shadow-sm flex items-center justify-between hover:shadow-md transition-all group">
+              <div className="p-5 rounded-2xl bg-white border border-slate-200/90 shadow-sm flex items-center justify-between hover:shadow-xl card-hover-fx transition-all group">
                 <div className="flex items-center space-x-3.5">
-                  <div className="w-12 h-12 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center text-xl group-hover:scale-105 transition-transform">
+                  <div className="w-12 h-12 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center text-xl group-hover:scale-110 group-hover:bg-slate-700 group-hover:text-white transition-all">
                     <i className="fa-solid fa-shield-halved"></i>
                   </div>
                   <div>
@@ -72,6 +72,7 @@ const Giaithuong: React.FC = () => {
                 </div>
                 <span className="font-fco text-2xl font-black text-slate-600">60.000đ</span>
               </div>
+
             </div>
 
             <p className="text-xs text-slate-500 italic pt-2 border-t border-slate-100">

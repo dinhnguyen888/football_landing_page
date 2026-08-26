@@ -75,7 +75,7 @@
   color: #0f172a !important;
 }
 
-/* FC Online Cyber Neon Accents */
+/* FC Online Cyber Neon Accents & Dynamic Animations */
 .fco-glow-green {
   box-shadow: 0 0 15px rgba(0, 229, 117, 0.35);
 }
@@ -86,6 +86,181 @@
 
 .fco-glow-cyan {
   box-shadow: 0 0 15px rgba(14, 165, 233, 0.35);
+}
+
+/* Dynamic Animation Keyframes */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(4deg);
+  }
+}
+
+@keyframes floatReverse {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(10px) rotate(-4deg);
+  }
+}
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes shineSweep {
+  0% {
+    left: -100%;
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    left: 200%;
+    opacity: 0;
+  }
+}
+
+@keyframes pulseHalo {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(0, 229, 117, 0.45);
+  }
+  50% {
+    box-shadow: 0 0 25px 8px rgba(0, 229, 117, 0.25);
+  }
+}
+
+@keyframes borderRotate {
+  0% {
+    --border-angle: 0deg;
+  }
+  100% {
+    --border-angle: 360deg;
+  }
+}
+
+@keyframes marqueeScroll {
+  0% {
+    transform: translateX(100%);
+  }
+  100% {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes stadiumLightSway {
+  0%, 100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Helper Animation Classes */
+.animate-float-slow {
+  animation: floatSlow 4.5s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: floatReverse 5.5s ease-in-out infinite;
+}
+
+.animate-gradient-flow {
+  background-size: 200% 200%;
+  animation: gradientMove 4s ease infinite;
+}
+
+.animate-pulse-halo {
+  animation: pulseHalo 2.5s ease-in-out infinite;
+}
+
+.animate-floodlight {
+  animation: stadiumLightSway 6s ease-in-out infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Button Shimmer / Sheen Effect */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shimmer::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -60%;
+  width: 40%;
+  height: 200%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.45) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  animation: shineSweep 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Interactive Card Hover Depth & Cyber Border Glow */
+.card-hover-fx {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-hover-fx:hover {
+  transform: translateY(-8px) scale(1.018);
+  box-shadow: 0 22px 45px -8px rgba(0, 229, 117, 0.28), 0 12px 24px -6px rgba(15, 23, 42, 0.12);
+}
+
+/* Active Tournament Neon Ring Aura */
+.neon-ring-pulse {
+  position: relative;
+}
+
+.neon-ring-pulse::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 1.75rem;
+  background: linear-gradient(135deg, rgba(0, 229, 117, 0.6), rgba(14, 165, 233, 0.3), rgba(245, 158, 11, 0.5));
+  z-index: -1;
+  opacity: 0.6;
+  filter: blur(8px);
+  transition: opacity 0.3s ease;
+}
+
+.neon-ring-pulse:hover::before {
+  opacity: 1;
+  filter: blur(14px);
 }
 
 /* Dropdown Menu with Esports Slide */
@@ -107,3 +282,391 @@
   position: relative;
   clip-path: polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px);
 }
+
+/* REALISTIC 16-SECOND TACTICAL FOOTBALL MATCH SIMULATION (NHỊP ĐỘ CHÂN THẬT) */
+
+/* Ball Trajectory: Natural passing arcs, control pauses, and realistic shot curves */
+@keyframes naturalMatchBall {
+  /* 0s - 1.5s: GK A distributes ball out to CM A (#8) */
+  0% {
+    left: 7%;
+    bottom: 12px;
+    transform: rotate(0deg) scale(0.9);
+  }
+  9% {
+    left: 28%;
+    bottom: 12px;
+    transform: rotate(180deg) scale(0.95);
+  }
+
+  /* 1.5s - 3.2s: CM A controls, takes 2 dribble touches forward */
+  14% {
+    left: 33%;
+    bottom: 12px;
+    transform: rotate(240deg) scale(0.95);
+  }
+  20% {
+    left: 36%;
+    bottom: 12px;
+    transform: rotate(300deg) scale(0.95);
+  }
+
+  /* 3.2s - 4.8s: CM A plays through ball into space for Striker A (#9) */
+  25% {
+    left: 45%;
+    bottom: 15px;
+    transform: rotate(450deg) scale(0.95);
+  }
+  30% {
+    left: 55%;
+    bottom: 12px;
+    transform: rotate(600deg) scale(1);
+  }
+
+  /* 4.8s - 6.2s: Striker A takes 1 touch and FIRES high curling shot towards Goal B */
+  33% {
+    left: 58%;
+    bottom: 12px;
+    transform: rotate(660deg) scale(1);
+  }
+  37% {
+    left: 75%;
+    bottom: 42px; /* Top of shot arc */
+    transform: rotate(820deg) scale(1.1);
+  }
+  41% {
+    left: 92%;
+    bottom: 26px; /* Reaches GK B save point */
+    transform: rotate(960deg) scale(1.05);
+  }
+
+  /* 6.2s - 8.0s: GK B deflects out to CB B (#4) who clears to CM B (#10) */
+  45% {
+    left: 82%;
+    bottom: 12px;
+    transform: rotate(1080deg) scale(0.95);
+  }
+  50% {
+    left: 70%;
+    bottom: 12px;
+    transform: rotate(1200deg) scale(0.95);
+  }
+
+  /* 8.0s - 9.8s: CM B controls ball, looks up and turns */
+  56% {
+    left: 66%;
+    bottom: 12px;
+    transform: rotate(1260deg) scale(0.95);
+  }
+  62% {
+    left: 63%;
+    bottom: 12px;
+    transform: rotate(1320deg) scale(0.95);
+  }
+
+  /* 9.8s - 11.5s: CM B delivers driven diagonal pass to Striker B (#11) */
+  68% {
+    left: 50%;
+    bottom: 18px; /* Slight lift on pass */
+    transform: rotate(1480deg) scale(1);
+  }
+  73% {
+    left: 38%;
+    bottom: 12px;
+    transform: rotate(1620deg) scale(1);
+  }
+
+  /* 11.5s - 13.5s: Striker B cuts inside, creates angle and SHOOTS towards Goal A */
+  77% {
+    left: 34%;
+    bottom: 12px;
+    transform: rotate(1680deg) scale(1);
+  }
+  82% {
+    left: 20%;
+    bottom: 40px; /* Top of counter-shot arc */
+    transform: rotate(1860deg) scale(1.1);
+  }
+  87% {
+    left: 7%;
+    bottom: 24px; /* Reaches GK A save point */
+    transform: rotate(2040deg) scale(1.05);
+  }
+
+  /* 13.5s - 16.0s: GK A secures ball, stands up and resets team shape */
+  93% {
+    left: 6%;
+    bottom: 12px;
+    transform: rotate(2100deg) scale(0.9);
+  }
+  100% {
+    left: 7%;
+    bottom: 12px;
+    transform: rotate(2160deg) scale(0.9);
+  }
+}
+
+/* Team A: Natural Tactical Positioning & Running strides */
+@keyframes naturalTeamAMove {
+  /* 0s - 4.5s: Team A pushes upfield during attack */
+  0%, 100% {
+    transform: translateX(0px) scaleX(1);
+  }
+  15% {
+    transform: translateX(12px) translateY(-1px) scaleX(1);
+  }
+  30% {
+    transform: translateX(26px) translateY(-2px) scaleX(1);
+  }
+  42% {
+    transform: translateX(34px) translateY(-3px) scaleX(1);
+  }
+
+  /* 4.5s - 8.0s: Team A shot taken, players transition back to defend */
+  50% {
+    transform: translateX(20px) translateY(0px) scaleX(-1);
+  }
+  65% {
+    transform: translateX(5px) translateY(-1px) scaleX(-1);
+  }
+
+  /* 8.0s - 13.5s: Team A defending against Team B counter */
+  75% {
+    transform: translateX(-12px) translateY(-2px) scaleX(-1);
+  }
+  87% {
+    transform: translateX(-18px) translateY(0px) scaleX(-1);
+  }
+  94% {
+    transform: translateX(-6px) translateY(0px) scaleX(1);
+  }
+}
+
+/* Team B: Natural Defensive Jockeying & Counter-Attack surges */
+@keyframes naturalTeamBMove {
+  /* 0s - 4.5s: Team B drops back into defensive structure */
+  0%, 100% {
+    transform: translateX(0px) scaleX(1);
+  }
+  15% {
+    transform: translateX(8px) translateY(0px) scaleX(-1);
+  }
+  30% {
+    transform: translateX(18px) translateY(-1px) scaleX(-1);
+  }
+  42% {
+    transform: translateX(24px) translateY(-2px) scaleX(-1);
+  }
+
+  /* 4.5s - 8.0s: Team B wins ball, turns and pushes upfield */
+  50% {
+    transform: translateX(10px) translateY(0px) scaleX(1);
+  }
+  65% {
+    transform: translateX(-14px) translateY(-2px) scaleX(1);
+  }
+
+  /* 8.0s - 13.5s: Team B on counter-attack sprint */
+  75% {
+    transform: translateX(-28px) translateY(-3px) scaleX(1);
+  }
+  87% {
+    transform: translateX(-36px) translateY(-3px) scaleX(1);
+  }
+  94% {
+    transform: translateX(-10px) translateY(0px) scaleX(-1);
+  }
+}
+
+/* GK A: Natural Anticipation, Diving Save at 87% (13.9s), and Ball Collection */
+@keyframes naturalGkASave {
+  0%, 75%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  80% {
+    transform: translateY(-4px) rotate(-4deg) scale(1.04); /* Anticipation crouch */
+  }
+  87% {
+    transform: translateY(-16px) translateX(6px) rotate(-18deg) scale(1.15); /* Full stretch dive save */
+  }
+  93% {
+    transform: translateY(-3px) rotate(-2deg) scale(1); /* Land & secure */
+  }
+}
+
+/* GK B: Natural Anticipation, Diving Save at 41% (6.5s), and Ball Distribution */
+@keyframes naturalGkBSave {
+  0%, 30%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  35% {
+    transform: translateY(-4px) rotate(4deg) scale(1.04); /* Anticipation crouch */
+  }
+  41% {
+    transform: translateY(-16px) translateX(-6px) rotate(18deg) scale(1.15); /* Full stretch dive save */
+  }
+  47% {
+    transform: translateY(-3px) rotate(2deg) scale(1); /* Land & clear */
+  }
+}
+
+.animate-rally-ball {
+  animation: naturalMatchBall 16s ease-in-out infinite;
+}
+
+.animate-team-a-move {
+  animation: naturalTeamAMove 16s ease-in-out infinite;
+}
+
+.animate-team-b-move {
+  animation: naturalTeamBMove 16s ease-in-out infinite;
+}
+
+.animate-gk-a {
+  animation: naturalGkASave 16s ease-in-out infinite;
+}
+
+.animate-gk-b {
+  animation: naturalGkBSave 16s ease-in-out infinite;
+}
+
+/* ARTICULATED PLAYER LIMB ANIMATIONS (ĐỘNG TÁC CHÂN TAY CHẠY & SÚT BÓNG) */
+
+/* Running stride: Front leg swing */
+@keyframes runLegFront {
+  0%, 100% {
+    transform: rotate(-22deg);
+  }
+  50% {
+    transform: rotate(26deg);
+  }
+}
+
+/* Running stride: Back leg swing */
+@keyframes runLegBack {
+  0%, 100% {
+    transform: rotate(26deg);
+  }
+  50% {
+    transform: rotate(-22deg);
+  }
+}
+
+/* Running stride: Front arm swing */
+@keyframes runArmFront {
+  0%, 100% {
+    transform: rotate(28deg);
+  }
+  50% {
+    transform: rotate(-24deg);
+  }
+}
+
+/* Running stride: Back arm swing */
+@keyframes runArmBack {
+  0%, 100% {
+    transform: rotate(-24deg);
+  }
+  50% {
+    transform: rotate(28deg);
+  }
+}
+
+/* Striker A (Home) Kick & Shoot Motion (synchronized at 33% - 38% of the 16s cycle) */
+@keyframes strikerAShootLeg {
+  0%, 30%, 42%, 100% {
+    transform: rotate(-10deg);
+  }
+  33% {
+    transform: rotate(-45deg); /* Back-lift preparation */
+  }
+  36% {
+    transform: rotate(55deg); /* Full power follow-through kick */
+  }
+  39% {
+    transform: rotate(20deg);
+  }
+}
+
+/* Striker B (Away) Kick & Shoot Motion (synchronized at 75% - 82% of the 16s cycle) */
+@keyframes strikerBShootLeg {
+  0%, 72%, 84%, 100% {
+    transform: rotate(-10deg);
+  }
+  75% {
+    transform: rotate(-45deg); /* Back-lift preparation */
+  }
+  78% {
+    transform: rotate(55deg); /* Full power follow-through kick */
+  }
+  81% {
+    transform: rotate(20deg);
+  }
+}
+
+/* Midfielder Pass Motion */
+@keyframes midfieldPassLeg {
+  0%, 20%, 30%, 100% {
+    transform: rotate(-8deg);
+  }
+  24% {
+    transform: rotate(-32deg);
+  }
+  27% {
+    transform: rotate(38deg);
+  }
+}
+
+/* Goalkeeper Padded Hands Ready & Stretch Reach */
+@keyframes gkHandsReach {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-4px) scale(1.1);
+  }
+}
+
+/* HOLOGRAPHIC ESPORTS TACTICAL MATCH ANIMATIONS (ĐỒ HỌA CHIẾN THUẬT HIỆN ĐẠI) */
+@keyframes laserPassFlow {
+  0% {
+    stroke-dashoffset: 60;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes tacticalRingPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.25);
+    opacity: 0.9;
+  }
+}
+
+@keyframes tokenFloatBob {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-laser-flow {
+  stroke-dasharray: 6, 6;
+  animation: laserPassFlow 1.2s linear infinite;
+}
+
+.animate-ring-pulse {
+  animation: tacticalRingPulse 2s ease-in-out infinite;
+}
+
+.animate-token-bob {
+  animation: tokenFloatBob 3s ease-in-out infinite;
+}
+
