@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { ThemeToggleButton } from "../utils/themeContext";
 
 const Navbar: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -224,8 +225,10 @@ const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Right: Quick Action - Admin Portal & Return to Hub */}
-        <div className="hidden lg:flex items-center space-x-1.5 flex-shrink-0">
+        {/* Right: Quick Action - Admin Portal, Theme Toggle & Return to Hub */}
+        <div className="hidden lg:flex items-center space-x-2 flex-shrink-0">
+          <ThemeToggleButton />
+
           <Link
             to="/quanlygiaidau"
             className="px-2.5 xl:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center space-x-1.5 shadow-sm hover:scale-105 btn-shimmer"
@@ -246,22 +249,25 @@ const Navbar: React.FC = () => {
         </div>
 
 
-        {/* Mobile menu toggle */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          aria-label="Toggle Menu"
-          className="lg:hidden p-2 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 focus:outline-none"
-        >
-          <i className={`fa-solid ${mobileMenuOpen ? "fa-xmark" : "fa-bars"} text-lg`}></i>
-        </button>
+        {/* Mobile menu toggle & quick theme button */}
+        <div className="flex items-center space-x-2 lg:hidden">
+          <ThemeToggleButton />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Toggle Menu"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none"
+          >
+            <i className={`fa-solid ${mobileMenuOpen ? "fa-xmark" : "fa-bars"} text-lg`}></i>
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu Dropdown */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-200 px-4 py-4 space-y-2.5 shadow-lg">
+        <div className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 py-4 space-y-2.5 shadow-lg">
           <Link
             to="/"
-            className="block px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-slate-900 flex items-center justify-between"
+            className="block px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-slate-900 dark:bg-slate-800 flex items-center justify-between"
           >
             <span className="flex items-center">
               <i className="fa-solid fa-layer-group mr-2 text-amber-400"></i>

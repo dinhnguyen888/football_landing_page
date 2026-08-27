@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./utils/themeContext";
 import HomeHub from "./pages/homehub";
 import Trangchu from "./pages/trangchu";
 
@@ -32,7 +33,7 @@ import DthenAdmin from "./pages/dthen/admin";
 
 export default function App() {
   return (
-    <>
+    <ThemeProvider>
       <Navbar />
       <Routes>
         {/* Hub Selection Portal */}
@@ -67,6 +68,6 @@ export default function App() {
         <Route path="/dthen/xephang" element={<DthenXephang />} />
         <Route path="/dthen/admin" element={<DthenAdmin />} />
       </Routes>
-    </>
+    </ThemeProvider>
   );
 }

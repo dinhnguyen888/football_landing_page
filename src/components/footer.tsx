@@ -129,7 +129,7 @@ const Footer: React.FC = () => {
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
                   <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
-                  <span>Quy định squad lương 300</span>
+                  <span>Quy định squad lương 305</span>
                 </Link>
               </li>
               <li>

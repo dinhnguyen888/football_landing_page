@@ -4,20 +4,30 @@
 
 @layer base {
   body {
-    @apply bg-[#f2f6fa] text-slate-800 font-sans antialiased min-h-screen relative selection:bg-emerald-500 selection:text-white;
+    @apply bg-[#f1f5f9] text-slate-800 font-sans antialiased min-h-screen relative selection:bg-emerald-500 selection:text-white transition-colors duration-300;
     /* FC Online Event Clean Bright Atmosphere (Sáng Tươi, Năng Động & Mềm Mại) */
     background-color: #f1f5f9;
     background-image: 
       radial-gradient(ellipse 70% 40% at 50% 0%, rgba(0, 229, 117, 0.12), transparent 70%),
       radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.08), transparent 60%),
       radial-gradient(circle at 10% 40%, rgba(245, 158, 11, 0.06), transparent 50%),
-      /* Soft stadium turf pattern */
       repeating-linear-gradient(90deg, transparent 0px, transparent 48px, rgba(15, 23, 42, 0.015) 48px, rgba(15, 23, 42, 0.015) 96px);
+    background-attachment: fixed;
+  }
+
+  body.dark, html.dark body {
+    @apply bg-[#07130e] text-slate-100;
+    background-color: #07130e;
+    background-image: 
+      radial-gradient(ellipse 75% 45% at 50% 0%, rgba(0, 229, 117, 0.24), transparent 75%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(14, 165, 233, 0.14), transparent 60%),
+      radial-gradient(circle at 10% 40%, rgba(245, 158, 11, 0.12), transparent 50%),
+      repeating-linear-gradient(90deg, transparent 0px, transparent 48px, rgba(255, 255, 255, 0.015) 48px, rgba(255, 255, 255, 0.015) 96px);
     background-attachment: fixed;
   }
   
   h1, h2, h3, h4, .font-heading {
-    @apply font-fco tracking-wide uppercase text-slate-900;
+    @apply font-fco tracking-wide uppercase text-slate-900 dark:text-white;
   }
 }
 
@@ -29,9 +39,15 @@
 ::-webkit-scrollbar-track {
   background: #f1f5f9;
 }
+.dark ::-webkit-scrollbar-track {
+  background: #07130e;
+}
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #1e3a2f;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #00e575;
@@ -47,6 +63,13 @@
   overflow: hidden;
   color: #334155;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dark .portal-card {
+  background: #0b1f17;
+  border: 1px solid #17382b;
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.5), 0 0 15px rgba(0, 229, 117, 0.08);
+  color: #cbd5e1;
 }
 
 .portal-card::before {
@@ -66,13 +89,26 @@
   transform: translateY(-2px);
 }
 
+.dark .portal-card:hover {
+  border-color: #00e575;
+  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.7), 0 0 25px rgba(0, 229, 117, 0.25);
+}
+
 /* Typography styles inside cards for crisp high-contrast readability */
 .portal-card p, .portal-card li {
   color: #334155 !important;
 }
 
+.dark .portal-card p, .dark .portal-card li {
+  color: #cbd5e1 !important;
+}
+
 .portal-card h1, .portal-card h2, .portal-card h3, .portal-card h4, .portal-card strong {
   color: #0f172a !important;
+}
+
+.dark .portal-card h1, .dark .portal-card h2, .dark .portal-card h3, .dark .portal-card h4, .dark .portal-card strong {
+  color: #ffffff !important;
 }
 
 /* FC Online Cyber Neon Accents & Dynamic Animations */
@@ -205,6 +241,24 @@
 
 .animate-fade-in-up {
   animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-marquee {
+  animation: marqueeScroll 20s linear infinite;
+  display: inline-block;
+}
+
+.animate-spin-slow {
+  animation: spin 8s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Button Shimmer / Sheen Effect */
@@ -669,4 +723,153 @@
 .animate-token-bob {
   animation: tokenFloatBob 3s ease-in-out infinite;
 }
+
+/* FOOTBALL STADIUM & HUB SPECIFIC DYNAMIC EFFECTS */
+
+@keyframes radarSweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pitchGlowPulse {
+  0%, 100% {
+    opacity: 0.4;
+    filter: drop-shadow(0 0 8px rgba(0, 229, 117, 0.4));
+  }
+  50% {
+    opacity: 0.85;
+    filter: drop-shadow(0 0 16px rgba(0, 229, 117, 0.85));
+  }
+}
+
+@keyframes ballSpinFly {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  50% {
+    transform: scale(1.3) rotate(360deg);
+  }
+  100% {
+    transform: scale(0.6) rotate(720deg);
+  }
+}
+
+@keyframes goalExplosion {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  70% {
+    transform: scale(0.95);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes searchlightLeft {
+  0%, 100% {
+    transform: rotate(-25deg) scaleY(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: rotate(15deg) scaleY(1.15);
+    opacity: 0.55;
+  }
+}
+
+@keyframes searchlightRight {
+  0%, 100% {
+    transform: rotate(25deg) scaleY(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: rotate(-15deg) scaleY(1.15);
+    opacity: 0.55;
+  }
+}
+
+@keyframes stadiumCrowdWave {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-radar-sweep {
+  animation: radarSweep 4s linear infinite;
+  transform-origin: center center;
+}
+
+.animate-pitch-glow {
+  animation: pitchGlowPulse 3s ease-in-out infinite;
+}
+
+.animate-searchlight-l {
+  animation: searchlightLeft 7s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.animate-searchlight-r {
+  animation: searchlightRight 7s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+.animate-goal-pop {
+  animation: goalExplosion 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.animate-crowd-wave {
+  animation: stadiumCrowdWave 2s ease-in-out infinite;
+}
+
+/* 3D Glassmorphism Football Card */
+.football-glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 12px 32px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(0, 229, 117, 0.08);
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* NATURAL FOOTBALL PITCH & STADIUM TURF STYLES */
+.pitch-turf-pattern {
+  background-color: #0d3826;
+  background-image: repeating-linear-gradient(
+    90deg,
+    #0d3826 0px,
+    #0d3826 60px,
+    #114630 60px,
+    #114630 120px
+  );
+}
+
+.pitch-turf-light {
+  background-color: #145a3c;
+  background-image: repeating-linear-gradient(
+    90deg,
+    #145a3c 0px,
+    #145a3c 60px,
+    #186846 60px,
+    #186846 120px
+  );
+}
+
+.chalk-line {
+  border-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.4);
+}
+
 

@@ -9,7 +9,7 @@ const Quydinh: React.FC = () => {
     <>
       <Banner
         title="QUY ĐỊNH ĐỘI HÌNH & CHIẾN THUẬT"
-        subtitle="Tiêu chuẩn quỹ lương 300/300, danh sách sơ đồ chiến thuật mặc định và quy trình xử lý vi phạm"
+        subtitle="Tiêu chuẩn quỹ lương 305/305, danh sách sơ đồ chiến thuật mặc định và quy trình xử lý vi phạm"
         badge="SQUAD & TACTICS"
       />
 
@@ -21,11 +21,11 @@ const Quydinh: React.FC = () => {
               {/* Wage Limit Banner inside Section 1 */}
               <div className="p-4 sm:p-5 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center space-x-4 shadow-sm">
                 <div className="w-14 h-14 rounded-xl bg-emerald-700 text-white flex items-center justify-center text-2xl font-black font-fco shadow-sm flex-shrink-0">
-                  300
+                  305
                 </div>
                 <div>
                   <span className="text-xs font-fco font-bold uppercase text-emerald-800 block">GIỚI HẠN LƯƠNG ĐỘI HÌNH</span>
-                  <span className="text-base sm:text-lg font-black text-slate-900">Tối đa 300/300 (11 chính + 7 dự bị)</span>
+                  <span className="text-base sm:text-lg font-black text-slate-900">Tối đa 305/305 (11 chính + 7 dự bị)</span>
                 </div>
               </div>
 
@@ -125,7 +125,7 @@ const Quydinh: React.FC = () => {
           <CardSection badgeNumber={2} title="QUY TRÌNH XỬ LÝ VI PHẠM SƠ ĐỒ & QUỸ LƯƠNG">
             <div className="space-y-4 text-slate-700 text-sm leading-relaxed">
               <p className="text-slate-800">
-                Khi phát hiện đối phương vi phạm quỹ lương (<strong>&gt; 300</strong>) hoặc sử dụng sơ đồ ngoài danh mục quy định, HLV cần <strong>chụp ảnh hoặc quay video làm bằng chứng</strong> và thực hiện theo quy trình sau:
+                Khi phát hiện đối phương vi phạm quỹ lương (<strong>&gt; 305</strong>) hoặc sử dụng sơ đồ ngoài danh mục quy định, HLV cần <strong>chụp ảnh hoặc quay video làm bằng chứng</strong> và thực hiện theo quy trình sau:
               </p>
 
               {/* Case 1 */}

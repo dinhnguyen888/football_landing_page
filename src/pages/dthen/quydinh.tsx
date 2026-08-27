@@ -9,7 +9,7 @@ const DthenQuyDinh: React.FC = () => {
     <>
       <Banner
         title="QUY ĐỊNH ĐỘI HÌNH & CHIẾN THUẬT ĐTHÉN FCO ™"
-        subtitle="Tiêu chuẩn quỹ lương 300/300, danh sách sơ đồ chiến thuật hợp lệ và quy tắc thi đấu công bằng"
+        subtitle="Tiêu chuẩn quỹ lương 305/305, danh sách sơ đồ chiến thuật hợp lệ và quy tắc thi đấu công bằng"
         badge="SQUAD & TACTICS"
       />
 
@@ -21,11 +21,11 @@ const DthenQuyDinh: React.FC = () => {
               {/* Wage Limit Banner inside Section 1 */}
               <div className="p-4 sm:p-5 rounded-xl bg-blue-50 border border-blue-200 flex items-center space-x-4 shadow-sm">
                 <div className="w-14 h-14 rounded-xl bg-blue-700 text-white flex items-center justify-center text-2xl font-black font-fco shadow-sm flex-shrink-0">
-                  300
+                  305
                 </div>
                 <div>
                   <span className="text-xs font-fco font-bold uppercase text-blue-800 block">GIỚI HẠN LƯƠNG ĐỘI HÌNH</span>
-                  <span className="text-base sm:text-lg font-black text-slate-900">Tối đa 300/300 (11 chính + 7 dự bị)</span>
+                  <span className="text-base sm:text-lg font-black text-slate-900">Tối đa 305/305 (11 chính + 7 dự bị)</span>
                 </div>
               </div>
 
