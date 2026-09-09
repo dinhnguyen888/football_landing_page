@@ -1,3 +1,9 @@
+import {
+  saveTournamentToFirestore,
+  getTournamentFromFirestore,
+  CLOUD_KEYS,
+} from '../services/tournamentService';
+
 export interface Team {
   id: string;
   name: string;
@@ -222,8 +228,10 @@ export function saveTournamentData(data: TournamentData | null): void {
   try {
     if (data) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      saveTournamentToFirestore(CLOUD_KEYS.SAO_VANG, data);
     } else {
       localStorage.removeItem(STORAGE_KEY);
+      saveTournamentToFirestore(CLOUD_KEYS.SAO_VANG, null);
     }
   } catch (err) {
     console.error('Error saving tournament data', err);
@@ -247,8 +255,10 @@ export function saveDthenTournamentData(data: TournamentData | null): void {
   try {
     if (data) {
       localStorage.setItem(STORAGE_KEY_DTHEN, JSON.stringify(data));
+      saveTournamentToFirestore(CLOUD_KEYS.DTHEN, data);
     } else {
       localStorage.removeItem(STORAGE_KEY_DTHEN);
+      saveTournamentToFirestore(CLOUD_KEYS.DTHEN, null);
     }
   } catch (err) {
     console.error('Error saving Dthen tournament data', err);
@@ -269,14 +279,6 @@ export function loadDthenTournamentData(): TournamentData | null {
         return fresh;
       }
 
-      // Xóa dữ liệu mẫu các trận đấu nếu còn tồn tại từ phiên bản cũ trong localStorage
-      let hasOldMockMatches = false;
-      data.groups.forEach((g) => {
-        if (g.matches && g.matches.length > 0) {
-          g.matches = [];
-          hasOldMockMatches = true;
-        }
-      });
       // Đảm bảo nhánh đấu Knockout luôn có sẵn 16 đội chuẩn World Cup (Nhất A - Nhì B,...)
       const r16Round = data.knockoutStage?.rounds?.[0];
       const needsFreshKnockout =
@@ -290,8 +292,6 @@ export function loadDthenTournamentData(): TournamentData | null {
       if (needsFreshKnockout) {
         data.knockoutStage = buildFIFABracketFromGroups(data.groups);
         saveDthenTournamentData(data);
-      } else if (hasOldMockMatches) {
-        saveDthenTournamentData(data);
       }
     }
     return data;
@@ -304,6 +304,7 @@ export function loadDthenTournamentData(): TournamentData | null {
 export function saveArchiveTournaments(list: TournamentData[]): void {
   try {
     localStorage.setItem(ARCHIVE_KEY, JSON.stringify(list));
+    saveTournamentToFirestore(CLOUD_KEYS.ARCHIVE, list);
   } catch (err) {
     console.error('Error saving archive tournaments', err);
   }
@@ -319,6 +320,46 @@ export function loadArchiveTournaments(): TournamentData[] {
     console.error('Error loading archive tournaments', err);
   }
   return [];
+}
+
+// Async helpers to fetch and sync from Firebase Cloud
+export async function fetchAndSyncDthenTournament(): Promise<TournamentData | null> {
+  try {
+    const cloudData = await getTournamentFromFirestore<TournamentData>(CLOUD_KEYS.DTHEN);
+    if (cloudData) {
+      localStorage.setItem(STORAGE_KEY_DTHEN, JSON.stringify(cloudData));
+      return cloudData;
+    }
+  } catch (err) {
+    console.warn('[Firebase] Fallback to local Dthen tournament data', err);
+  }
+  return loadDthenTournamentData();
+}
+
+export async function fetchAndSyncSaoVangTournament(): Promise<TournamentData | null> {
+  try {
+    const cloudData = await getTournamentFromFirestore<TournamentData>(CLOUD_KEYS.SAO_VANG);
+    if (cloudData) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData));
+      return cloudData;
+    }
+  } catch (err) {
+    console.warn('[Firebase] Fallback to local Sao Vang tournament data', err);
+  }
+  return loadTournamentData();
+}
+
+export async function fetchAndSyncArchiveTournaments(): Promise<TournamentData[]> {
+  try {
+    const cloudData = await getTournamentFromFirestore<TournamentData[]>(CLOUD_KEYS.ARCHIVE);
+    if (cloudData && Array.isArray(cloudData)) {
+      localStorage.setItem(ARCHIVE_KEY, JSON.stringify(cloudData));
+      return cloudData;
+    }
+  } catch (err) {
+    console.warn('[Firebase] Fallback to local archive tournament data', err);
+  }
+  return loadArchiveTournaments();
 }
 
 // Generate FIFA Knockout Bracket depending on number of groups (2, 4, or 8)

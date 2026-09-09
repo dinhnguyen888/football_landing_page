@@ -14,6 +14,8 @@ import {
   buildFIFABracketFromGroups,
   Team,
   Group,
+  fetchAndSyncSaoVangTournament,
+  fetchAndSyncArchiveTournaments,
 } from '../utils/tournamentEngine';
 
 const SECRET_PIN = '020604';
@@ -22,6 +24,7 @@ const Quanlygiaidau: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [pinInput, setPinInput] = useState<string>('');
   const [pinError, setPinError] = useState<string>('');
+  const [isCloudLoaded, setIsCloudLoaded] = useState<boolean>(false);
 
   // Active tournament
   const [tournament, setTournament] = useState<TournamentData>(() => {
@@ -43,6 +46,21 @@ const Quanlygiaidau: React.FC = () => {
     return [defaultData];
   });
 
+  // Load cloud data on mount
+  useEffect(() => {
+    fetchAndSyncSaoVangTournament().then((cloud) => {
+      if (cloud && cloud.groups && cloud.groups.length > 0) {
+        setTournament(cloud);
+      }
+      setIsCloudLoaded(true);
+    });
+    fetchAndSyncArchiveTournaments().then((list) => {
+      if (list && list.length > 0) {
+        setSavedTournaments(list);
+      }
+    });
+  }, []);
+
   // Tabs: 'LIST' | 'SCORES' | 'CREATE'
   const [managerTab, setManagerTab] = useState<'LIST' | 'SCORES' | 'CREATE'>('LIST');
 
@@ -59,10 +77,12 @@ const Quanlygiaidau: React.FC = () => {
   const [legTypeInput, setLegTypeInput] = useState<'single' | 'double'>('double');
   const [groupTeamsInput, setGroupTeamsInput] = useState<{ name: string; club: string }[][]>([]);
 
-  // Synchronize state when active tournament or archive updates
+  // Synchronize state when active tournament updates (only after initial load)
   useEffect(() => {
-    saveTournamentData(tournament);
-  }, [tournament]);
+    if (isCloudLoaded) {
+      saveTournamentData(tournament);
+    }
+  }, [tournament, isCloudLoaded]);
 
   useEffect(() => {
     saveArchiveTournaments(savedTournaments);

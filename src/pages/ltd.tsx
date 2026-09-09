@@ -8,7 +8,12 @@ import {
   loadTournamentData,
   loadArchiveTournaments,
   createDefaultTournament,
+  fetchAndSyncSaoVangTournament,
 } from '../utils/tournamentEngine';
+import {
+  subscribeTournamentFromFirestore,
+  CLOUD_KEYS,
+} from '../services/tournamentService';
 
 const Ltd: React.FC = () => {
   const [tournament, setTournament] = useState<TournamentData | null>(() => {
@@ -37,6 +42,29 @@ const Ltd: React.FC = () => {
   const [activeRoundFilter, setActiveRoundFilter] = useState<number | 'ALL'>('ALL');
 
   useEffect(() => {
+    // Initial fetch from cloud
+    fetchAndSyncSaoVangTournament().then((cloud) => {
+      if (cloud && cloud.isVisible) {
+        setTournament(cloud);
+        if (cloud.knockoutStage?.isCompletedGroupStage) {
+          setViewStage('KNOCKOUT');
+        }
+      }
+    });
+
+    // Realtime subscription from Cloud
+    const unsubscribe = subscribeTournamentFromFirestore<TournamentData>(
+      CLOUD_KEYS.SAO_VANG,
+      (cloudData) => {
+        if (cloudData && cloudData.isVisible) {
+          setTournament(cloudData);
+          if (cloudData.knockoutStage?.isCompletedGroupStage) {
+            setViewStage('KNOCKOUT');
+          }
+        }
+      }
+    );
+
     const handleStorage = () => {
       const active = loadTournamentData();
       if (active && active.isVisible) {
@@ -54,7 +82,10 @@ const Ltd: React.FC = () => {
       }
     };
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   // If no tournament is currently published / active

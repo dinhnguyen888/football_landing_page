@@ -8,7 +8,13 @@ import {
   loadDthenTournamentData,
   createDefaultDthenTournament,
   buildFIFABracketFromGroups,
+  fetchAndSyncDthenTournament,
 } from '../../utils/tournamentEngine';
+import {
+  subscribeTournamentFromFirestore,
+  CLOUD_KEYS,
+} from '../../services/tournamentService';
+import { isFirebaseConfigured } from '../../services/firebase';
 
 const DthenLtd: React.FC = () => {
   const [tournament, setTournament] = useState<TournamentData | null>(() => {
@@ -22,8 +28,35 @@ const DthenLtd: React.FC = () => {
   const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT'>('GROUP');
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
   const [activeRoundFilter, setActiveRoundFilter] = useState<number | 'ALL'>('ALL');
+  const [syncStatus, setSyncStatus] = useState<'cloud' | 'local'>('local');
 
   useEffect(() => {
+    // 1. Initial fetch from Cloud
+    fetchAndSyncDthenTournament().then((data) => {
+      if (data && data.isVisible) {
+        setTournament(data);
+        if (data.knockoutStage?.isCompletedGroupStage) {
+          setViewStage('KNOCKOUT');
+        }
+        if (isFirebaseConfigured) setSyncStatus('cloud');
+      }
+    });
+
+    // 2. Real-time Cloud listener
+    const unsubscribe = subscribeTournamentFromFirestore<TournamentData>(
+      CLOUD_KEYS.DTHEN,
+      (cloudData) => {
+        if (cloudData && cloudData.isVisible) {
+          setTournament(cloudData);
+          if (cloudData.knockoutStage?.isCompletedGroupStage) {
+            setViewStage('KNOCKOUT');
+          }
+          setSyncStatus('cloud');
+        }
+      }
+    );
+
+    // 3. Fallback Local storage listener
     const handleStorage = () => {
       const active = loadDthenTournamentData();
       if (active && active.isVisible) {
@@ -34,7 +67,11 @@ const DthenLtd: React.FC = () => {
       }
     };
     window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('storage', handleStorage);
+    };
   }, []);
 
   if (!tournament || !tournament.groups || tournament.groups.length === 0) {
@@ -96,10 +133,18 @@ const DthenLtd: React.FC = () => {
         <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
           {/* Header Controls: Stage Selector & Status */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
-            <div className="flex items-center space-x-2 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
               <span className="inline-flex items-center px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-700 text-blue-800 dark:text-blue-300 font-fco font-bold text-xs uppercase">
                 <span className="w-2 h-2 rounded-full bg-blue-600 animate-ping mr-1.5"></span>
                 {tournament.season} • {tournament.tournamentName}
+              </span>
+              <span className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                syncStatus === 'cloud'
+                  ? 'bg-emerald-100 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
+                  : 'bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
+              }`}>
+                <i className={`fa-solid ${syncStatus === 'cloud' ? 'fa-cloud text-emerald-600 dark:text-emerald-400' : 'fa-database text-slate-500'}`}></i>
+                <span>{syncStatus === 'cloud' ? 'Cloud Synced' : 'Local'}</span>
               </span>
               <span className="text-[11px] text-slate-500 font-semibold sm:hidden">
                 32 Đội • 8 Bảng
