@@ -86,6 +86,7 @@ export interface TournamentData {
 const STORAGE_KEY = 'great_mates_tournament_data';
 const STORAGE_KEY_DTHEN = 'dthen_fco_tournament_data';
 const ARCHIVE_KEY = 'great_mates_tournaments_archive';
+const ARCHIVE_KEY_DTHEN = 'dthen_tournaments_archive';
 
 // Berger Tables / Round Robin Scheduling Algorithm
 export function generateRoundRobinMatches(teams: Team[], legType: 'single' | 'double' = 'double'): Match[] {
@@ -320,6 +321,40 @@ export function loadArchiveTournaments(): TournamentData[] {
     console.error('Error loading archive tournaments', err);
   }
   return [];
+}
+
+export function saveArchiveDthenTournaments(list: TournamentData[]): void {
+  try {
+    localStorage.setItem(ARCHIVE_KEY_DTHEN, JSON.stringify(list));
+    saveTournamentToFirestore(CLOUD_KEYS.ARCHIVE_DTHEN, list);
+  } catch (err) {
+    console.error('Error saving Dthen archive tournaments', err);
+  }
+}
+
+export function loadArchiveDthenTournaments(): TournamentData[] {
+  try {
+    const raw = localStorage.getItem(ARCHIVE_KEY_DTHEN);
+    if (raw) {
+      return JSON.parse(raw);
+    }
+  } catch (err) {
+    console.error('Error loading Dthen archive tournaments', err);
+  }
+  return [];
+}
+
+export async function fetchAndSyncArchiveDthenTournaments(): Promise<TournamentData[]> {
+  try {
+    const cloudData = await getTournamentFromFirestore<TournamentData[]>(CLOUD_KEYS.ARCHIVE_DTHEN);
+    if (cloudData && Array.isArray(cloudData)) {
+      localStorage.setItem(ARCHIVE_KEY_DTHEN, JSON.stringify(cloudData));
+      return cloudData;
+    }
+  } catch (err) {
+    console.warn('[Firebase] Fallback to local Dthen archive tournament data', err);
+  }
+  return loadArchiveDthenTournaments();
 }
 
 // Async helpers to fetch and sync from Firebase Cloud

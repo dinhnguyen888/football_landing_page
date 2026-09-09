@@ -7,6 +7,7 @@ export const CLOUD_KEYS = {
   DTHEN: 'dthen_fco',
   SAO_VANG: 'sao_vang',
   ARCHIVE: 'archive',
+  ARCHIVE_DTHEN: 'archive_dthen',
 } as const;
 
 /**

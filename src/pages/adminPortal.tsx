@@ -1,20 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import AdminLayout, { AdminTab } from '../components/admin/AdminLayout';
+import AdminLayout, { AdminTab, TournamentSystem } from '../components/admin/AdminLayout';
 import {
   TournamentData,
   calculateGroupStandings,
   loadTournamentData,
   saveTournamentData,
   createDefaultTournament,
+  loadDthenTournamentData,
+  saveDthenTournamentData,
+  createDefaultDthenTournament,
   generateRoundRobinMatches,
   loadArchiveTournaments,
   saveArchiveTournaments,
+  loadArchiveDthenTournaments,
+  saveArchiveDthenTournaments,
   buildFIFABracketFromGroups,
   Team,
   Group,
   fetchAndSyncSaoVangTournament,
   fetchAndSyncArchiveTournaments,
+  fetchAndSyncDthenTournament,
+  fetchAndSyncArchiveDthenTournaments,
 } from '../utils/tournamentEngine';
 import { isFirebaseConfigured } from '../services/firebase';
 import {
@@ -25,6 +32,7 @@ import {
 
 const SECRET_PIN = '020604';
 const SESSION_AUTH_KEY = 'admin_portal_authenticated_session';
+const SESSION_SYSTEM_KEY = 'admin_portal_selected_system';
 
 const AdminPortal: React.FC = () => {
   // Session authentication
@@ -35,6 +43,12 @@ const AdminPortal: React.FC = () => {
   const [showPin, setShowPin] = useState<boolean>(false);
   const [pinError, setPinError] = useState<string>('');
 
+  // Selected Tournament System: 'SAO_VANG' | 'DTHEN' | null
+  const [selectedSystem, setSelectedSystem] = useState<TournamentSystem | null>(() => {
+    const saved = sessionStorage.getItem(SESSION_SYSTEM_KEY);
+    return saved === 'SAO_VANG' || saved === 'DTHEN' ? saved : null;
+  });
+
   // Active tab in Admin Dashboard
   const [activeTab, setActiveTab] = useState<AdminTab>('LIST');
 
@@ -43,25 +57,13 @@ const AdminPortal: React.FC = () => {
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [syncFeedback, setSyncFeedback] = useState<string>('');
 
-  // Active tournament being edited
+  // Active tournament state
   const [tournament, setTournament] = useState<TournamentData>(() => {
-    const existing = loadTournamentData();
-    if (existing && existing.groups && existing.groups.length > 0) {
-      return existing;
-    }
-    const defaultData = createDefaultTournament();
-    saveTournamentData(defaultData);
-    return defaultData;
+    return createDefaultTournament();
   });
 
-  // Archive list of all created tournaments
-  const [savedTournaments, setSavedTournaments] = useState<TournamentData[]>(() => {
-    const archive = loadArchiveTournaments();
-    if (archive && archive.length > 0) return archive;
-    const defaultData = createDefaultTournament();
-    saveArchiveTournaments([defaultData]);
-    return [defaultData];
-  });
+  // Archive list of tournaments state
+  const [savedTournaments, setSavedTournaments] = useState<TournamentData[]>([]);
 
   // Match score editing states
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
@@ -76,31 +78,101 @@ const AdminPortal: React.FC = () => {
   const [legTypeInput, setLegTypeInput] = useState<'single' | 'double'>('double');
   const [groupTeamsInput, setGroupTeamsInput] = useState<{ name: string; club: string }[][]>([]);
 
-  // Load cloud data on mount
-  useEffect(() => {
-    fetchAndSyncSaoVangTournament().then((cloud) => {
-      if (cloud && cloud.groups && cloud.groups.length > 0) {
-        setTournament(cloud);
+  // Load data for the selected tournament system
+  const loadSystemData = useCallback(async (sys: TournamentSystem) => {
+    setIsCloudLoaded(false);
+
+    if (sys === 'SAO_VANG') {
+      // 1. Local fallback initial load
+      const existing = loadTournamentData();
+      const initial = existing && existing.groups?.length > 0 ? existing : createDefaultTournament();
+      setTournament(initial);
+
+      const archive = loadArchiveTournaments();
+      setSavedTournaments(archive.length > 0 ? archive : [initial]);
+
+      // 2. Fetch from Cloud Firestore
+      try {
+        const cloud = await fetchAndSyncSaoVangTournament();
+        if (cloud && cloud.groups?.length > 0) {
+          setTournament(cloud);
+        }
+        const cloudArchive = await fetchAndSyncArchiveTournaments();
+        if (cloudArchive && cloudArchive.length > 0) {
+          setSavedTournaments(cloudArchive);
+        }
+      } catch (err) {
+        console.warn('Error fetching Sao Vang cloud data:', err);
       }
-      setIsCloudLoaded(true);
-    });
-    fetchAndSyncArchiveTournaments().then((list) => {
-      if (list && list.length > 0) {
-        setSavedTournaments(list);
+
+      setTourNameInput('SAO VÀNG CUP ™');
+      setSeasonInput('MÙA 3');
+      setNumGroupsInput(4);
+      setTeamsPerGroupInput(5);
+      setLegTypeInput('double');
+    } else {
+      // DTHEN system
+      const existing = loadDthenTournamentData();
+      const initial = existing && existing.groups?.length > 0 ? existing : createDefaultDthenTournament();
+      setTournament(initial);
+
+      const archive = loadArchiveDthenTournaments();
+      setSavedTournaments(archive.length > 0 ? archive : [initial]);
+
+      // Fetch from Cloud Firestore
+      try {
+        const cloud = await fetchAndSyncDthenTournament();
+        if (cloud && cloud.groups?.length > 0) {
+          setTournament(cloud);
+        }
+        const cloudArchive = await fetchAndSyncArchiveDthenTournaments();
+        if (cloudArchive && cloudArchive.length > 0) {
+          setSavedTournaments(cloudArchive);
+        }
+      } catch (err) {
+        console.warn('Error fetching Dthen cloud data:', err);
       }
-    });
+
+      setTourNameInput('ĐTHÉN FCO ™');
+      setSeasonInput('MÙA 2');
+      setNumGroupsInput(8);
+      setTeamsPerGroupInput(4);
+      setLegTypeInput('single');
+    }
+
+    setIsCloudLoaded(true);
+    setActiveGroupIndex(0);
+    setActiveRoundFilter('ALL');
   }, []);
 
-  // Synchronize state when active tournament updates (only after initial load)
+  // When selectedSystem changes, trigger data loading
   useEffect(() => {
-    if (isCloudLoaded) {
-      saveTournamentData(tournament);
+    if (selectedSystem) {
+      loadSystemData(selectedSystem);
     }
-  }, [tournament, isCloudLoaded]);
+  }, [selectedSystem, loadSystemData]);
 
+  // Synchronize state when active tournament updates (only after initial cloud load)
   useEffect(() => {
-    saveArchiveTournaments(savedTournaments);
-  }, [savedTournaments]);
+    if (!isCloudLoaded || !selectedSystem) return;
+
+    if (selectedSystem === 'SAO_VANG') {
+      saveTournamentData(tournament);
+    } else {
+      saveDthenTournamentData(tournament);
+    }
+  }, [tournament, isCloudLoaded, selectedSystem]);
+
+  // Synchronize archive state
+  useEffect(() => {
+    if (!isCloudLoaded || !selectedSystem || savedTournaments.length === 0) return;
+
+    if (selectedSystem === 'SAO_VANG') {
+      saveArchiveTournaments(savedTournaments);
+    } else {
+      saveArchiveDthenTournaments(savedTournaments);
+    }
+  }, [savedTournaments, isCloudLoaded, selectedSystem]);
 
   // Handle Login
   const handleLogin = (e: React.FormEvent) => {
@@ -119,20 +191,39 @@ const AdminPortal: React.FC = () => {
     if (window.confirm('Bạn có chắc chắn muốn đăng xuất khỏi Admin Portal?')) {
       setIsAuthenticated(false);
       sessionStorage.removeItem(SESSION_AUTH_KEY);
+      sessionStorage.removeItem(SESSION_SYSTEM_KEY);
+      setSelectedSystem(null);
       setPinInput('');
     }
   };
 
+  // Select tournament system
+  const handleSelectSystem = (sys: TournamentSystem) => {
+    setSelectedSystem(sys);
+    sessionStorage.setItem(SESSION_SYSTEM_KEY, sys);
+    setActiveTab('LIST');
+  };
+
+  // Return to tournament selection screen
+  const handleSwitchSystem = () => {
+    setSelectedSystem(null);
+    sessionStorage.removeItem(SESSION_SYSTEM_KEY);
+  };
+
   // Manual Push to Cloud Firestore
   const handleManualSync = async () => {
+    if (!selectedSystem) return;
     setIsSyncing(true);
     setSyncFeedback('Đang đồng bộ với Cloud Firestore...');
     try {
-      const successTour = await saveTournamentToFirestore(CLOUD_KEYS.SAO_VANG, tournament);
-      const successArchive = await saveTournamentToFirestore(CLOUD_KEYS.ARCHIVE, savedTournaments);
+      const docKey = selectedSystem === 'SAO_VANG' ? CLOUD_KEYS.SAO_VANG : CLOUD_KEYS.DTHEN;
+      const archiveKey = selectedSystem === 'SAO_VANG' ? CLOUD_KEYS.ARCHIVE : CLOUD_KEYS.ARCHIVE_DTHEN;
+
+      const successTour = await saveTournamentToFirestore(docKey, tournament);
+      const successArchive = await saveTournamentToFirestore(archiveKey, savedTournaments);
 
       if (successTour && successArchive) {
-        setSyncFeedback('✓ Đã đồng bộ thành công tất cả dữ liệu lên Cloud Firestore!');
+        setSyncFeedback(`✓ Đã đồng bộ thành công dữ liệu ${tournament.tournamentName} lên Cloud Firestore!`);
       } else if (!isFirebaseConfigured) {
         setSyncFeedback('⚠ Firebase chưa cấu hình biến môi trường, dữ liệu đã lưu an toàn tại Local Storage.');
       } else {
@@ -149,21 +240,33 @@ const AdminPortal: React.FC = () => {
 
   // Manual Pull from Cloud Firestore
   const handlePullFromCloud = async () => {
+    if (!selectedSystem) return;
     setIsSyncing(true);
     setSyncFeedback('Đang tải dữ liệu mới nhất từ Cloud...');
     try {
-      const cloudTour = await getTournamentFromFirestore<TournamentData>(CLOUD_KEYS.SAO_VANG);
-      const cloudArchive = await getTournamentFromFirestore<TournamentData[]>(CLOUD_KEYS.ARCHIVE);
+      const docKey = selectedSystem === 'SAO_VANG' ? CLOUD_KEYS.SAO_VANG : CLOUD_KEYS.DTHEN;
+      const archiveKey = selectedSystem === 'SAO_VANG' ? CLOUD_KEYS.ARCHIVE : CLOUD_KEYS.ARCHIVE_DTHEN;
+
+      const cloudTour = await getTournamentFromFirestore<TournamentData>(docKey);
+      const cloudArchive = await getTournamentFromFirestore<TournamentData[]>(archiveKey);
 
       if (cloudTour) {
         setTournament(cloudTour);
-        saveTournamentData(cloudTour);
+        if (selectedSystem === 'SAO_VANG') {
+          saveTournamentData(cloudTour);
+        } else {
+          saveDthenTournamentData(cloudTour);
+        }
       }
       if (cloudArchive && cloudArchive.length > 0) {
         setSavedTournaments(cloudArchive);
-        saveArchiveTournaments(cloudArchive);
+        if (selectedSystem === 'SAO_VANG') {
+          saveArchiveTournaments(cloudArchive);
+        } else {
+          saveArchiveDthenTournaments(cloudArchive);
+        }
       }
-      setSyncFeedback('✓ Đã tải và cập nhật dữ liệu mới nhất từ Cloud Firestore!');
+      setSyncFeedback(`✓ Đã tải và cập nhật dữ liệu ${tournament.tournamentName} mới nhất từ Cloud Firestore!`);
     } catch (err) {
       console.error(err);
       setSyncFeedback('❌ Lỗi khi tải dữ liệu từ Cloud.');
@@ -189,18 +292,30 @@ const AdminPortal: React.FC = () => {
     const activeTour = updatedList.find((t) => t.isVisible);
     if (activeTour) {
       setTournament(activeTour);
-      saveTournamentData(activeTour);
+      if (selectedSystem === 'SAO_VANG') {
+        saveTournamentData(activeTour);
+      } else {
+        saveDthenTournamentData(activeTour);
+      }
     } else {
       const updatedCurr = { ...tournament, isVisible: false };
       setTournament(updatedCurr);
-      saveTournamentData(updatedCurr);
+      if (selectedSystem === 'SAO_VANG') {
+        saveTournamentData(updatedCurr);
+      } else {
+        saveDthenTournamentData(updatedCurr);
+      }
     }
   };
 
-  // Switch active editing tournament
+  // Switch active editing tournament within archive
   const handleSelectTournament = (selected: TournamentData) => {
     setTournament(selected);
-    saveTournamentData(selected);
+    if (selectedSystem === 'SAO_VANG') {
+      saveTournamentData(selected);
+    } else {
+      saveDthenTournamentData(selected);
+    }
     setActiveTab('SCORES');
     setActiveGroupIndex(0);
     setActiveRoundFilter('ALL');
@@ -302,7 +417,7 @@ const AdminPortal: React.FC = () => {
     });
 
     const newTour: TournamentData = {
-      id: `tour_${Date.now()}`,
+      id: `tour_${selectedSystem?.toLowerCase()}_${Date.now()}`,
       tournamentName: tourNameInput,
       season: seasonInput,
       numGroups: numGroupsInput,
@@ -323,7 +438,7 @@ const AdminPortal: React.FC = () => {
     setCreateStep(1);
     setActiveGroupIndex(0);
     setActiveRoundFilter('ALL');
-    alert('🎉 Đã tạo giải đấu mới & kích hoạt xuất bản thành công!');
+    alert(`🎉 Đã tạo giải đấu mới cho ${selectedSystem === 'DTHEN' ? 'ĐThén FCO' : 'Sao Vàng Cup'} & xuất bản thành công!`);
   };
 
   // Active Group Standings
@@ -347,13 +462,13 @@ const AdminPortal: React.FC = () => {
       : activeGroup.matches.filter((m) => m.round === activeRoundFilter)
     : [];
 
-  // ================= RENDER: DEDICATED LOGIN SCREEN =================
+  // ================= 1. RENDER: LOGIN FORM =================
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-[#070e17] flex flex-col justify-center items-center px-4 py-12 font-sans relative overflow-hidden">
-        {/* Background glow effects */}
+        {/* Background ambient glows */}
         <div className="absolute top-1/4 -left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="w-full max-w-md bg-slate-900/90 border border-slate-800 rounded-3xl p-8 shadow-2xl backdrop-blur-xl relative z-10 space-y-6">
           
@@ -371,7 +486,7 @@ const AdminPortal: React.FC = () => {
                 CỔNG QUẢN TRỊ BTC
               </h1>
               <p className="text-xs text-slate-400 mt-1">
-                Bảng điều khiển nội bộ dành riêng cho Ban Tổ Chức giải đấu Sao Vàng Cup ™ & ĐThén FCO ™
+                Hệ thống nội bộ quản lý tất cả giải đấu: <strong>Sao Vàng Cup ™</strong> & <strong>ĐThén FCO ™</strong>
               </p>
             </div>
           </div>
@@ -433,19 +548,181 @@ const AdminPortal: React.FC = () => {
 
         </div>
 
-        {/* Footnote */}
         <p className="text-slate-600 text-[11px] font-oswald uppercase tracking-wider mt-8 text-center relative z-10">
-          Hệ thống bảo mật giải đấu điện tử Sao Vàng ™
+          Hệ thống bảo mật giải đấu Sao Vàng ™ & ĐThén FCO ™
         </p>
       </div>
     );
   }
 
-  // ================= RENDER: DEDICATED ADMIN DASHBOARD =================
+  // ================= 2. RENDER: TOURNAMENT SELECTOR HUB =================
+  if (!selectedSystem) {
+    return (
+      <div className="min-h-screen bg-[#070e17] flex flex-col justify-center items-center px-4 py-12 font-sans relative overflow-hidden">
+        {/* Decorative Background Glows */}
+        <div className="absolute top-1/3 -left-32 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/3 -right-32 w-[500px] h-[500px] bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="w-full max-w-4xl relative z-10 space-y-8">
+          
+          {/* Header */}
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full text-xs font-oswald font-black uppercase tracking-widest bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              <i className="fa-solid fa-layer-group text-amber-400"></i>
+              <span>CHỌN HỆ THỐNG GIẢI ĐẤU</span>
+            </div>
+            
+            <h1 className="font-oswald text-3xl sm:text-4xl lg:text-5xl font-black uppercase text-white tracking-wide">
+              BẠN MUỐN QUẢN TRỊ GIẢI ĐẤU NÀO?
+            </h1>
+            <p className="text-sm text-slate-400 max-w-xl mx-auto">
+              Hệ thống quản lý thống nhất tất cả các giải đấu. Vui lòng chọn giải đấu bạn muốn cập nhật tỉ số, bảng xếp hạng và vòng knock-out.
+            </p>
+          </div>
+
+          {/* Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Card 1: SAO VÀNG CUP */}
+            <div
+              onClick={() => handleSelectSystem('SAO_VANG')}
+              className="group p-8 rounded-3xl bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-emerald-950/40 border-2 border-emerald-500/40 hover:border-emerald-400 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/20 hover:-translate-y-1.5 cursor-pointer relative overflow-hidden flex flex-col justify-between space-y-6"
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all pointer-events-none" />
+
+              <div className="space-y-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-600 to-emerald-400 flex items-center justify-center text-white text-2xl shadow-lg shadow-emerald-600/30 group-hover:scale-110 transition-transform">
+                    <i className="fa-solid fa-trophy"></i>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-[11px] font-oswald font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                    MÙA 2 ĐANG DIỄN RA
+                  </span>
+                </div>
+
+                <div>
+                  <h2 className="font-oswald text-2xl sm:text-3xl font-black uppercase text-white tracking-wide group-hover:text-emerald-300 transition-colors">
+                    SAO VÀNG CUP ™
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                    Giải bóng đá điện tử truyền thống Sao Vàng Cup. Quản lý 4 bảng đấu (20 HLV), vòng tròn 2 lượt và cây phân nhánh Tứ kết, Bán kết, Chung kết.
+                  </p>
+                </div>
+
+                {/* Specs Pill List */}
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 text-xs font-semibold font-mono">
+                    4 Bảng (A-D)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 text-xs font-semibold font-mono">
+                    20 HLV
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 text-xs font-semibold font-mono">
+                    2 Lượt (Đi/Về)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-400 text-xs font-semibold font-mono border border-emerald-800/60">
+                    Firebase: sao_vang
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 group-hover:from-emerald-500 group-hover:to-teal-500 text-white font-oswald text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-emerald-600/30 flex items-center justify-center space-x-2"
+              >
+                <span>VÀO QUẢN TRỊ SAO VÀNG CUP</span>
+                <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+              </button>
+            </div>
+
+            {/* Card 2: ĐTHÉN FCO */}
+            <div
+              onClick={() => handleSelectSystem('DTHEN')}
+              className="group p-8 rounded-3xl bg-gradient-to-br from-slate-900/95 via-slate-900/80 to-blue-950/40 border-2 border-blue-500/40 hover:border-blue-400 transition-all duration-300 shadow-2xl hover:shadow-blue-500/20 hover:-translate-y-1.5 cursor-pointer relative overflow-hidden flex flex-col justify-between space-y-6"
+            >
+              <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-all pointer-events-none" />
+
+              <div className="space-y-4 relative z-10">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-blue-400 flex items-center justify-center text-white text-2xl shadow-lg shadow-blue-600/30 group-hover:scale-110 transition-transform">
+                    <i className="fa-solid fa-bolt"></i>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-[11px] font-oswald font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                    CHUẨN FIFA WORLD CUP
+                  </span>
+                </div>
+
+                <div>
+                  <h2 className="font-oswald text-2xl sm:text-3xl font-black uppercase text-white tracking-wide group-hover:text-blue-300 transition-colors">
+                    ĐTHÉN FCO ™
+                  </h2>
+                  <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
+                    Giải đấu đỉnh cao ĐThén FCO do Founder Đức Thén sáng lập. Quy mô 8 bảng đấu (32 HLV), vòng 1/8, Tứ kết, Bán kết và Chung kết chuẩn FIFA World Cup.
+                  </p>
+                </div>
+
+                {/* Specs Pill List */}
+                <div className="flex flex-wrap gap-2 pt-2">
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 text-xs font-semibold font-mono">
+                    8 Bảng (A-H)
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 text-xs font-semibold font-mono">
+                    32 HLV
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-slate-800/90 text-slate-300 text-xs font-semibold font-mono">
+                    Vòng 1 Lượt
+                  </span>
+                  <span className="px-2.5 py-1 rounded-lg bg-blue-950 text-blue-400 text-xs font-semibold font-mono border border-blue-800/60">
+                    Firebase: dthen_fco
+                  </span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 group-hover:from-blue-500 group-hover:to-indigo-500 text-white font-oswald text-sm font-black uppercase tracking-wider transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center space-x-2"
+              >
+                <span>VÀO QUẢN TRỊ ĐTHÉN FCO</span>
+                <i className="fa-solid fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+              </button>
+            </div>
+
+          </div>
+
+          {/* Bottom Actions */}
+          <div className="flex items-center justify-between pt-4 border-t border-slate-800">
+            <Link
+              to="/"
+              className="text-xs font-oswald uppercase tracking-wider text-slate-400 hover:text-amber-400 transition-colors inline-flex items-center space-x-1.5"
+            >
+              <i className="fa-solid fa-layer-group text-[10px]"></i>
+              <span>Về Hub Công Khai</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-300 text-xs font-oswald font-bold uppercase transition-colors flex items-center space-x-2 cursor-pointer"
+            >
+              <i className="fa-solid fa-arrow-right-from-bracket text-xs"></i>
+              <span>Đăng Xuất Khỏi Portal</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    );
+  }
+
+  // ================= 3. RENDER: DEDICATED ADMIN DASHBOARD =================
+  const isDthen = selectedSystem === 'DTHEN';
+
   return (
     <AdminLayout
       activeTab={activeTab}
       setActiveTab={setActiveTab}
+      tournamentSystem={selectedSystem}
+      onSwitchSystem={handleSwitchSystem}
       tournamentName={tournament.tournamentName}
       season={tournament.season}
       isCloudLoaded={isCloudLoaded}
@@ -467,7 +744,14 @@ const AdminPortal: React.FC = () => {
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h2 className="font-oswald text-xl sm:text-2xl font-black uppercase text-slate-900 dark:text-white tracking-wide">
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-oswald font-black uppercase tracking-wider ${
+                    isDthen ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300' : 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300'
+                  }`}>
+                    {isDthen ? 'HỆ THỐNG ĐTHÉN FCO' : 'HỆ THỐNG SAO VÀNG CUP'}
+                  </span>
+                </div>
+                <h2 className="font-oswald text-xl sm:text-2xl font-black uppercase text-slate-900 dark:text-white tracking-wide mt-1">
                   DANH SÁCH GIẢI ĐẤU & XUẤT BẢN RA WEB
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -475,20 +759,36 @@ const AdminPortal: React.FC = () => {
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setActiveTab('CREATE')}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-oswald text-xs font-black uppercase tracking-wider shadow-sm flex items-center space-x-2 flex-shrink-0 cursor-pointer"
-              >
-                <i className="fa-solid fa-plus"></i>
-                <span>Tạo Giải Mới</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={handleSwitchSystem}
+                  className="px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-oswald text-xs font-bold uppercase tracking-wider shadow-xs flex items-center space-x-1.5 cursor-pointer"
+                  title="Chuyển sang quản lý giải đấu khác"
+                >
+                  <i className="fa-solid fa-repeat"></i>
+                  <span>Đổi Giải Đấu</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('CREATE')}
+                  className={`px-4 py-2 rounded-xl font-oswald text-xs font-black uppercase tracking-wider shadow-sm flex items-center space-x-2 flex-shrink-0 cursor-pointer ${
+                    isDthen
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                  }`}
+                >
+                  <i className="fa-solid fa-plus"></i>
+                  <span>Tạo Giải Mới</span>
+                </button>
+              </div>
             </div>
 
             {savedTournaments.length === 0 ? (
               <div className="text-center py-12 text-slate-500">
                 <i className="fa-solid fa-folder-open text-4xl text-slate-400 mb-2 block"></i>
-                <p className="font-oswald text-sm uppercase font-bold">Chưa có giải đấu nào trong hệ thống</p>
+                <p className="font-oswald text-sm uppercase font-bold">Chưa có giải đấu nào trong hệ thống này</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -500,7 +800,9 @@ const AdminPortal: React.FC = () => {
                       key={tour.id}
                       className={`p-5 rounded-2xl border transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
                         isVisible
-                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/80 shadow-xs'
+                          ? isDthen
+                            ? 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-300 dark:border-blue-800/80 shadow-xs'
+                            : 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800/80 shadow-xs'
                           : 'bg-slate-50/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800'
                       }`}
                     >
@@ -510,8 +812,10 @@ const AdminPortal: React.FC = () => {
                             {tour.tournamentName} - {tour.season}
                           </h3>
                           {isVisible ? (
-                            <span className="px-2.5 py-0.5 rounded-full bg-emerald-700 text-white text-[11px] font-bold font-oswald uppercase tracking-wider flex items-center space-x-1.5 shadow-2xs">
-                              <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                            <span className={`px-2.5 py-0.5 rounded-full text-white text-[11px] font-bold font-oswald uppercase tracking-wider flex items-center space-x-1.5 shadow-2xs ${
+                              isDthen ? 'bg-blue-700' : 'bg-emerald-700'
+                            }`}>
+                              <span className="w-2 h-2 rounded-full bg-amber-300 animate-pulse"></span>
                               <span>ĐANG HIỂN THỊ CÔNG KHAI</span>
                             </span>
                           ) : (
@@ -522,7 +826,7 @@ const AdminPortal: React.FC = () => {
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                           {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/bảng •{' '}
-                          {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt'}
+                          {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt (Chuẩn World Cup)'}
                         </p>
                       </div>
 
@@ -532,7 +836,9 @@ const AdminPortal: React.FC = () => {
                         <div className="flex items-center space-x-2">
                           <span
                             className={`text-xs font-oswald font-bold uppercase ${
-                              isVisible ? 'text-emerald-700 dark:text-emerald-400' : 'text-slate-500'
+                              isVisible
+                                ? isDthen ? 'text-blue-700 dark:text-blue-400' : 'text-emerald-700 dark:text-emerald-400'
+                                : 'text-slate-500'
                             }`}
                           >
                             {isVisible ? 'BẬT' : 'TẮT'}
@@ -541,7 +847,9 @@ const AdminPortal: React.FC = () => {
                             type="button"
                             onClick={() => handleToggleVisibility(tour.id, isVisible)}
                             className={`w-12 h-6 rounded-full transition-colors relative p-0.5 shadow-inner cursor-pointer ${
-                              isVisible ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'
+                              isVisible
+                                ? isDthen ? 'bg-blue-600' : 'bg-emerald-600'
+                                : 'bg-slate-300 dark:bg-slate-700'
                             }`}
                           >
                             <div
@@ -556,7 +864,11 @@ const AdminPortal: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleSelectTournament(tour)}
-                          className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-oswald font-bold uppercase flex items-center space-x-1.5 transition-all shadow-xs cursor-pointer"
+                          className={`px-3.5 py-2 rounded-xl text-xs font-oswald font-bold uppercase flex items-center space-x-1.5 transition-all shadow-xs cursor-pointer ${
+                            isDthen
+                              ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                              : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                          }`}
                         >
                           <i className="fa-solid fa-pen-to-square"></i>
                           <span>Chỉnh Tỉ Số</span>
@@ -597,7 +909,7 @@ const AdminPortal: React.FC = () => {
                   onClick={() => handleSelectTournament(t)}
                   className={`px-3.5 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
                     tournament.id === t.id
-                      ? 'bg-amber-500 text-slate-950 shadow-sm'
+                      ? isDthen ? 'bg-blue-600 text-white shadow-sm' : 'bg-amber-500 text-slate-950 shadow-sm'
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                   }`}
                 >
@@ -642,7 +954,9 @@ const AdminPortal: React.FC = () => {
                 }}
                 className={`px-5 py-2 rounded-xl font-oswald text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
                   activeGroupIndex === idx
-                    ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                    ? isDthen
+                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                      : 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
                     : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
                 }`}
               >
@@ -683,7 +997,7 @@ const AdminPortal: React.FC = () => {
                     <tr
                       key={teamStat.teamId}
                       className={`hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors ${
-                        rankIdx < 2 ? 'bg-amber-50/40 dark:bg-amber-950/20' : ''
+                        rankIdx < 2 ? (isDthen ? 'bg-blue-50/40 dark:bg-blue-950/20' : 'bg-amber-50/40 dark:bg-amber-950/20') : ''
                       }`}
                     >
                       <td className="p-3 text-left font-bold font-oswald text-slate-900 dark:text-white">
@@ -750,7 +1064,7 @@ const AdminPortal: React.FC = () => {
                     onClick={() => setActiveRoundFilter(rnd)}
                     className={`px-2.5 py-1 text-xs font-oswald font-bold rounded-lg cursor-pointer ${
                       activeRoundFilter === rnd
-                        ? 'bg-amber-500 text-slate-950'
+                        ? isDthen ? 'bg-blue-600 text-white' : 'bg-amber-500 text-slate-950'
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                     }`}
                   >
@@ -795,7 +1109,9 @@ const AdminPortal: React.FC = () => {
                           value={match.homeScore !== null ? match.homeScore : ''}
                           onChange={(e) => handleScoreChange(match.id, 'homeScore', e.target.value)}
                           placeholder="-"
-                          className="w-12 h-10 text-center font-oswald font-bold text-xl border-2 border-amber-500 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-inner"
+                          className={`w-12 h-10 text-center font-oswald font-bold text-xl border-2 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 shadow-inner ${
+                            isDthen ? 'border-blue-500 focus:ring-blue-400' : 'border-amber-500 focus:ring-amber-400'
+                          }`}
                         />
                         <span className="font-bold text-slate-400 text-sm">:</span>
                         <input
@@ -805,7 +1121,9 @@ const AdminPortal: React.FC = () => {
                           value={match.awayScore !== null ? match.awayScore : ''}
                           onChange={(e) => handleScoreChange(match.id, 'awayScore', e.target.value)}
                           placeholder="-"
-                          className="w-12 h-10 text-center font-oswald font-bold text-xl border-2 border-amber-500 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-400 shadow-inner"
+                          className={`w-12 h-10 text-center font-oswald font-bold text-xl border-2 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 shadow-inner ${
+                            isDthen ? 'border-blue-500 focus:ring-blue-400' : 'border-amber-500 focus:ring-amber-400'
+                          }`}
                         />
                       </div>
 
@@ -866,15 +1184,27 @@ const AdminPortal: React.FC = () => {
                   const newBracket = buildFIFABracketFromGroups(tournament.groups);
                   const updatedTour = { ...tournament, knockoutStage: newBracket };
                   setTournament(updatedTour);
-                  saveTournamentData(updatedTour);
+                  if (selectedSystem === 'SAO_VANG') {
+                    saveTournamentData(updatedTour);
+                  } else {
+                    saveDthenTournamentData(updatedTour);
+                  }
                   const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
                   setSavedTournaments(updatedArchive);
-                  saveArchiveTournaments(updatedArchive);
-                  alert('🏆 Đã tạo và kích hoạt sơ đồ Vòng Loại Trực Tiếp (Knockout) chuẩn FIFA!');
+                  if (selectedSystem === 'SAO_VANG') {
+                    saveArchiveTournaments(updatedArchive);
+                  } else {
+                    saveArchiveDthenTournaments(updatedArchive);
+                  }
+                  alert(`🏆 Đã tạo và kích hoạt sơ đồ Vòng Loại Trực Tiếp cho ${tournament.tournamentName}!`);
                 }}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-oswald text-xs font-black uppercase tracking-wider transition-all shadow-md shadow-amber-500/30 cursor-pointer flex items-center space-x-2"
+                className={`px-5 py-2.5 rounded-xl font-oswald text-xs font-black uppercase tracking-wider transition-all shadow-md cursor-pointer flex items-center space-x-2 ${
+                  isDthen
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white shadow-blue-500/30'
+                    : 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 shadow-amber-500/30'
+                }`}
               >
-                <i className="fa-solid fa-trophy text-slate-950"></i>
+                <i className={`fa-solid fa-trophy ${isDthen ? 'text-white' : 'text-slate-950'}`}></i>
                 <span>{tournament.knockoutStage?.isCompletedGroupStage ? 'Cập Nhật Lại Cây Knockout' : 'Tạo Cây Knockout Ngay'}</span>
               </button>
 
@@ -885,10 +1215,18 @@ const AdminPortal: React.FC = () => {
                     if (window.confirm('Bạn có chắc chắn muốn mở lại vòng bảng và xóa dữ liệu Knockout?')) {
                       const updatedTour = { ...tournament, knockoutStage: undefined };
                       setTournament(updatedTour);
-                      saveTournamentData(updatedTour);
+                      if (selectedSystem === 'SAO_VANG') {
+                        saveTournamentData(updatedTour);
+                      } else {
+                        saveDthenTournamentData(updatedTour);
+                      }
                       const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
                       setSavedTournaments(updatedArchive);
-                      saveArchiveTournaments(updatedArchive);
+                      if (selectedSystem === 'SAO_VANG') {
+                        saveArchiveTournaments(updatedArchive);
+                      } else {
+                        saveArchiveDthenTournaments(updatedArchive);
+                      }
                     }
                   }}
                   className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-oswald uppercase transition-colors cursor-pointer"
@@ -905,7 +1243,7 @@ const AdminPortal: React.FC = () => {
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
               <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
                 <h3 className="font-oswald text-lg font-black uppercase text-slate-900 dark:text-white">
-                  ĐIỀN KẾT QUẢ VÒNG LOẠI TRỰC TIẾP
+                  ĐIỀN KẾT QUẢ VÒNG LOẠI TRỰC TIẾP ({tournament.tournamentName})
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Nhập tỉ số trận đấu (nếu hòa có thể nhập thêm tỉ số Penalty). Đội thắng sẽ tự động nhảy vào trận kế tiếp!
@@ -915,7 +1253,9 @@ const AdminPortal: React.FC = () => {
               <div className="space-y-6">
                 {tournament.knockoutStage.rounds.map((rnd, rIdx) => (
                   <div key={rIdx} className="space-y-3">
-                    <span className="px-3 py-1 rounded-lg bg-amber-500 text-slate-950 font-oswald text-xs font-bold uppercase tracking-wider inline-block">
+                    <span className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider inline-block ${
+                      isDthen ? 'bg-blue-600 text-white' : 'bg-amber-500 text-slate-950'
+                    }`}>
                       {rnd.name}
                     </span>
 
@@ -932,7 +1272,9 @@ const AdminPortal: React.FC = () => {
                             className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/60 hover:border-amber-400 transition-all space-y-3 shadow-2xs"
                           >
                             <div className="flex items-center justify-between text-xs font-oswald text-slate-500 border-b border-slate-200 dark:border-slate-800 pb-1.5">
-                              <span className="font-bold text-amber-600 uppercase">TRẬN #{kMatch.matchOrder}</span>
+                              <span className={`font-bold uppercase ${isDthen ? 'text-blue-500' : 'text-amber-600'}`}>
+                                TRẬN #{kMatch.matchOrder}
+                              </span>
                               <span>{kMatch.roundName}</span>
                             </div>
 
@@ -1005,7 +1347,11 @@ const AdminPortal: React.FC = () => {
                                       },
                                     };
                                     setTournament(updatedTour);
-                                    saveTournamentData(updatedTour);
+                                    if (selectedSystem === 'SAO_VANG') {
+                                      saveTournamentData(updatedTour);
+                                    } else {
+                                      saveDthenTournamentData(updatedTour);
+                                    }
                                   }}
                                   placeholder="-"
                                   className="w-10 h-9 text-center font-oswald font-bold text-lg border-2 border-amber-500 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none"
@@ -1059,7 +1405,11 @@ const AdminPortal: React.FC = () => {
                                       },
                                     };
                                     setTournament(updatedTour);
-                                    saveTournamentData(updatedTour);
+                                    if (selectedSystem === 'SAO_VANG') {
+                                      saveTournamentData(updatedTour);
+                                    } else {
+                                      saveDthenTournamentData(updatedTour);
+                                    }
                                   }}
                                   placeholder="-"
                                   className="w-10 h-9 text-center font-oswald font-bold text-lg border-2 border-amber-500 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none"
@@ -1106,7 +1456,11 @@ const AdminPortal: React.FC = () => {
                                       }
                                       const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
                                       setTournament(updatedTour);
-                                      saveTournamentData(updatedTour);
+                                      if (selectedSystem === 'SAO_VANG') {
+                                        saveTournamentData(updatedTour);
+                                      } else {
+                                        saveDthenTournamentData(updatedTour);
+                                      }
                                     }}
                                     className="w-12 h-7 text-center font-mono font-bold text-xs border border-amber-400 rounded bg-white dark:bg-slate-900"
                                   />
@@ -1127,7 +1481,11 @@ const AdminPortal: React.FC = () => {
                                       }
                                       const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
                                       setTournament(updatedTour);
-                                      saveTournamentData(updatedTour);
+                                      if (selectedSystem === 'SAO_VANG') {
+                                        saveTournamentData(updatedTour);
+                                      } else {
+                                        saveDthenTournamentData(updatedTour);
+                                      }
                                     }}
                                     className="w-12 h-7 text-center font-mono font-bold text-xs border border-amber-400 rounded bg-white dark:bg-slate-900"
                                   />
@@ -1153,7 +1511,7 @@ const AdminPortal: React.FC = () => {
             <div className="p-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-3">
               <i className="fa-solid fa-trophy text-4xl text-slate-400 block"></i>
               <h3 className="font-oswald text-lg font-bold uppercase text-slate-900 dark:text-white">
-                Chưa khởi tạo sơ đồ Vòng Knock-out
+                Chưa khởi tạo sơ đồ Vòng Knock-out cho {tournament.tournamentName}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
                 Sau khi các đội hoàn thành vòng bảng, hãy bấm nút <strong>"Tạo Cây Knockout Ngay"</strong> ở trên để tự động bốc nhánh.
@@ -1169,7 +1527,14 @@ const AdminPortal: React.FC = () => {
           {createStep === 1 && (
             <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
               <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h2 className="font-oswald text-xl sm:text-2xl font-black uppercase text-slate-900 dark:text-white">
+                <div className="flex items-center space-x-2">
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-oswald font-black uppercase tracking-wider ${
+                    isDthen ? 'bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-300' : 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-300'
+                  }`}>
+                    {isDthen ? 'TẠO GIẢI CHO ĐTHÉN FCO' : 'TẠO GIẢI CHO SAO VÀNG CUP'}
+                  </span>
+                </div>
+                <h2 className="font-oswald text-xl sm:text-2xl font-black uppercase text-slate-900 dark:text-white mt-1">
                   BƯỚC 1: CẤU HÌNH THỂ THỨC GIẢI ĐẤU
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -1277,7 +1642,11 @@ const AdminPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleSetupStep2}
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-oswald text-sm font-bold uppercase tracking-wider cursor-pointer"
+                  className={`px-6 py-2.5 rounded-xl font-oswald text-sm font-bold uppercase tracking-wider cursor-pointer ${
+                    isDthen
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                  }`}
                 >
                   Tiếp Tục Điền Tên Đội →
                 </button>
@@ -1313,7 +1682,9 @@ const AdminPortal: React.FC = () => {
                       key={gIdx}
                       className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3"
                     >
-                      <span className="font-oswald font-bold text-base text-amber-600 dark:text-amber-400 uppercase block border-b border-slate-200 dark:border-slate-800 pb-1">
+                      <span className={`font-oswald font-bold text-base uppercase block border-b border-slate-200 dark:border-slate-800 pb-1 ${
+                        isDthen ? 'text-blue-500' : 'text-amber-500'
+                      }`}>
                         BẢNG {groupLetter} ({teamsInGroup.length} Đội)
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1355,7 +1726,11 @@ const AdminPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleFinishCreateTournament}
-                  className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-oswald text-sm font-bold uppercase tracking-wider cursor-pointer shadow-md shadow-amber-500/25"
+                  className={`px-6 py-2.5 rounded-xl font-oswald text-sm font-bold uppercase tracking-wider cursor-pointer shadow-md ${
+                    isDthen
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
+                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/25'
+                  }`}
                 >
                   HOÀN TẤT & TẠO GIẢI NGAY
                 </button>
@@ -1371,7 +1746,7 @@ const AdminPortal: React.FC = () => {
           <div className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
               <h2 className="font-oswald text-xl sm:text-2xl font-black uppercase text-slate-900 dark:text-white">
-                TRẠNG THÁI CLOUD FIRESTORE & ĐỒNG BỘ DỮ LIỆU
+                TRẠNG THÁI CLOUD FIRESTORE & ĐỒNG BỘ DỮ LIỆU ({tournament.tournamentName})
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 Xem tình trạng kết nối Firebase Cloud Firestore và quản lý đồng bộ dữ liệu giải đấu.
@@ -1399,12 +1774,12 @@ const AdminPortal: React.FC = () => {
                 <div>
                   <h3 className="font-oswald font-bold text-base uppercase text-slate-900 dark:text-white">
                     {isFirebaseConfigured
-                      ? 'Firebase Cloud Firestore: ĐÃ KẾT NỐI TRỰC TUYẾN'
+                      ? `Firebase Cloud Firestore: ĐÃ KẾT NỐI (Key: ${isDthen ? 'dthen_fco' : 'sao_vang'})`
                       : 'Chế độ Lưu trữ: LOCAL STORAGE (NỘI BỘ)'}
                   </h3>
                   <p className="text-xs text-slate-600 dark:text-slate-300">
                     {isFirebaseConfigured
-                      ? 'Mọi thay đổi tỉ số và giải đấu được lưu tự động lên Google Cloud Firestore theo thời gian thực.'
+                      ? `Mọi thay đổi tỉ số và giải đấu của ${tournament.tournamentName} được lưu tự động lên Google Cloud Firestore theo thời gian thực.`
                       : 'Dữ liệu hiện đang lưu tại trình duyệt máy tính của bạn. Để đồng bộ lên đám mây, hãy cấu hình các biến môi trường Firebase trên Vercel.'}
                   </p>
                 </div>
@@ -1428,16 +1803,20 @@ const AdminPortal: React.FC = () => {
                   Đẩy Dữ Liệu Lên Cloud (Push to Cloud)
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Ép đẩy toàn bộ giải đấu và danh sách lưu trữ hiện tại lên Firestore.
+                  Ép đẩy giải đấu <strong>{tournament.tournamentName}</strong> hiện tại lên Firestore document <code className="text-amber-500 font-bold">{isDthen ? 'dthen_fco' : 'sao_vang'}</code>.
                 </p>
                 <button
                   type="button"
                   onClick={handleManualSync}
                   disabled={isSyncing}
-                  className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-oswald text-xs font-bold uppercase tracking-wider flex items-center space-x-2 cursor-pointer"
+                  className={`px-4 py-2 rounded-xl text-xs font-oswald font-bold uppercase tracking-wider flex items-center space-x-2 cursor-pointer ${
+                    isDthen
+                      ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                      : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                  }`}
                 >
                   <i className={`fa-solid fa-cloud-arrow-up ${isSyncing ? 'fa-spin' : ''}`}></i>
-                  <span>{isSyncing ? 'Đang gửi...' : 'Đẩy Lên Cloud Firestore'}</span>
+                  <span>{isSyncing ? 'Đang gửi...' : `Đẩy Lên Firestore (${isDthen ? 'ĐThén' : 'Sao Vàng'})`}</span>
                 </button>
               </div>
 
@@ -1446,7 +1825,7 @@ const AdminPortal: React.FC = () => {
                   Tải Dữ Liệu Từ Cloud (Pull from Cloud)
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Kéo bản ghi mới nhất từ Cloud Firestore về máy ghi đè vào bộ nhớ tạm.
+                  Kéo bản ghi mới nhất từ Cloud Firestore của <strong>{tournament.tournamentName}</strong> về máy ghi đè vào bộ nhớ tạm.
                 </p>
                 <button
                   type="button"
