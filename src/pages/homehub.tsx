@@ -99,13 +99,13 @@ const HomeHub: React.FC = () => {
       bxhLink: "/dthen/xephang",
       rulesLink: "/dthen/quydinh",
       subtitle: "Đấu trường sân cỏ phong trào do Admin ĐThén sáng lập, đề cao tinh thần Fair-play và sự gắn kết cộng đồng.",
-      organizer: "Admin ĐThén & FCO Community",
+      organizer: "Admin ĐThén & Tổ Trọng Tài Phan Long",
       theme: "blue",
       squadCap: "Quỹ Lương 305 Chuẩn",
-      mode: "Vòng Bảng & Vòng Loại Trực Tiếp",
+      mode: "32 Đội • 8 Bảng Đấu (Chuẩn World Cup)",
       prize: "Cúp Lưu Niệm + Tiền Thưởng Nóng",
-      playersCount: "16 Huấn Luyện Viên",
-      highlights: ["🔥 Vòng bảng tranh vé gay cấn", "🤝 Đề cao tinh thần Fair-play", "🛡️ Giám sát đội hình nghiêm ngặt"],
+      playersCount: "32 Huấn Luyện Viên",
+      highlights: ["🌍 Chuẩn thể thức World Cup 32 đội", "🔥 8 bảng đấu tranh vé Vòng 1/8", "🛡️ Giám sát đội hình nghiêm ngặt"],
     },
   ];
 
@@ -131,7 +131,7 @@ const HomeHub: React.FC = () => {
       )}
 
       {/* ================= HERO HEADER: NATURAL FOOTBALL STADIUM PITCH ================= */}
-      <section className="relative w-full text-white py-12 sm:py-16 px-4 border-b-4 border-emerald-700 shadow-xl overflow-hidden pitch-turf-pattern">
+      <section className="relative w-full text-white py-8 sm:py-14 md:py-16 px-3 sm:px-4 border-b-4 border-emerald-700 shadow-xl overflow-hidden pitch-turf-pattern">
         
         {/* Stadium Floodlights Glow from Upper Corners */}
         <div className="absolute -top-10 left-1/4 w-80 h-72 bg-radial from-amber-200/20 via-emerald-300/10 to-transparent blur-3xl pointer-events-none" />
@@ -154,41 +154,41 @@ const HomeHub: React.FC = () => {
         </div>
 
         {/* Top-Right Theme Toggle Button */}
-        <div className="absolute top-4 right-4 z-20">
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 z-20">
           <ThemeToggleButton />
         </div>
 
         {/* Hero Content */}
-        <div className="max-w-5xl mx-auto text-center space-y-4 relative z-10">
+        <div className="max-w-5xl mx-auto text-center space-y-3 sm:space-y-4 relative z-10">
           
           {/* Tournament Badge */}
-          <div className="inline-flex items-center space-x-2 px-4 py-1.5 rounded-full bg-emerald-950/85 border border-emerald-400/50 text-emerald-200 text-xs font-oswald font-bold uppercase tracking-widest shadow-md backdrop-blur-xs">
-            <i className="fa-solid fa-trophy text-amber-400 text-sm"></i>
+          <div className="inline-flex items-center space-x-1.5 px-3 py-1 sm:px-4 sm:py-1.5 rounded-full bg-emerald-950/85 border border-emerald-400/50 text-emerald-200 text-[10px] sm:text-xs font-oswald font-bold uppercase tracking-widest shadow-md backdrop-blur-xs">
+            <i className="fa-solid fa-trophy text-amber-400 text-xs sm:text-sm"></i>
             <span>HỆ THỐNG GIẢI ĐẤU BÓNG ĐÁ FC ONLINE</span>
           </div>
 
           {/* Main Title */}
-          <h1 className="font-oswald font-black text-3xl sm:text-5xl md:text-6xl uppercase tracking-wide text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] leading-tight">
+          <h1 className="font-oswald font-black text-2xl sm:text-4xl md:text-5xl lg:text-6xl uppercase tracking-wide text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] leading-tight px-1">
             ĐẠI ĐẤU TRƯỜNG <span className="text-amber-300">SÂN CỎ FC ONLINE</span>
           </h1>
 
-          <p className="text-emerald-100 text-sm sm:text-base max-w-2xl mx-auto font-normal leading-relaxed drop-shadow-sm">
+          <p className="text-emerald-100 text-xs sm:text-sm md:text-base max-w-2xl mx-auto font-normal leading-relaxed drop-shadow-sm px-2">
             Nơi hội tụ các trận cầu kịch tính, tra cứu lịch thi đấu, bảng xếp hạng trực tiếp, thể thức và hồ sơ các Huấn luyện viên tham dự.
           </p>
 
           {/* Quick Kick-off & Action Buttons */}
-          <div className="pt-3 flex flex-wrap items-center justify-center gap-3.5">
+          <div className="pt-2 sm:pt-3 flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3.5 w-full max-w-md mx-auto sm:max-w-none">
             <button
               onClick={triggerHeroGoal}
-              className="py-3.5 px-8 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-oswald text-base font-black uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center space-x-2.5 cursor-pointer"
+              className="w-full sm:w-auto py-3 sm:py-3.5 px-6 sm:px-8 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-500 to-amber-600 hover:from-amber-300 hover:to-amber-500 text-slate-950 font-oswald text-sm sm:text-base font-black uppercase tracking-wider shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center space-x-2.5 cursor-pointer"
             >
-              <i className="fa-solid fa-futbol text-lg animate-spin-slow"></i>
+              <i className="fa-solid fa-futbol text-base sm:text-lg animate-spin-slow"></i>
               <span>SÚT BÓNG GIAO HỮU!</span>
             </button>
 
             <a
               href="#tournaments-section"
-              className="py-3.5 px-7 rounded-2xl bg-emerald-900/90 border border-emerald-400/60 hover:border-emerald-300 text-white font-oswald text-base font-bold uppercase tracking-wider hover:bg-emerald-800 transition-all flex items-center space-x-2 shadow-md hover:scale-105"
+              className="w-full sm:w-auto py-3 sm:py-3.5 px-6 sm:px-7 rounded-2xl bg-emerald-900/90 border border-emerald-400/60 hover:border-emerald-300 text-white font-oswald text-sm sm:text-base font-bold uppercase tracking-wider hover:bg-emerald-800 transition-all flex items-center justify-center space-x-2 shadow-md hover:scale-105"
             >
               <i className="fa-solid fa-list-ol text-amber-300"></i>
               <span>XEM CÁC GIẢI ĐẤU</span>
@@ -196,9 +196,9 @@ const HomeHub: React.FC = () => {
           </div>
 
           {/* Matchday Preview Bar on the Grass */}
-          <div className="mt-6 pt-3 border-t border-emerald-600/40 max-w-3xl mx-auto flex items-center justify-between px-4 sm:px-6 py-2.5 bg-emerald-950/60 rounded-2xl border border-emerald-500/30 backdrop-blur-xs text-xs font-oswald">
+          <div className="mt-4 sm:mt-6 pt-2.5 sm:pt-3 border-t border-emerald-600/40 max-w-3xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-2 px-3.5 sm:px-6 py-2 sm:py-2.5 bg-emerald-950/60 rounded-2xl border border-emerald-500/30 backdrop-blur-xs text-[11px] sm:text-xs font-oswald">
             <div className="flex items-center space-x-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00e575] animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-[#00e575] animate-ping" />
               <span className="text-emerald-300 uppercase font-bold">KHỞI TRANH MÙA GIẢI MỚI</span>
             </div>
             <div className="text-slate-200 hidden sm:block">
@@ -213,7 +213,7 @@ const HomeHub: React.FC = () => {
       </section>
 
       {/* ================= MAIN CONTENT ================= */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-12">
         
         {/* ================= TOURNAMENT SELECTION SECTION ================= */}
         <section id="tournaments-section" className="space-y-6">
@@ -239,107 +239,131 @@ const HomeHub: React.FC = () => {
               return (
                 <div
                   key={tour.id}
-                  className={`rounded-3xl bg-white dark:bg-[#0c2419] border-2 ${
-                    isBlue 
-                      ? "border-blue-200 dark:border-blue-800/80 hover:border-blue-500" 
-                      : "border-emerald-200 dark:border-emerald-800/80 hover:border-emerald-500"
-                  } shadow-lg dark:shadow-2xl overflow-hidden relative flex flex-col justify-between group transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl`}
+                  className={`rounded-3xl border-2 ${
+                    isBlue
+                      ? "border-blue-400/40 dark:border-blue-600/50 hover:border-cyan-400 dark:hover:border-cyan-400 bg-gradient-to-b from-blue-50/60 via-white to-slate-50 dark:from-[#0c223e] dark:via-[#07172c] dark:to-[#040e1b]"
+                      : "border-emerald-400/40 dark:border-emerald-600/50 hover:border-amber-400 dark:hover:border-amber-400 bg-gradient-to-b from-emerald-50/60 via-white to-slate-50 dark:from-[#0b291d] dark:via-[#071d14] dark:to-[#04110c]"
+                  } shadow-xl dark:shadow-2xl overflow-hidden relative flex flex-col justify-between group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl`}
                 >
-                  {/* Top Stadium Pitch Stripe Header */}
+                  {/* Subtle Background Stadium Floodlight Glow */}
                   <div
-                    className={`h-3 w-full bg-gradient-to-r ${
-                      isBlue
-                        ? "from-blue-600 via-indigo-600 to-blue-700"
-                        : "from-emerald-600 via-teal-600 to-emerald-700"
+                    className={`absolute -top-12 -right-12 w-64 h-64 rounded-full pointer-events-none blur-3xl opacity-20 dark:opacity-30 ${
+                      isBlue ? "bg-cyan-400" : "bg-amber-400"
                     }`}
                   />
 
-                  <div className="p-6 sm:p-7 space-y-5 flex-1 flex flex-col justify-between">
+                  {/* Top Stadium Header Strip with Matchday Banner */}
+                  <div
+                    className={`py-1.5 sm:py-2 px-3.5 sm:px-6 bg-gradient-to-r ${
+                      isBlue
+                        ? "from-blue-800 via-indigo-900 to-blue-950 text-cyan-200 border-b border-blue-500/30"
+                        : "from-emerald-900 via-emerald-950 to-slate-950 text-amber-200 border-b border-emerald-500/30"
+                    } flex items-center justify-between text-[10px] sm:text-[11px] font-oswald font-bold uppercase tracking-widest`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <span className={`w-2 h-2 rounded-full ${isBlue ? "bg-cyan-400" : "bg-[#00e575]"} animate-ping`} />
+                      <span>{isBlue ? "⚡ ĐẤU TRƯỜNG ĐTHÉN FCO" : "🏆 GIẢI ĐẤU QUỐC GIA CHÍNH THỨC"}</span>
+                    </div>
+                    <span className="text-white/80 font-normal hidden sm:inline">
+                      {isBlue ? "COMMUNITY LEAGUE" : "CHAMPIONSHIP SERIES"}
+                    </span>
+                  </div>
+
+                  <div className="p-4 sm:p-7 space-y-4 sm:space-y-5 flex-1 flex flex-col justify-between relative z-10">
                     
                     {/* Top Status & Season */}
-                    <div className="space-y-4">
+                    <div className="space-y-3.5 sm:space-y-4">
                       <div className="flex items-center justify-between">
                         <span
-                          className={`inline-flex items-center space-x-1.5 px-3 py-1 rounded-full border ${tour.badgeClass} text-xs font-oswald font-bold uppercase tracking-wider`}
+                          className={`inline-flex items-center space-x-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full border ${
+                            isBlue
+                              ? "bg-blue-100/90 text-blue-900 border-blue-300 dark:bg-blue-950/90 dark:text-cyan-300 dark:border-cyan-500/50"
+                              : "bg-emerald-100/90 text-emerald-900 border-emerald-300 dark:bg-emerald-950/90 dark:text-emerald-300 dark:border-emerald-500/50"
+                          } text-[10px] sm:text-xs font-oswald font-bold uppercase tracking-wider shadow-xs`}
                         >
-                          <span className={`w-2 h-2 rounded-full ${isBlue ? "bg-blue-600" : "bg-emerald-600"} animate-pulse`} />
+                          <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${isBlue ? "bg-cyan-500" : "bg-emerald-500"} animate-pulse`} />
                           <span>{tour.statusText}</span>
                         </span>
 
-                        <span className="text-xs font-oswald font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wide flex items-center space-x-1">
-                          <i className="fa-solid fa-flag text-amber-500 text-xs"></i>
+                        <span className="text-[10px] sm:text-xs font-oswald font-bold text-amber-600 dark:text-amber-300 uppercase tracking-wide flex items-center space-x-1 sm:space-x-1.5 bg-amber-500/10 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg border border-amber-500/20">
+                          <i className="fa-solid fa-medal text-amber-500 text-[10px] sm:text-xs"></i>
                           <span>{tour.season}</span>
                         </span>
                       </div>
 
                       {/* Crest & Title */}
-                      <div className="flex items-center space-x-3.5 pt-1">
+                      <div className="flex items-start sm:items-center space-x-3 sm:space-x-4 pt-0.5 sm:pt-1">
                         <div
-                          className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl ${
+                          className={`w-13 h-13 sm:w-18 sm:h-18 rounded-2xl ${
                             isBlue
-                              ? "bg-blue-50 dark:bg-blue-950/80 border border-blue-200 dark:border-blue-800"
-                              : "bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800"
-                          } p-2 flex items-center justify-center flex-shrink-0 shadow-xs group-hover:scale-105 transition-transform duration-200`}
+                              ? "bg-gradient-to-br from-blue-900/80 via-blue-950 to-slate-950 border-2 border-cyan-400/60 shadow-[0_0_15px_rgba(14,165,233,0.3)] text-cyan-300"
+                              : "bg-gradient-to-br from-emerald-900/80 via-emerald-950 to-slate-950 border-2 border-emerald-400/60 shadow-[0_0_15px_rgba(0,229,117,0.3)] text-emerald-300"
+                          } p-1.5 sm:p-2 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform duration-300`}
                         >
                           {tour.logo ? (
                             <img
                               src={tour.logo}
                               alt={tour.name}
-                              className="w-full h-full max-h-12 max-w-12 object-contain"
+                              className="w-full h-full max-h-12 max-w-12 sm:max-h-14 sm:max-w-14 object-contain drop-shadow-md"
                             />
                           ) : (
-                            <div className="w-full h-full rounded-lg bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex items-center justify-center text-xl shadow-xs">
-                              <i className={`fa-solid ${tour.customIcon || "fa-trophy"} text-amber-300`}></i>
+                            <div className="w-full h-full rounded-xl bg-gradient-to-br from-blue-600 via-indigo-700 to-cyan-800 text-white flex flex-col items-center justify-center text-lg sm:text-xl shadow-xs">
+                              <i className="fa-solid fa-trophy text-amber-300"></i>
                             </div>
                           )}
                         </div>
 
-                        <div className="space-y-1 flex-1">
-                          <span className="text-[11px] font-oswald font-bold uppercase text-slate-500 dark:text-slate-400 block">
-                            {tour.organizer}
+                        <div className="space-y-0.5 sm:space-y-1 flex-1 min-w-0">
+                          <span className="text-[10px] sm:text-[11px] font-oswald font-bold uppercase text-slate-500 dark:text-slate-400 flex items-center space-x-1 truncate">
+                            <i className="fa-solid fa-shield-halved text-xs"></i>
+                            <span className="truncate">{tour.organizer}</span>
                           </span>
                           <h3
-                            className={`font-oswald font-black text-2xl sm:text-3xl uppercase tracking-tight text-slate-900 dark:text-white ${
-                              isBlue ? "group-hover:text-blue-600 dark:group-hover:text-blue-300" : "group-hover:text-emerald-600 dark:group-hover:text-emerald-300"
-                            } transition-colors leading-tight`}
+                            className={`font-oswald font-black text-xl sm:text-3xl uppercase tracking-tight text-slate-900 dark:text-white ${
+                              isBlue ? "group-hover:text-cyan-400" : "group-hover:text-amber-300"
+                            } transition-colors leading-tight drop-shadow-xs`}
                           >
                             {tour.name}
                           </h3>
-                          <p className="text-xs text-slate-600 dark:text-slate-300 font-normal line-clamp-2">
+                          <p className="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 font-normal line-clamp-2 leading-relaxed">
                             {tour.subtitle}
                           </p>
                         </div>
                       </div>
 
                       {/* Football Match Specs Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 text-xs">
-                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 flex flex-col">
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-oswald font-bold flex items-center space-x-1">
-                            <i className="fa-solid fa-shirt text-slate-400"></i>
-                            <span>Giới Hạn Lương</span>
-                          </span>
-                          <span className="font-oswald font-bold text-slate-900 dark:text-white text-sm mt-0.5">{tour.squadCap}</span>
-                        </div>
-                        
-                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 flex flex-col">
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-oswald font-bold flex items-center space-x-1">
-                            <i className="fa-solid fa-futbol text-slate-400"></i>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 pt-1 sm:pt-2 text-xs">
+                        <div className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl ${
+                          isBlue 
+                            ? "bg-blue-500/10 dark:bg-blue-950/60 border border-blue-500/20 dark:border-blue-800/60" 
+                            : "bg-emerald-500/10 dark:bg-emerald-950/60 border border-emerald-500/20 dark:border-emerald-800/60"
+                        } flex flex-col justify-between`}>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-oswald font-bold flex items-center space-x-1.5">
+                            <i className="fa-solid fa-futbol text-emerald-500 dark:text-emerald-400"></i>
                             <span>Thể Thức</span>
                           </span>
-                          <span className="font-oswald font-bold text-slate-900 dark:text-white text-sm mt-0.5">{tour.mode}</span>
+                          <span className="font-oswald font-bold text-slate-900 dark:text-white text-xs sm:text-base mt-1 leading-snug">
+                            {tour.mode}
+                          </span>
                         </div>
 
-                        <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 flex flex-col col-span-2 sm:col-span-1">
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-oswald font-bold flex items-center space-x-1">
+                        <div className={`p-3 sm:p-3.5 rounded-xl sm:rounded-2xl ${
+                          isBlue 
+                            ? "bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/20 dark:border-amber-700/50" 
+                            : "bg-amber-500/10 dark:bg-amber-950/40 border border-amber-500/20 dark:border-amber-700/50"
+                        } flex flex-col justify-between`}>
+                          <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-oswald font-bold flex items-center space-x-1.5">
                             <i className="fa-solid fa-trophy text-amber-500"></i>
                             <span>Giải Thưởng</span>
                           </span>
-                          <span className="font-oswald font-bold text-amber-600 dark:text-amber-300 text-sm mt-0.5 truncate">{tour.prize}</span>
+                          <span className="font-oswald font-bold text-amber-600 dark:text-amber-300 text-xs sm:text-base mt-1 truncate leading-snug">
+                            {tour.prize}
+                          </span>
                         </div>
                       </div>
 
                       {/* Bullet Highlights */}
-                      <div className="space-y-1.5 pt-1 text-xs text-slate-600 dark:text-slate-300">
+                      <div className="space-y-1 sm:space-y-1.5 pt-1 text-[11px] sm:text-xs text-slate-600 dark:text-slate-300">
                         {tour.highlights.map((hl, i) => (
                           <div key={i} className="flex items-center space-x-2">
                             <span>{hl}</span>
@@ -349,45 +373,20 @@ const HomeHub: React.FC = () => {
                     </div>
 
                     {/* Action Nav Links */}
-                    <div className="space-y-2.5 pt-4 border-t border-slate-200 dark:border-slate-800 mt-4">
+                    <div className="pt-3 sm:pt-4 border-t border-slate-200/80 dark:border-slate-800/80 mt-3 sm:mt-4">
                       {/* Primary Button */}
                       <Link
                         to={tour.link}
-                        className={`w-full py-3.5 px-6 rounded-2xl bg-gradient-to-r ${
+                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-gradient-to-r ${
                           isBlue
-                            ? "from-blue-600 via-blue-700 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white"
-                            : "from-emerald-700 via-emerald-800 to-teal-800 hover:from-emerald-600 hover:to-teal-700 text-white"
-                        } font-oswald text-base font-bold uppercase tracking-wider text-center transition-all flex items-center justify-center space-x-2 shadow-md hover:scale-[1.02] active:scale-95`}
+                            ? "from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-[0_4px_20px_rgba(14,165,233,0.35)]"
+                            : "from-emerald-700 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:to-teal-500 shadow-[0_4px_20px_rgba(0,229,117,0.35)]"
+                        } text-white font-oswald text-sm sm:text-base font-black uppercase tracking-wider text-center transition-all flex items-center justify-center space-x-2 hover:scale-[1.02] active:scale-95 btn-shimmer cursor-pointer`}
                       >
-                        <i className="fa-solid fa-futbol text-sm"></i>
+                        <i className="fa-solid fa-futbol text-sm sm:text-base animate-spin-slow"></i>
                         <span>VÀO SÂN THI ĐẤU</span>
                         <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform"></i>
                       </Link>
-
-                      {/* Quick Links */}
-                      <div className="grid grid-cols-3 gap-2 text-center text-xs font-oswald font-bold">
-                        <Link
-                          to={tour.ltdLink}
-                          className="py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center space-x-1"
-                        >
-                          <i className="fa-solid fa-calendar-days text-[11px] text-emerald-600"></i>
-                          <span>Lịch Đấu</span>
-                        </Link>
-                        <Link
-                          to={tour.bxhLink}
-                          className="py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center space-x-1"
-                        >
-                          <i className="fa-solid fa-ranking-star text-[11px] text-amber-500"></i>
-                          <span>Bảng Xếp Hạng</span>
-                        </Link>
-                        <Link
-                          to={tour.rulesLink}
-                          className="py-2.5 px-2 rounded-xl bg-slate-100 dark:bg-slate-900 hover:bg-slate-200 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-all flex items-center justify-center space-x-1"
-                        >
-                          <i className="fa-solid fa-book-bookmark text-[11px] text-sky-600"></i>
-                          <span>Quy Định</span>
-                        </Link>
-                      </div>
                     </div>
 
                   </div>
@@ -398,41 +397,41 @@ const HomeHub: React.FC = () => {
         </section>
 
         {/* ================= ULTRA-CUSTOMIZED REALISTIC PENALTY SHOOTOUT ================= */}
-        <section className="rounded-3xl border-2 border-emerald-600/80 dark:border-emerald-700 bg-gradient-to-b from-[#0e442c] via-[#093522] to-[#052115] text-white p-6 sm:p-8 shadow-2xl relative overflow-hidden">
+        <section className="rounded-2xl sm:rounded-3xl border-2 border-emerald-600/80 dark:border-emerald-700 bg-gradient-to-b from-[#0e442c] via-[#093522] to-[#052115] text-white p-4 sm:p-8 shadow-2xl relative overflow-hidden">
           
           {/* Ambient Floodlight Beam */}
           <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-40 bg-radial from-amber-200/25 via-emerald-300/10 to-transparent blur-2xl pointer-events-none" />
 
           {/* Section Header with Stadium Scoreboard */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-white/20 pb-5 mb-6 relative z-10">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 border-b border-white/20 pb-4 sm:pb-5 mb-4 sm:mb-6 relative z-10">
             <div className="text-center sm:text-left">
-              <span className="text-xs font-oswald font-bold uppercase tracking-widest text-amber-300 flex items-center justify-center sm:justify-start space-x-2">
-                <i className="fa-solid fa-bullseye text-sm animate-pulse"></i>
+              <span className="text-[10px] sm:text-xs font-oswald font-bold uppercase tracking-widest text-amber-300 flex items-center justify-center sm:justify-start space-x-1.5 sm:space-x-2">
+                <i className="fa-solid fa-bullseye text-xs sm:text-sm animate-pulse"></i>
                 <span>GÓC SÚT PHẠT ĐỀN 11M THỰC CHIẾN</span>
               </span>
-              <h3 className="font-oswald text-2xl sm:text-4xl font-black uppercase text-white tracking-wide mt-1 drop-shadow-sm">
+              <h3 className="font-oswald text-xl sm:text-4xl font-black uppercase text-white tracking-wide mt-1 drop-shadow-sm">
                 ⚽ ĐẤU TRÍ TRÊN CHẤM LUÂN LƯU 11M
               </h3>
-              <p className="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
+              <p className="text-[11px] sm:text-sm text-emerald-100 mt-1 max-w-xl">
                 Chọn góc sút hiểm hóc (Góc chữ A hoặc Sút chìm mép lưới) để đánh bại thủ môn và thiết lập kỷ lục chuỗi bàn thắng!
               </p>
             </div>
 
             {/* Stadium LED Scoreboard */}
-            <div className="flex items-center space-x-3 sm:space-x-4 bg-black/60 border-2 border-emerald-500/50 px-5 py-3 rounded-2xl shadow-xl backdrop-blur-md">
+            <div className="flex items-center space-x-2.5 sm:space-x-4 bg-black/60 border-2 border-emerald-500/50 px-3.5 py-2 sm:px-5 sm:py-3 rounded-xl sm:rounded-2xl shadow-xl backdrop-blur-md">
               <div className="text-center">
-                <span className="text-[10px] text-emerald-400 uppercase font-oswald font-bold block tracking-wider">BÀN THẮNG</span>
-                <span className="font-oswald font-black text-2xl sm:text-3xl text-amber-400">{penaltyScore}</span>
+                <span className="text-[9px] sm:text-[10px] text-emerald-400 uppercase font-oswald font-bold block tracking-wider">BÀN THẮNG</span>
+                <span className="font-oswald font-black text-xl sm:text-3xl text-amber-400">{penaltyScore}</span>
               </div>
-              <div className="w-px h-9 bg-emerald-600/60" />
+              <div className="w-px h-7 sm:h-9 bg-emerald-600/60" />
               <div className="text-center">
-                <span className="text-[10px] text-emerald-400 uppercase font-oswald font-bold block tracking-wider">CHUỖI THẮNG</span>
-                <span className="font-oswald font-black text-2xl sm:text-3xl text-[#00e575]">{penaltyStreak} 🔥</span>
+                <span className="text-[9px] sm:text-[10px] text-emerald-400 uppercase font-oswald font-bold block tracking-wider">CHUỖI THẮNG</span>
+                <span className="font-oswald font-black text-xl sm:text-3xl text-[#00e575]">{penaltyStreak} 🔥</span>
               </div>
               {penaltyScore > 0 && (
                 <button
                   onClick={() => { setPenaltyScore(0); setPenaltyStreak(0); }}
-                  className="ml-2 p-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600 text-xs text-slate-300 hover:text-white transition-colors"
+                  className="ml-1 sm:ml-2 p-1.5 rounded-lg bg-emerald-950/80 hover:bg-emerald-900 border border-emerald-600 text-xs text-slate-300 hover:text-white transition-colors"
                   title="Đặt lại điểm số"
                 >
                   <i className="fa-solid fa-rotate-left"></i>
@@ -442,7 +441,7 @@ const HomeHub: React.FC = () => {
           </div>
 
           {/* ================= 3D STADIUM GOAL & PITCH ARENA ================= */}
-          <div className="relative w-full max-w-3xl mx-auto h-80 sm:h-96 bg-gradient-to-b from-[#072418] via-[#0b3826] to-[#072519] rounded-2xl border-4 border-emerald-500/80 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col justify-between p-4 sm:p-6 select-none">
+          <div className="relative w-full max-w-3xl mx-auto h-72 sm:h-96 bg-gradient-to-b from-[#072418] via-[#0b3826] to-[#072519] rounded-2xl border-4 border-emerald-500/80 shadow-[0_0_50px_rgba(0,0,0,0.6)] overflow-hidden flex flex-col justify-between p-2 sm:p-6 select-none">
             
             {/* Background Stadium Spectators Silhouette */}
             <div className="absolute top-0 left-0 right-0 h-16 opacity-30 pointer-events-none flex items-end justify-around px-8">
@@ -450,7 +449,7 @@ const HomeHub: React.FC = () => {
             </div>
 
             {/* Realistic 3D Goal Structure (Crossbar & Posts) */}
-            <div className="absolute top-5 left-8 right-8 bottom-16 border-t-[7px] border-x-[7px] border-slate-100 rounded-t-xl shadow-[0_10px_25px_rgba(0,0,0,0.7)] z-10 pointer-events-none">
+            <div className="absolute top-3 sm:top-5 left-2 sm:left-8 right-2 sm:right-8 bottom-14 sm:bottom-16 border-t-[5px] sm:border-t-[7px] border-x-[5px] sm:border-x-[7px] border-slate-100 rounded-t-xl shadow-[0_10px_25px_rgba(0,0,0,0.7)] z-10 pointer-events-none">
               {/* Metallic Goal Post Highlighting */}
               <div className="absolute -top-1 left-0 right-0 h-1 bg-white/90" />
               <div className="absolute top-0 bottom-0 left-0 w-1 bg-white/90" />
@@ -475,43 +474,43 @@ const HomeHub: React.FC = () => {
             {/* Goalkeeper with Realistic Stance & Diving Animation */}
             <div 
               className={`absolute bottom-20 left-1/2 -translate-x-1/2 transition-all duration-500 ease-out z-20 flex flex-col items-center pointer-events-none ${
-                gkDive === "left" ? "-translate-x-32 sm:-translate-x-44 -translate-y-8 -rotate-45 scale-110" :
-                gkDive === "right" ? "translate-x-28 sm:translate-x-40 -translate-y-8 rotate-45 scale-110" :
+                gkDive === "left" ? "-translate-x-24 sm:-translate-x-44 -translate-y-6 sm:-translate-y-8 -rotate-45 scale-105 sm:scale-110" :
+                gkDive === "right" ? "translate-x-20 sm:translate-x-40 -translate-y-6 sm:-translate-y-8 rotate-45 scale-105 sm:scale-110" :
                 gkDive === "center" ? "-translate-y-4 scale-115" : "animate-bounce"
               }`}
             >
               <div className="relative">
                 {/* GK Body / Jersey */}
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 border-2 border-white shadow-xl flex items-center justify-center text-slate-950 text-xl font-bold">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-gradient-to-br from-amber-400 via-yellow-500 to-amber-600 border-2 border-white shadow-xl flex items-center justify-center text-slate-950 text-base sm:text-xl font-bold">
                   <i className="fa-solid fa-hands"></i>
                 </div>
-                <div className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-600 border border-white text-[9px] font-black text-white flex items-center justify-center font-oswald">
+                <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-emerald-600 border border-white text-[8px] sm:text-[9px] font-black text-white flex items-center justify-center font-oswald">
                   #1
                 </div>
               </div>
-              <span className="text-[10px] font-oswald font-black bg-black/80 px-2.5 py-0.5 rounded-full text-amber-300 mt-1 border border-amber-400/50 shadow-md">
+              <span className="text-[9px] sm:text-[10px] font-oswald font-black bg-black/80 px-2 sm:px-2.5 py-0.5 rounded-full text-amber-300 mt-1 border border-amber-400/50 shadow-md">
                 THỦ MÔN
               </span>
             </div>
 
             {/* 4 PRECISION INTERACTIVE CROSSHAIR TARGETS */}
             {!isShooting && (
-              <div className="absolute top-8 left-11 right-11 bottom-20 grid grid-cols-2 grid-rows-2 gap-4 z-30 pointer-events-auto">
+              <div className="absolute top-5 sm:top-8 left-2 sm:left-11 right-2 sm:right-11 bottom-16 sm:bottom-20 grid grid-cols-2 grid-rows-2 gap-1.5 sm:gap-4 z-30 pointer-events-auto">
                 
                 {/* Target 1: Top Left (Góc Chữ A Trái) */}
                 <button
                   onClick={() => shootPenalty("top-left")}
-                  className="group flex flex-col items-start justify-start p-2.5 rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-left relative overflow-hidden"
+                  className="group flex flex-col items-start justify-start p-1 sm:p-2.5 rounded-xl sm:rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-left relative overflow-hidden"
                 >
-                  <div className="flex items-center space-x-1.5 bg-black/75 px-3 py-1.5 rounded-xl border border-amber-400/50 group-hover:scale-105 group-hover:border-amber-300 transition-all shadow-md">
-                    <div className="w-5 h-5 rounded-full border border-amber-400 flex items-center justify-center text-amber-300 text-xs animate-spin-slow">
+                  <div className="flex items-center space-x-1 sm:space-x-1.5 bg-black/75 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-amber-400/50 group-hover:scale-105 group-hover:border-amber-300 transition-all shadow-md">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-amber-400 flex items-center justify-center text-amber-300 text-[10px] sm:text-xs animate-spin-slow">
                       <i className="fa-solid fa-crosshairs"></i>
                     </div>
                     <div>
-                      <span className="text-[11px] font-oswald font-black text-amber-300 block uppercase leading-none">
+                      <span className="text-[9px] sm:text-[11px] font-oswald font-black text-amber-300 block uppercase leading-none">
                         GÓC CHỮ A TRÁI
                       </span>
-                      <span className="text-[8px] text-slate-300 font-mono">Nóc Lưới Hiểm</span>
+                      <span className="text-[7px] sm:text-[8px] text-slate-300 font-mono">Nóc Lưới</span>
                     </div>
                   </div>
                 </button>
@@ -519,16 +518,16 @@ const HomeHub: React.FC = () => {
                 {/* Target 2: Top Right (Góc Chữ A Phải) */}
                 <button
                   onClick={() => shootPenalty("top-right")}
-                  className="group flex flex-col items-end justify-start p-2.5 rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-right relative overflow-hidden"
+                  className="group flex flex-col items-end justify-start p-1 sm:p-2.5 rounded-xl sm:rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-right relative overflow-hidden"
                 >
-                  <div className="flex items-center space-x-1.5 bg-black/75 px-3 py-1.5 rounded-xl border border-amber-400/50 group-hover:scale-105 group-hover:border-amber-300 transition-all shadow-md">
+                  <div className="flex items-center space-x-1 sm:space-x-1.5 bg-black/75 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-amber-400/50 group-hover:scale-105 group-hover:border-amber-300 transition-all shadow-md">
                     <div>
-                      <span className="text-[11px] font-oswald font-black text-amber-300 block uppercase leading-none">
+                      <span className="text-[9px] sm:text-[11px] font-oswald font-black text-amber-300 block uppercase leading-none">
                         GÓC CHỮ A PHẢI
                       </span>
-                      <span className="text-[8px] text-slate-300 font-mono">Nóc Lưới Hiểm</span>
+                      <span className="text-[7px] sm:text-[8px] text-slate-300 font-mono">Nóc Lưới</span>
                     </div>
-                    <div className="w-5 h-5 rounded-full border border-amber-400 flex items-center justify-center text-amber-300 text-xs animate-spin-slow">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-amber-400 flex items-center justify-center text-amber-300 text-[10px] sm:text-xs animate-spin-slow">
                       <i className="fa-solid fa-crosshairs"></i>
                     </div>
                   </div>
@@ -537,17 +536,17 @@ const HomeHub: React.FC = () => {
                 {/* Target 3: Bottom Left (Góc Sệt Trái) */}
                 <button
                   onClick={() => shootPenalty("bottom-left")}
-                  className="group flex flex-col items-start justify-end p-2.5 rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-left relative overflow-hidden"
+                  className="group flex flex-col items-start justify-end p-1 sm:p-2.5 rounded-xl sm:rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-left relative overflow-hidden"
                 >
-                  <div className="flex items-center space-x-1.5 bg-black/75 px-3 py-1.5 rounded-xl border border-emerald-400/50 group-hover:scale-105 group-hover:border-emerald-300 transition-all shadow-md">
-                    <div className="w-5 h-5 rounded-full border border-emerald-400 flex items-center justify-center text-emerald-300 text-xs">
+                  <div className="flex items-center space-x-1 sm:space-x-1.5 bg-black/75 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-emerald-400/50 group-hover:scale-105 group-hover:border-emerald-300 transition-all shadow-md">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-emerald-400 flex items-center justify-center text-emerald-300 text-[10px] sm:text-xs">
                       <i className="fa-solid fa-angles-down"></i>
                     </div>
                     <div>
-                      <span className="text-[11px] font-oswald font-black text-emerald-300 block uppercase leading-none">
+                      <span className="text-[9px] sm:text-[11px] font-oswald font-black text-emerald-300 block uppercase leading-none">
                         GÓC CHÌM TRÁI
                       </span>
-                      <span className="text-[8px] text-slate-300 font-mono">Sát Cột Dọc</span>
+                      <span className="text-[7px] sm:text-[8px] text-slate-300 font-mono">Cột Dọc</span>
                     </div>
                   </div>
                 </button>
@@ -555,16 +554,16 @@ const HomeHub: React.FC = () => {
                 {/* Target 4: Bottom Right (Góc Sệt Phải) */}
                 <button
                   onClick={() => shootPenalty("bottom-right")}
-                  className="group flex flex-col items-end justify-end p-2.5 rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-right relative overflow-hidden"
+                  className="group flex flex-col items-end justify-end p-1 sm:p-2.5 rounded-xl sm:rounded-2xl border border-transparent hover:border-amber-400 hover:bg-amber-400/15 transition-all cursor-pointer text-right relative overflow-hidden"
                 >
-                  <div className="flex items-center space-x-1.5 bg-black/75 px-3 py-1.5 rounded-xl border border-emerald-400/50 group-hover:scale-105 group-hover:border-emerald-300 transition-all shadow-md">
+                  <div className="flex items-center space-x-1 sm:space-x-1.5 bg-black/75 px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-emerald-400/50 group-hover:scale-105 group-hover:border-emerald-300 transition-all shadow-md">
                     <div>
-                      <span className="text-[11px] font-oswald font-black text-emerald-300 block uppercase leading-none">
+                      <span className="text-[9px] sm:text-[11px] font-oswald font-black text-emerald-300 block uppercase leading-none">
                         GÓC CHÌM PHẢI
                       </span>
-                      <span className="text-[8px] text-slate-300 font-mono">Sát Cột Dọc</span>
+                      <span className="text-[7px] sm:text-[8px] text-slate-300 font-mono">Cột Dọc</span>
                     </div>
-                    <div className="w-5 h-5 rounded-full border border-emerald-400 flex items-center justify-center text-emerald-300 text-xs">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border border-emerald-400 flex items-center justify-center text-emerald-300 text-[10px] sm:text-xs">
                       <i className="fa-solid fa-angles-down"></i>
                     </div>
                   </div>

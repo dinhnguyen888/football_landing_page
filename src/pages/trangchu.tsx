@@ -112,46 +112,79 @@ const Trangchu: React.FC = () => {
             </p>
           </div>
 
-          {/* 3 Core Pillars - FC Online Event Colorful Cards */}
+          {/* 3 Core Quick Access: Nội quy, Lịch thi đấu, Thể thức thi đấu */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 pt-2 relative z-10">
-            {/* Card 1 */}
-            <div className="p-6 rounded-2xl bg-white border border-emerald-200/90 shadow-sm space-y-3 hover:border-emerald-400 hover:shadow-lg card-hover-fx transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/20 group-hover:scale-110 transition-transform">
-                <i className="fa-solid fa-scale-balanced"></i>
+            {/* Card 1: Nội quy */}
+            <Link
+              to="/noiquy"
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border-2 border-emerald-200/90 dark:border-emerald-800/60 shadow-sm space-y-3 hover:border-emerald-500 hover:shadow-xl card-hover-fx transition-all group block relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white flex items-center justify-center text-xl shadow-md shadow-emerald-500/20 group-hover:scale-110 transition-transform">
+                  <i className="fa-solid fa-shield-halved"></i>
+                </div>
+                <span className="text-[10px] font-oswald font-black px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700 uppercase tracking-wider group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                  ĐIỀU LỆ
+                </span>
               </div>
-              <h3 className="font-fco font-black text-slate-900 text-base uppercase tracking-wide group-hover:text-emerald-700 transition-colors">
-                MINH BẠCH & CÔNG BẰNG
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Hệ thống luật thi đấu rõ ràng, trọng tài giám sát chặt chẽ và kết quả được cập nhật công khai, chính xác theo thời gian thực.
-              </p>
-            </div>
+              <div>
+                <h3 className="font-fco font-black text-slate-900 dark:text-white text-base uppercase tracking-wide group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors flex items-center justify-between">
+                  <span>NỘI QUY GIẢI ĐẤU</span>
+                  <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform text-emerald-600 dark:text-emerald-400"></i>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
+                  Hệ thống điều lệ thi đấu rõ ràng, giờ hẹn thi đấu và quy trình xử lý sự cố mạng, bảo đảm tính công bằng tuyệt đối.
+                </p>
+              </div>
+            </Link>
 
-            {/* Card 2 */}
-            <div className="p-6 rounded-2xl bg-white border border-sky-200/90 shadow-sm space-y-3 hover:border-sky-400 hover:shadow-lg card-hover-fx transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 text-white flex items-center justify-center text-xl shadow-md shadow-sky-500/20 group-hover:scale-110 transition-transform">
-                <i className="fa-solid fa-chess"></i>
+            {/* Card 2: Lịch thi đấu */}
+            <Link
+              to="/ltd"
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border-2 border-sky-200/90 dark:border-sky-800/60 shadow-sm space-y-3 hover:border-sky-500 hover:shadow-xl card-hover-fx transition-all group block relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 text-white flex items-center justify-center text-xl shadow-md shadow-sky-500/20 group-hover:scale-110 transition-transform">
+                  <i className="fa-solid fa-calendar-days"></i>
+                </div>
+                <span className="text-[10px] font-oswald font-black px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 uppercase tracking-wider group-hover:bg-sky-600 group-hover:text-white transition-colors">
+                  LIVE FIXTURES
+                </span>
               </div>
-              <h3 className="font-fco font-black text-slate-900 text-base uppercase tracking-wide group-hover:text-sky-700 transition-colors">
-                CHIẾN THUẬT ĐỈNH CAO
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Nơi thử thách tư duy sắp xếp đội hình, vận hành chiến thuật và khả năng đọc trận đấu linh hoạt của từng HLV.
-              </p>
-            </div>
+              <div>
+                <h3 className="font-fco font-black text-slate-900 dark:text-white text-base uppercase tracking-wide group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors flex items-center justify-between">
+                  <span>LỊCH THI ĐẤU & BXH</span>
+                  <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform text-sky-600 dark:text-sky-400"></i>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
+                  Theo dõi kết quả các trận cầu nảy lửa, lịch đấu từng lượt trận và cập nhật bảng điểm các bảng theo thời gian thực.
+                </p>
+              </div>
+            </Link>
 
-            {/* Card 3 */}
-            <div className="p-6 rounded-2xl bg-white border border-amber-200/90 shadow-sm space-y-3 hover:border-amber-400 hover:shadow-lg card-hover-fx transition-all group">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-xl shadow-md shadow-amber-500/20 group-hover:scale-110 transition-transform">
-                <i className="fa-solid fa-handshake-angle"></i>
+            {/* Card 3: Thể thức thi đấu */}
+            <Link
+              to="/thethuc"
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border-2 border-amber-200/90 dark:border-amber-800/60 shadow-sm space-y-3 hover:border-amber-500 hover:shadow-xl card-hover-fx transition-all group block relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-xl shadow-md shadow-amber-500/20 group-hover:scale-110 transition-transform">
+                  <i className="fa-solid fa-sitemap"></i>
+                </div>
+                <span className="text-[10px] font-oswald font-black px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 uppercase tracking-wider group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                  FORMAT CHUẨN
+                </span>
               </div>
-              <h3 className="font-fco font-black text-slate-900 text-base uppercase tracking-wide group-hover:text-amber-700 transition-colors">
-                GẮN KẾT CỘNG ĐỒNG
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                Giao lưu học hỏi, tôn trọng đối thủ và lan tỏa tinh thần thể thao điện tử đẹp đẽ đến cộng đồng FC Online.
-              </p>
-            </div>
+              <div>
+                <h3 className="font-fco font-black text-slate-900 dark:text-white text-base uppercase tracking-wide group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors flex items-center justify-between">
+                  <span>THỂ THỨC THI ĐẤU</span>
+                  <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform text-amber-600 dark:text-amber-400"></i>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
+                  Quy định chia bảng thi đấu vòng tròn 2 lượt tính điểm và cơ chế phân nhánh trực tiếp Knockout BO3 phân định thứ hạng.
+                </p>
+              </div>
+            </Link>
           </div>
 
           {/* Arena of Champions - Bright Turf Callout */}

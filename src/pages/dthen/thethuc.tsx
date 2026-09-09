@@ -24,11 +24,11 @@ const DthenTheThuc: React.FC = () => {
 
               {/* Giai đoạn 1 */}
               <div className="space-y-1.5 pt-1">
-                <h4 className="font-bold text-slate-900">Giai đoạn 1 – Vòng bảng (Group Stage)</h4>
+                <h4 className="font-bold text-slate-900">Giai đoạn 1 – Vòng bảng (Group Stage - Chuẩn World Cup)</h4>
                 <ul className="list-disc list-inside space-y-1 pl-1">
-                  <li>20 Huấn luyện viên được chia đều vào <strong>4 bảng đấu (Bảng A, B, C, D)</strong>, mỗi bảng 5 HLV.</li>
-                  <li>Thi đấu theo thể thức <strong>vòng tròn 2 lượt (Lượt đi & Lượt về)</strong> tính điểm.</li>
-                  <li><strong>Top 2 HLV dẫn đầu mỗi bảng</strong> sẽ giành vé chính thức tiến vào giai đoạn Knockout (Tứ kết).</li>
+                  <li>32 Huấn luyện viên được chia đều vào <strong>8 bảng đấu (Bảng A, B, C, D, E, F, G, H)</strong>, mỗi bảng 4 HLV.</li>
+                  <li>Thi đấu theo thể thức <strong>vòng tròn 1 lượt</strong> tính điểm (thắng 3 điểm, hòa 1 điểm, thua 0 điểm).</li>
+                  <li><strong>Top 2 HLV dẫn đầu mỗi bảng (tổng cộng 16 HLV)</strong> sẽ giành vé chính thức tiến vào giai đoạn Knockout (Vòng 1/8).</li>
                 </ul>
               </div>
 
@@ -36,7 +36,7 @@ const DthenTheThuc: React.FC = () => {
               <div className="space-y-1.5 pt-2 border-t border-slate-100">
                 <h4 className="font-bold text-slate-900">Giai đoạn 2 – Vòng loại trực tiếp (Knockout Stage)</h4>
                 <ul className="list-disc list-inside space-y-1 pl-1">
-                  <li>8 HLV xuất sắc nhất thi đấu theo phân nhánh chuẩn: <strong>Tứ Kết ➔ Bán Kết ➔ Chung Kết & Tranh Hạng Ba</strong>.</li>
+                  <li>16 HLV xuất sắc nhất thi đấu theo phân nhánh chuẩn World Cup: <strong>Vòng 1/8 (Round of 16) ➔ Tứ Kết ➔ Bán Kết ➔ Chung Kết & Tranh Hạng Ba</strong>.</li>
                   <li>Các trận đấu Knockout áp dụng thể thức <strong>BO3 (Best of 3)</strong>: HLV thắng 2/3 trận sẽ giành quyền đi tiếp.</li>
                   <li>Trận Chung kết phân định ngôi vương đỉnh cao của giải đấu.</li>
                 </ul>

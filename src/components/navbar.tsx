@@ -225,127 +225,242 @@ const Navbar: React.FC = () => {
           })}
         </nav>
 
-        {/* Right: Quick Action - Admin Portal, Theme Toggle & Return to Hub */}
-        <div className="hidden lg:flex items-center space-x-2 flex-shrink-0">
+        {/* Right: Quick Action - Theme Toggle & 3-gạch Menu Button */}
+        <div className="flex items-center space-x-2 flex-shrink-0">
           <ThemeToggleButton />
 
-          <Link
-            to="/quanlygiaidau"
-            className="px-2.5 xl:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center space-x-1.5 shadow-sm hover:scale-105 btn-shimmer"
-            title="Quản Trị Giải Đấu BTC"
-          >
-            <i className="fa-solid fa-lock text-[9px]"></i>
-            <span>BTC ADMIN</span>
-          </Link>
-
-          <Link
-            to="/"
-            className="px-2.5 xl:px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-oswald text-[11px] xl:text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap inline-flex items-center space-x-1.5 shadow-xs hover:scale-105 btn-shimmer"
-            title="Quay lại Cổng Chọn Giải Đấu (Hub)"
-          >
-            <i className="fa-solid fa-layer-group text-[9px] text-amber-400"></i>
-            <span>HUB GIẢI ĐẤU</span>
-          </Link>
-        </div>
-
-
-        {/* Mobile menu toggle & quick theme button */}
-        <div className="flex items-center space-x-2 lg:hidden">
-          <ThemeToggleButton />
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Toggle Menu"
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 focus:outline-none"
+            title="Menu Điều Hướng (Dấu 3 Gạch)"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors focus:outline-none flex items-center justify-center cursor-pointer shadow-2xs"
           >
-            <i className={`fa-solid ${mobileMenuOpen ? "fa-xmark" : "fa-bars"} text-lg`}></i>
+            <i className={`fa-solid ${mobileMenuOpen ? "fa-xmark" : "fa-bars"} text-base`}></i>
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu Dropdown */}
+      {/* Mobile/Tablet Appbar Nav: Always visible on the Appbar */}
+      <div className="lg:hidden w-full border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/95 dark:bg-slate-900/95 px-2.5 py-1.5 overflow-x-auto no-scrollbar flex items-center space-x-1.5">
+        <Link
+          to={currentHomeLink}
+          className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex items-center space-x-1 flex-shrink-0 ${
+            location.pathname === currentHomeLink
+              ? isDthen
+                ? "bg-blue-700 text-white shadow-2xs"
+                : "bg-emerald-700 text-white shadow-2xs"
+              : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+          }`}
+        >
+          <i className="fa-solid fa-house text-[10px]"></i>
+          <span>Trang chủ</span>
+        </Link>
+
+        {isDthen ? (
+          <>
+            <Link
+              to="/dthen/noiquy"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/dthen/noiquy"
+                  ? "bg-blue-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Nội quy
+            </Link>
+            <Link
+              to="/dthen/thethuc"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/dthen/thethuc"
+                  ? "bg-blue-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Thể thức
+            </Link>
+            <Link
+              to="/dthen/ltd"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/dthen/ltd"
+                  ? "bg-blue-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Lịch đấu & BXH
+            </Link>
+            <Link
+              to="/dthen/quydinh"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/dthen/quydinh"
+                  ? "bg-blue-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Quy định
+            </Link>
+            <Link
+              to="/dthen/giaithuong"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/dthen/giaithuong"
+                  ? "bg-blue-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Giải thưởng
+            </Link>
+            <Link
+              to="/dthen/xephang"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/dthen/xephang"
+                  ? "bg-blue-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Bảng vàng
+            </Link>
+            <Link
+              to="/dthen/admin"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/dthen/admin"
+                  ? "bg-blue-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Ban tổ chức
+            </Link>
+          </>
+        ) : (
+          <>
+            <Link
+              to="/noiquy"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/noiquy"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Nội quy
+            </Link>
+            <Link
+              to="/thethuc"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/thethuc"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Thể thức
+            </Link>
+            <Link
+              to="/ltd"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/ltd"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Lịch đấu & BXH
+            </Link>
+            <Link
+              to="/quydinh"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/quydinh"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Quy định
+            </Link>
+            <Link
+              to="/giaithuong"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/giaithuong"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Giải thưởng
+            </Link>
+            <Link
+              to="/xephang"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/xephang"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Bảng vàng
+            </Link>
+            <Link
+              to="/admin"
+              className={`px-3 py-1 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-colors flex-shrink-0 ${
+                location.pathname === "/admin"
+                  ? "bg-emerald-700 text-white shadow-2xs"
+                  : "text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-800"
+              }`}
+            >
+              Ban tổ chức
+            </Link>
+          </>
+        )}
+      </div>
+
+      {/* Backdrop overlay for 3-gạch menu */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 px-4 py-4 space-y-2.5 shadow-lg">
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-2xs z-40 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Menu Dấu 3 Gạch: CHỈ CÓ 3 MỤC (HUB CHỌN GIẢI, QUẢN TRỊ BTC, TRANG CHỦ) */}
+      {mobileMenuOpen && (
+        <div className="absolute right-3 sm:right-4 lg:right-6 top-full mt-2 w-72 max-w-[calc(100vw-24px)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-2xl space-y-2 z-50 animate-fade-in">
+          <div className="text-[10px] font-oswald font-bold uppercase tracking-wider text-slate-400 px-1">
+            MENU ĐIỀU HƯỚNG HỆ THỐNG
+          </div>
+
+          <Link
+            to={currentHomeLink}
+            onClick={() => setMobileMenuOpen(false)}
+            className={`px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase transition-all flex items-center justify-between ${
+              location.pathname === currentHomeLink
+                ? isDthen
+                  ? "bg-blue-700 text-white shadow-xs"
+                  : "bg-emerald-700 text-white shadow-xs"
+                : "text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700"
+            }`}
+          >
+            <span className="flex items-center space-x-2.5">
+              <i className="fa-solid fa-house text-amber-400 text-sm"></i>
+              <span>TRANG CHỦ ({tournamentTitle} {tournamentSuffix})</span>
+            </span>
+            <i className="fa-solid fa-chevron-right text-[10px] opacity-70"></i>
+          </Link>
+
           <Link
             to="/"
-            className="block px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-slate-900 dark:bg-slate-800 flex items-center justify-between"
+            onClick={() => setMobileMenuOpen(false)}
+            className="px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-slate-900 hover:bg-slate-800 flex items-center justify-between shadow-xs transition-all"
           >
-            <span className="flex items-center">
-              <i className="fa-solid fa-layer-group mr-2 text-amber-400"></i>
-              HUB CHỌN GIẢI ĐẤU
+            <span className="flex items-center space-x-2.5">
+              <i className="fa-solid fa-layer-group text-amber-400 text-sm"></i>
+              <span>HUB CHỌN GIẢI ĐẤU</span>
             </span>
-            <i className="fa-solid fa-arrow-right text-[10px]"></i>
+            <i className="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70"></i>
           </Link>
 
           <Link
             to="/quanlygiaidau"
-            className="block px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-gradient-to-r from-amber-500 to-amber-600 flex items-center justify-between shadow-xs"
+            onClick={() => setMobileMenuOpen(false)}
+            className="px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 flex items-center justify-between shadow-xs transition-all btn-shimmer"
           >
-            <span className="flex items-center">
-              <i className="fa-solid fa-lock mr-2"></i>
-              QUẢN TRỊ BTC (ADMIN PORTAL)
+            <span className="flex items-center space-x-2.5">
+              <i className="fa-solid fa-lock text-white text-sm"></i>
+              <span>QUẢN TRỊ BTC (ADMIN PORTAL)</span>
             </span>
-            <i className="fa-solid fa-arrow-right text-[10px]"></i>
+            <i className="fa-solid fa-shield-halved text-[10px] opacity-70"></i>
           </Link>
-
-          <Link
-            to={currentHomeLink}
-            className={`block px-3.5 py-2 rounded-xl font-oswald text-xs font-bold uppercase ${
-              location.pathname === currentHomeLink
-                ? isDthen
-                  ? "bg-blue-700 text-white"
-                  : "bg-emerald-700 text-white"
-                : "text-slate-700 bg-slate-50"
-            }`}
-          >
-            <i className="fa-solid fa-house mr-2 text-amber-500"></i>
-            TRANG CHỦ ({tournamentTitle} {tournamentSuffix})
-          </Link>
-
-          {currentNavGroups.map((g, idx) => {
-            const hasMultiple = g.items.length > 1;
-            const targetPath = g.items[0]?.path || g.pathRoot;
-
-            if (!hasMultiple) {
-              return (
-                <Link
-                  key={idx}
-                  to={targetPath}
-                  className={`block px-3.5 py-2 rounded-xl font-oswald text-xs font-bold uppercase border-t border-slate-100 pt-2 ${
-                    location.pathname === targetPath
-                      ? isDthen
-                        ? "text-blue-700 bg-blue-50"
-                        : "text-emerald-700 bg-emerald-50"
-                      : "text-slate-700"
-                  }`}
-                >
-                  {g.title}
-                </Link>
-              );
-            }
-
-            return (
-              <div key={idx} className="space-y-1 pt-2 border-t border-slate-100">
-                <span className="px-3 text-[10px] font-oswald font-bold uppercase tracking-widest text-slate-400 block">
-                  {g.title}
-                </span>
-                {g.items.map((item, iIdx) => (
-                  <Link
-                    key={iIdx}
-                    to={item.path}
-                    className={`block px-4 py-1.5 rounded-lg font-oswald text-xs uppercase font-medium ${
-                      location.pathname === item.path
-                        ? isDthen
-                          ? "bg-blue-50 text-blue-700 font-bold"
-                          : "bg-emerald-50 text-emerald-700 font-bold"
-                        : "text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            );
-          })}
         </div>
       )}
 

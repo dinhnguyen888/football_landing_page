@@ -18,18 +18,18 @@ export const CardSection: React.FC<CardSectionProps> = ({
   className = "",
 }) => {
   return (
-    <div className={`p-6 sm:p-8 rounded-2xl portal-card card-hover-fx space-y-5 transition-all group ${className}`}>
+    <div className={`p-4 sm:p-7 md:p-8 rounded-2xl portal-card card-hover-fx space-y-4 sm:space-y-5 transition-all group ${className}`}>
       {(title || badgeNumber || action) && (
-        <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 relative">
-          <div className="flex items-center space-x-3.5">
+        <div className="border-b border-slate-100 dark:border-slate-800 pb-3 sm:pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3 relative">
+          <div className="flex items-center space-x-3">
             {badgeNumber !== undefined && (
-              <span className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white font-fco font-black flex items-center justify-center text-sm flex-shrink-0 shadow-md shadow-emerald-700/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
+              <span className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br from-emerald-600 via-teal-600 to-emerald-800 text-white font-fco font-black flex items-center justify-center text-xs sm:text-sm flex-shrink-0 shadow-md shadow-emerald-700/30 group-hover:scale-110 group-hover:rotate-6 transition-transform">
                 {badgeNumber}
               </span>
             )}
             <div>
               {title && (
-                <h2 className="font-fco text-xl sm:text-2xl font-black uppercase text-slate-900 leading-tight tracking-wide group-hover:text-emerald-700 transition-colors">
+                <h2 className="font-fco text-lg sm:text-2xl font-black uppercase text-slate-900 dark:text-white leading-tight tracking-wide group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                   {title}
                 </h2>
               )}

@@ -258,13 +258,47 @@ export function saveDthenTournamentData(data: TournamentData | null): void {
 export function loadDthenTournamentData(): TournamentData | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_DTHEN);
-    if (raw) {
-      return JSON.parse(raw);
+    if (!raw) return null;
+    const data: TournamentData = JSON.parse(raw);
+
+    // Tự động nâng cấp lên phiên bản 32 đội (8 bảng chuẩn World Cup) nếu người dùng còn lưu cấu hình 4 bảng cũ
+    if (data && data.id === 'tour_dthen_mua_1') {
+      if (!Array.isArray(data.groups) || data.groups.length !== 8) {
+        const fresh = createDefaultDthenTournament();
+        saveDthenTournamentData(fresh);
+        return fresh;
+      }
+
+      // Xóa dữ liệu mẫu các trận đấu nếu còn tồn tại từ phiên bản cũ trong localStorage
+      let hasOldMockMatches = false;
+      data.groups.forEach((g) => {
+        if (g.matches && g.matches.length > 0) {
+          g.matches = [];
+          hasOldMockMatches = true;
+        }
+      });
+      // Đảm bảo nhánh đấu Knockout luôn có sẵn 16 đội chuẩn World Cup (Nhất A - Nhì B,...)
+      const r16Round = data.knockoutStage?.rounds?.[0];
+      const needsFreshKnockout =
+        !data.knockoutStage ||
+        !Array.isArray(data.knockoutStage.rounds) ||
+        data.knockoutStage.rounds.length !== 4 ||
+        !r16Round ||
+        r16Round.matches.length !== 8 ||
+        r16Round.matches[0].homeTeamName !== 'Nhất Bảng A';
+
+      if (needsFreshKnockout) {
+        data.knockoutStage = buildFIFABracketFromGroups(data.groups);
+        saveDthenTournamentData(data);
+      } else if (hasOldMockMatches) {
+        saveDthenTournamentData(data);
+      }
     }
+    return data;
   } catch (err) {
     console.error('Error loading Dthen tournament data', err);
+    return null;
   }
-  return null;
 }
 
 export function saveArchiveTournaments(list: TournamentData[]): void {
@@ -294,25 +328,293 @@ export function buildFIFABracketFromGroups(groups: Group[]): KnockoutStage {
 
   groups.forEach((grp, idx) => {
     const letter = String.fromCharCode(65 + idx); // 'A', 'B', 'C', 'D'...
-    const standings = calculateGroupStandings(grp);
-    const firstTeamStat = standings[0];
-    const secondTeamStat = standings[1];
+    const hasMatches = grp.matches && grp.matches.length > 0;
+    const isFinished = hasMatches && grp.matches.every((m) => m.played);
 
-    const firstTeam = grp.teams.find((t) => t.id === firstTeamStat?.teamId) || {
-      id: `top1_${letter}`,
-      name: `Nhất ${grp.name}`,
-    };
-    const secondTeam = grp.teams.find((t) => t.id === secondTeamStat?.teamId) || {
-      id: `top2_${letter}`,
-      name: `Nhì ${grp.name}`,
-    };
+    if (isFinished) {
+      const standings = calculateGroupStandings(grp);
+      const firstTeamStat = standings[0];
+      const secondTeamStat = standings[1];
 
-    topTeams[letter] = { first: firstTeam, second: secondTeam };
+      const firstTeam = grp.teams.find((t) => t.id === firstTeamStat?.teamId) || {
+        id: `top1_${letter}`,
+        name: `Nhất ${grp.name}`,
+        club: grp.name,
+      };
+      const secondTeam = grp.teams.find((t) => t.id === secondTeamStat?.teamId) || {
+        id: `top2_${letter}`,
+        name: `Nhì ${grp.name}`,
+        club: grp.name,
+      };
+
+      topTeams[letter] = { first: firstTeam, second: secondTeam };
+    } else {
+      // Khi chưa kết thúc vòng bảng: Luôn hiển thị quy tắc phân nhánh World Cup (Nhất Bảng A, Nhì Bảng B,...)
+      topTeams[letter] = {
+        first: {
+          id: `top1_${letter}`,
+          name: `Nhất ${grp.name}`,
+          club: `Đội đầu ${grp.name}`,
+        },
+        second: {
+          id: `top2_${letter}`,
+          name: `Nhì ${grp.name}`,
+          club: `Đội nhì ${grp.name}`,
+        },
+      };
+    }
   });
 
   const numGroups = groups.length;
 
-  // CASE 1: 4 GROUPS (Standard World Cup 8-team Quarterfinals)
+  // CASE 0: 8 GROUPS (World Cup Format: 16 Teams -> Vòng 1/8 -> Tứ Kết -> Bán Kết -> Chung Kết)
+  if (numGroups === 8) {
+    const r16Matches: KnockoutMatch[] = [
+      {
+        id: 'r16_1',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 1,
+        homeTeamName: topTeams['A']?.first.name || 'Nhất Bảng A',
+        homeTeamClub: topTeams['A']?.first.club,
+        homeSourceText: 'Nhất Bảng A',
+        awayTeamName: topTeams['B']?.second.name || 'Nhì Bảng B',
+        awayTeamClub: topTeams['B']?.second.club,
+        awaySourceText: 'Nhì Bảng B',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_1',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'r16_2',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 2,
+        homeTeamName: topTeams['C']?.first.name || 'Nhất Bảng C',
+        homeTeamClub: topTeams['C']?.first.club,
+        homeSourceText: 'Nhất Bảng C',
+        awayTeamName: topTeams['D']?.second.name || 'Nhì Bảng D',
+        awayTeamClub: topTeams['D']?.second.club,
+        awaySourceText: 'Nhì Bảng D',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_1',
+        nextMatchSlot: 'away',
+      },
+      {
+        id: 'r16_3',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 3,
+        homeTeamName: topTeams['E']?.first.name || 'Nhất Bảng E',
+        homeTeamClub: topTeams['E']?.first.club,
+        homeSourceText: 'Nhất Bảng E',
+        awayTeamName: topTeams['F']?.second.name || 'Nhì Bảng F',
+        awayTeamClub: topTeams['F']?.second.club,
+        awaySourceText: 'Nhì Bảng F',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_2',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'r16_4',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 4,
+        homeTeamName: topTeams['G']?.first.name || 'Nhất Bảng G',
+        homeTeamClub: topTeams['G']?.first.club,
+        homeSourceText: 'Nhất Bảng G',
+        awayTeamName: topTeams['H']?.second.name || 'Nhì Bảng H',
+        awayTeamClub: topTeams['H']?.second.club,
+        awaySourceText: 'Nhì Bảng H',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_2',
+        nextMatchSlot: 'away',
+      },
+      {
+        id: 'r16_5',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 5,
+        homeTeamName: topTeams['B']?.first.name || 'Nhất Bảng B',
+        homeTeamClub: topTeams['B']?.first.club,
+        homeSourceText: 'Nhất Bảng B',
+        awayTeamName: topTeams['A']?.second.name || 'Nhì Bảng A',
+        awayTeamClub: topTeams['A']?.second.club,
+        awaySourceText: 'Nhì Bảng A',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_3',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'r16_6',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 6,
+        homeTeamName: topTeams['D']?.first.name || 'Nhất Bảng D',
+        homeTeamClub: topTeams['D']?.first.club,
+        homeSourceText: 'Nhất Bảng D',
+        awayTeamName: topTeams['C']?.second.name || 'Nhì Bảng C',
+        awayTeamClub: topTeams['C']?.second.club,
+        awaySourceText: 'Nhì Bảng C',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_3',
+        nextMatchSlot: 'away',
+      },
+      {
+        id: 'r16_7',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 7,
+        homeTeamName: topTeams['F']?.first.name || 'Nhất Bảng F',
+        homeTeamClub: topTeams['F']?.first.club,
+        homeSourceText: 'Nhất Bảng F',
+        awayTeamName: topTeams['E']?.second.name || 'Nhì Bảng E',
+        awayTeamClub: topTeams['E']?.second.club,
+        awaySourceText: 'Nhì Bảng E',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_4',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'r16_8',
+        roundName: 'VÒNG 1/8',
+        matchOrder: 8,
+        homeTeamName: topTeams['H']?.first.name || 'Nhất Bảng H',
+        homeTeamClub: topTeams['H']?.first.club,
+        homeSourceText: 'Nhất Bảng H',
+        awayTeamName: topTeams['G']?.second.name || 'Nhì Bảng G',
+        awayTeamClub: topTeams['G']?.second.club,
+        awaySourceText: 'Nhì Bảng G',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'qf_4',
+        nextMatchSlot: 'away',
+      },
+    ];
+
+    const qfMatches: KnockoutMatch[] = [
+      {
+        id: 'qf_1',
+        roundName: 'TỨ KẾT',
+        matchOrder: 1,
+        homeTeamName: 'Thắng Trận 1/8 (1)',
+        awayTeamName: 'Thắng Trận 1/8 (2)',
+        homeSourceText: 'Thắng 1/8 (1)',
+        awaySourceText: 'Thắng 1/8 (2)',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_1',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'qf_2',
+        roundName: 'TỨ KẾT',
+        matchOrder: 2,
+        homeTeamName: 'Thắng Trận 1/8 (3)',
+        awayTeamName: 'Thắng Trận 1/8 (4)',
+        homeSourceText: 'Thắng 1/8 (3)',
+        awaySourceText: 'Thắng 1/8 (4)',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_1',
+        nextMatchSlot: 'away',
+      },
+      {
+        id: 'qf_3',
+        roundName: 'TỨ KẾT',
+        matchOrder: 3,
+        homeTeamName: 'Thắng Trận 1/8 (5)',
+        awayTeamName: 'Thắng Trận 1/8 (6)',
+        homeSourceText: 'Thắng 1/8 (5)',
+        awaySourceText: 'Thắng 1/8 (6)',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_2',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'qf_4',
+        roundName: 'TỨ KẾT',
+        matchOrder: 4,
+        homeTeamName: 'Thắng Trận 1/8 (7)',
+        awayTeamName: 'Thắng Trận 1/8 (8)',
+        homeSourceText: 'Thắng 1/8 (7)',
+        awaySourceText: 'Thắng 1/8 (8)',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'sf_2',
+        nextMatchSlot: 'away',
+      },
+    ];
+
+    const sfMatches: KnockoutMatch[] = [
+      {
+        id: 'sf_1',
+        roundName: 'BÁN KẾT',
+        matchOrder: 1,
+        homeTeamName: 'Thắng Tứ Kết 1',
+        awayTeamName: 'Thắng Tứ Kết 2',
+        homeSourceText: 'Thắng TK 1',
+        awaySourceText: 'Thắng TK 2',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'final_1',
+        nextMatchSlot: 'home',
+      },
+      {
+        id: 'sf_2',
+        roundName: 'BÁN KẾT',
+        matchOrder: 2,
+        homeTeamName: 'Thắng Tứ Kết 3',
+        awayTeamName: 'Thắng Tứ Kết 4',
+        homeSourceText: 'Thắng TK 3',
+        awaySourceText: 'Thắng TK 4',
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId: 'final_1',
+        nextMatchSlot: 'away',
+      },
+    ];
+
+    const finalMatch: KnockoutMatch = {
+      id: 'final_1',
+      roundName: 'CHUNG KẾT',
+      matchOrder: 1,
+      homeTeamName: 'Thắng Bán Kết 1',
+      awayTeamName: 'Thắng Bán Kết 2',
+      homeSourceText: 'Thắng BK 1',
+      awaySourceText: 'Thắng BK 2',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+    };
+
+    return {
+      isCompletedGroupStage: true,
+      rounds: [
+        { name: 'VÒNG 1/8', matches: r16Matches },
+        { name: 'TỨ KẾT', matches: qfMatches },
+        { name: 'BÁN KẾT', matches: sfMatches },
+        { name: 'CHUNG KẾT', matches: [finalMatch] },
+      ],
+    };
+  }
+
+  // CASE 1: 4 GROUPS (Standard 8-team Quarterfinals)
   if (numGroups === 4) {
     // Round 1: TỨ KẾT (4 matches)
     const qfMatches: KnockoutMatch[] = [
@@ -611,48 +913,85 @@ export function createDefaultTournament(): TournamentData {
   };
 }
 
-// Generate default preset data for ĐThén FCO Mùa 1
+// Generate default preset data for ĐThén FCO Mùa 1 (32 Đội - 8 Bảng Chuẩn World Cup)
 export function createDefaultDthenTournament(): TournamentData {
-  const groupNames = ['BẢNG A', 'BẢNG B', 'BẢNG C', 'BẢNG D'];
+  const groupNames = [
+    'BẢNG A',
+    'BẢNG B',
+    'BẢNG C',
+    'BẢNG D',
+    'BẢNG E',
+    'BẢNG F',
+    'BẢNG G',
+    'BẢNG H',
+  ];
+
   const defaultCoaches = [
+    // BẢNG A
     [
       { id: 'dt1', name: 'HLV ĐThén (BTC)', club: 'Real Madrid' },
       { id: 'dt2', name: 'HLV Minh Quân', club: 'Man City' },
       { id: 'dt3', name: 'HLV Hoàng Long', club: 'Chelsea' },
       { id: 'dt4', name: 'HLV Tuấn Anh', club: 'Arsenal' },
-      { id: 'dt5', name: 'HLV Văn Nam', club: 'Liverpool' },
     ],
+    // BẢNG B
     [
-      { id: 'dt6', name: 'HLV Hải Đăng', club: 'Bayern Munich' },
-      { id: 'dt7', name: 'HLV Quốc Cường', club: 'Barcelona' },
-      { id: 'dt8', name: 'HLV Thanh Tùng', club: 'Juventus' },
-      { id: 'dt9', name: 'HLV Bảo Long', club: 'Inter Milan' },
-      { id: 'dt10', name: 'HLV Trọng Nghĩa', club: 'PSG' },
+      { id: 'dt5', name: 'HLV Hải Đăng', club: 'Bayern Munich' },
+      { id: 'dt6', name: 'HLV Quốc Cường', club: 'Barcelona' },
+      { id: 'dt7', name: 'HLV Thanh Tùng', club: 'Juventus' },
+      { id: 'dt8', name: 'HLV Bảo Long', club: 'Inter Milan' },
     ],
+    // BẢNG C
     [
-      { id: 'dt11', name: 'HLV Hữu Đạt', club: 'Man United' },
-      { id: 'dt12', name: 'HLV Văn Đức', club: 'Tottenham' },
-      { id: 'dt13', name: 'HLV Thế Anh', club: 'Dortmund' },
-      { id: 'dt14', name: 'HLV Hoàng Phúc', club: 'Atletico' },
-      { id: 'dt15', name: 'HLV Gia Huy', club: 'AS Roma' },
+      { id: 'dt9', name: 'HLV Trọng Nghĩa', club: 'PSG' },
+      { id: 'dt10', name: 'HLV Hữu Đạt', club: 'Man United' },
+      { id: 'dt11', name: 'HLV Văn Đức', club: 'Tottenham' },
+      { id: 'dt12', name: 'HLV Thế Anh', club: 'Dortmund' },
     ],
+    // BẢNG D
     [
-      { id: 'dt16', name: 'HLV Tấn Tài', club: 'Napoli' },
-      { id: 'dt17', name: 'HLV Quang Minh', club: 'Leverkusen' },
-      { id: 'dt18', name: 'HLV Thành Đạt', club: 'AC Milan' },
-      { id: 'dt19', name: 'HLV Nhật Minh', club: 'Sevilla' },
-      { id: 'dt20', name: 'HLV Văn Khánh', club: 'Aston Villa' },
+      { id: 'dt13', name: 'HLV Hoàng Phúc', club: 'Atletico Madrid' },
+      { id: 'dt14', name: 'HLV Gia Huy', club: 'AS Roma' },
+      { id: 'dt15', name: 'HLV Tấn Tài', club: 'Napoli' },
+      { id: 'dt16', name: 'HLV Quang Minh', club: 'Bayer Leverkusen' },
+    ],
+    // BẢNG E
+    [
+      { id: 'dt17', name: 'HLV Thành Đạt', club: 'AC Milan' },
+      { id: 'dt18', name: 'HLV Nhật Minh', club: 'Sevilla' },
+      { id: 'dt19', name: 'HLV Văn Khánh', club: 'Aston Villa' },
+      { id: 'dt20', name: 'HLV Quốc Việt', club: 'Newcastle Utd' },
+    ],
+    // BẢNG F
+    [
+      { id: 'dt21', name: 'HLV Đình Trọng', club: 'Ajax Amsterdam' },
+      { id: 'dt22', name: 'HLV Hữu Thắng', club: 'Sporting CP' },
+      { id: 'dt23', name: 'HLV Đức Huy', club: 'SL Benfica' },
+      { id: 'dt24', name: 'HLV Việt Anh', club: 'FC Porto' },
+    ],
+    // BẢNG G
+    [
+      { id: 'dt25', name: 'HLV Văn Toàn', club: 'Villarreal' },
+      { id: 'dt26', name: 'HLV Công Phượng', club: 'Real Sociedad' },
+      { id: 'dt27', name: 'HLV Tuấn Kiệt', club: 'RB Leipzig' },
+      { id: 'dt28', name: 'HLV Hoàng Nam', club: 'SS Lazio' },
+    ],
+    // BẢNG H
+    [
+      { id: 'dt29', name: 'HLV Minh Đức', club: 'Olympique Lyon' },
+      { id: 'dt30', name: 'HLV Duy Anh', club: 'Marseille' },
+      { id: 'dt31', name: 'HLV Xuân Trường', club: 'Fiorentina' },
+      { id: 'dt32', name: 'HLV Ngọc Hải', club: 'West Ham' },
     ],
   ];
 
   const groups: Group[] = groupNames.map((name, idx) => {
     const teams = defaultCoaches[idx];
-    const matches = generateRoundRobinMatches(teams, 'double');
     return {
       id: `dthen_group_${idx + 1}`,
       name,
       teams,
-      matches,
+      matches: [], // Xóa dữ liệu mẫu các trận đấu theo yêu cầu
     };
   });
 
@@ -660,10 +999,11 @@ export function createDefaultDthenTournament(): TournamentData {
     id: 'tour_dthen_mua_1',
     tournamentName: 'ĐTHÉN FCO ™',
     season: 'MÙA 1',
-    numGroups: 4,
-    teamsPerGroup: 5,
-    legType: 'double',
+    numGroups: 8,
+    teamsPerGroup: 4,
+    legType: 'single', // Chuẩn World Cup: vòng bảng thi đấu vòng tròn 1 lượt
     groups,
+    knockoutStage: buildFIFABracketFromGroups(groups),
     createdAt: new Date().toISOString(),
     isVisible: true,
   };

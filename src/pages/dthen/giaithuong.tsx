@@ -66,7 +66,7 @@ const DthenGiaiThuong: React.FC = () => {
             {prizes.map((p, idx) => (
               <div
                 key={idx}
-                className={`p-6 rounded-2xl border ${p.bgLight} shadow-sm space-y-4 hover:shadow-md transition-shadow`}
+                className={`p-4 sm:p-6 rounded-2xl border ${p.bgLight} shadow-sm space-y-3 sm:space-y-4 hover:shadow-md transition-shadow`}
               >
                 <div className="flex items-center space-x-3.5">
                   <div

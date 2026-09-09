@@ -19,35 +19,35 @@ const DthenQuyDinh: React.FC = () => {
           <CardSection badgeNumber={1} title="TIÊU CHUẨN XÂY DỰNG ĐỘI HÌNH">
             <div className="space-y-6 text-slate-700 text-sm leading-relaxed">
               {/* Wage Limit Banner inside Section 1 */}
-              <div className="p-4 sm:p-5 rounded-xl bg-blue-50 border border-blue-200 flex items-center space-x-4 shadow-sm">
-                <div className="w-14 h-14 rounded-xl bg-blue-700 text-white flex items-center justify-center text-2xl font-black font-fco shadow-sm flex-shrink-0">
+              <div className="p-3.5 sm:p-5 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 flex items-center space-x-3 sm:space-x-4 shadow-sm">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl bg-blue-700 text-white flex items-center justify-center text-xl sm:text-2xl font-black font-fco shadow-sm flex-shrink-0">
                   305
                 </div>
                 <div>
-                  <span className="text-xs font-fco font-bold uppercase text-blue-800 block">GIỚI HẠN LƯƠNG ĐỘI HÌNH</span>
-                  <span className="text-base sm:text-lg font-black text-slate-900">Tối đa 305/305 (11 chính + 7 dự bị)</span>
+                  <span className="text-[11px] sm:text-xs font-fco font-bold uppercase text-blue-800 dark:text-blue-300 block">GIỚI HẠN LƯƠNG ĐỘI HÌNH</span>
+                  <span className="text-sm sm:text-lg font-black text-slate-900 dark:text-white">Tối đa 305/305 (11 chính + 7 dự bị)</span>
                 </div>
               </div>
 
-              <p className="text-slate-800">
+              <p className="text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
                 Các VĐV tham gia giải đấu được phép sử dụng các <strong>sơ đồ đội hình mặc định trong FC Online</strong> theo danh sách dưới đây:
               </p>
 
               {/* Grid 2 Columns: 4 Defenders vs 3 Defenders Formations */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4">
                 {/* 4 Defenders Card */}
-                <div className="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                    <span className="font-fco font-bold text-sm sm:text-base text-blue-900 uppercase flex items-center space-x-2">
-                      <i className="fa-solid fa-shield text-blue-600"></i>
+                <div className="p-3.5 sm:p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <span className="font-fco font-bold text-xs sm:text-base text-blue-900 dark:text-blue-300 uppercase flex items-center space-x-2">
+                      <i className="fa-solid fa-shield text-blue-600 dark:text-blue-400"></i>
                       <span>SƠ ĐỒ 4 HẬU VỆ (15 SƠ ĐỒ)</span>
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-blue-100 text-blue-800 font-fco font-bold text-xs">
+                    <span className="px-2 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 font-fco font-bold text-[10px] sm:text-xs">
                       4 DF
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
                     {[
                       "4-1-3-2", "4-1-4-1", "4-2-3-1",
                       "4-2-2-1-1", "4-2-4", "4-3-1-2",
@@ -55,7 +55,7 @@ const DthenQuyDinh: React.FC = () => {
                       "4-2-2-2", "4-1-2-1-2", "4-4-2",
                       "4-4-1-1", "4-5-1", "4-3-2-1"
                     ].map((formation, idx) => (
-                      <div key={idx} className="p-2 rounded-lg bg-white border border-slate-200 text-xs font-mono font-bold text-slate-800 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-2xs">
+                      <div key={idx} className="p-1.5 sm:p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs font-mono font-bold text-slate-800 dark:text-slate-200 hover:border-blue-400 hover:text-blue-600 transition-colors shadow-2xs">
                         {formation}
                       </div>
                     ))}
@@ -63,23 +63,23 @@ const DthenQuyDinh: React.FC = () => {
                 </div>
 
                 {/* 3 Defenders Card */}
-                <div className="p-4 sm:p-5 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                    <span className="font-fco font-bold text-sm sm:text-base text-indigo-900 uppercase flex items-center space-x-2">
-                      <i className="fa-solid fa-shield-halved text-indigo-600"></i>
+                <div className="p-3.5 sm:p-5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-3">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-700">
+                    <span className="font-fco font-bold text-xs sm:text-base text-indigo-900 dark:text-indigo-300 uppercase flex items-center space-x-2">
+                      <i className="fa-solid fa-shield-halved text-indigo-600 dark:text-indigo-400"></i>
                       <span>SƠ ĐỒ 3 HẬU VỆ (5 SƠ ĐỒ)</span>
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-indigo-100 text-indigo-800 font-fco font-bold text-xs">
+                    <span className="px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200 font-fco font-bold text-[10px] sm:text-xs">
                       3 DF
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 text-center">
                     {[
                       "3-1-4-2", "3-4-3", "3-5-2",
                       "3-2-3-2", "3-4-1-2"
                     ].map((formation, idx) => (
-                      <div key={idx} className="p-2 rounded-lg bg-white border border-slate-200 text-xs font-mono font-bold text-slate-800 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-2xs">
+                      <div key={idx} className="p-1.5 sm:p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-[11px] sm:text-xs font-mono font-bold text-slate-800 dark:text-slate-200 hover:border-indigo-400 hover:text-indigo-600 transition-colors shadow-2xs">
                         {formation}
                       </div>
                     ))}

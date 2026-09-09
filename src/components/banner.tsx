@@ -17,7 +17,7 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
     <div
       className={`w-full ${
         isDthen ? "bg-[#050f1f] border-b-2 border-blue-500/80" : "bg-[#051410] border-b-2 border-emerald-500/80"
-      } text-white py-11 sm:py-14 px-4 relative overflow-hidden`}
+      } text-white py-6 sm:py-10 md:py-14 px-3 sm:px-4 relative overflow-hidden`}
     >
       {/* 1. Dynamic Stadium Pitch Night Gradient */}
       <div
@@ -53,7 +53,7 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
       />
 
       {/* 3. HIGH-END 3D ESPORTS HOLOGRAPHIC TACTICAL MATCH ENGINE */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-5 opacity-40 sm:opacity-55 transition-opacity">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-5 opacity-25 sm:opacity-55 transition-opacity">
         
         {/* Left Goal Post Frame */}
         <div className="absolute bottom-2 left-1 w-3 sm:w-4 h-12 border-r-2 border-y-2 border-emerald-400/40 rounded-r-lg bg-emerald-500/10 flex items-center justify-center opacity-70">
@@ -157,7 +157,7 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
         {/* ================= THE LIVE RALLY FOOTBALL ================= */}
         <div className="absolute animate-rally-ball pointer-events-none z-20">
           <div className="relative">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-white text-slate-950 border border-slate-300 flex items-center justify-center text-xs sm:text-sm shadow-[0_0_20px_rgba(255,255,255,1)]">
+            <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-white text-slate-950 border border-slate-300 flex items-center justify-center text-[10px] sm:text-sm shadow-[0_0_20px_rgba(255,255,255,1)]">
               <i className="fa-solid fa-futbol"></i>
             </div>
             <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#00e575] via-amber-400 to-rose-400 opacity-80 blur-xs -z-10" />
@@ -165,8 +165,8 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
         </div>
       </div>
 
-      {/* 4. Floating Esports Decors */}
-      <div className="absolute top-1/2 left-3 sm:left-10 -translate-y-1/2 flex flex-col items-center space-y-3 pointer-events-none opacity-30 sm:opacity-50 animate-float-slow">
+      {/* 4. Floating Esports Decors (hidden on small mobile to avoid text overlapping) */}
+      <div className="hidden sm:flex absolute top-1/2 left-3 sm:left-10 -translate-y-1/2 flex-col items-center space-y-3 pointer-events-none opacity-30 sm:opacity-50 animate-float-slow">
         <div
           className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${
             isDthen
@@ -178,21 +178,21 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
         </div>
       </div>
 
-      <div className="absolute top-1/2 right-12 sm:right-20 -translate-y-1/2 flex flex-col items-center space-y-3 pointer-events-none opacity-30 sm:opacity-50 animate-float-reverse">
+      <div className="hidden sm:flex absolute top-1/2 right-6 sm:right-20 -translate-y-1/2 flex-col items-center space-y-3 pointer-events-none opacity-30 sm:opacity-50 animate-float-reverse">
         <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-950/80 border border-amber-500/50 text-amber-400 flex items-center justify-center text-lg sm:text-xl shadow-xl backdrop-blur-md">
           <i className="fa-solid fa-trophy"></i>
         </div>
       </div>
 
       {/* Banner Main Content */}
-      <div className="max-w-4xl mx-auto text-center space-y-3 relative z-20">
+      <div className="max-w-4xl mx-auto text-center space-y-2 sm:space-y-3 relative z-20">
         {badge && (
           <div
-            className={`inline-flex items-center space-x-2 px-3.5 py-1 rounded-full ${
+            className={`inline-flex items-center space-x-1.5 sm:space-x-2 px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-full ${
               isDthen
                 ? "bg-blue-900/80 border border-blue-400/60 text-blue-300"
                 : "bg-emerald-900/80 border border-emerald-400/60 text-emerald-300"
-            } text-xs font-fco font-bold uppercase tracking-widest backdrop-blur-md shadow-sm transition-transform hover:scale-105`}
+            } text-[10px] sm:text-xs font-fco font-bold uppercase tracking-widest backdrop-blur-md shadow-sm transition-transform hover:scale-105`}
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${
@@ -203,7 +203,7 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
           </div>
         )}
 
-        <h1 className="font-fco font-black text-2xl sm:text-4xl md:text-5xl uppercase tracking-wider text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] leading-tight">
+        <h1 className="font-fco font-black text-xl sm:text-3xl md:text-4xl lg:text-5xl uppercase tracking-wider text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] leading-tight px-1">
           {displayTitle}
         </h1>
 
@@ -211,14 +211,14 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
           <p
             className={`${
               isDthen ? "text-blue-100/80" : "text-emerald-100/80"
-            } text-xs sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm`}
+            } text-[11px] sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm px-2`}
           >
             {subtitle}
           </p>
         )}
 
         <div
-          className={`pt-1 flex items-center justify-center space-x-2 text-xs ${
+          className={`pt-0.5 flex flex-wrap items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-xs ${
             isDthen ? "text-blue-400/90" : "text-emerald-400/90"
           } font-medium tracking-wide`}
         >

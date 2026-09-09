@@ -221,6 +221,25 @@ const Footer: React.FC = () => {
                 </div>
               </a>
 
+              {isDthen && (
+                <a
+                  href="https://www.tiktok.com/@duck.thens2601?_r=1&_t=ZS-99ZvOx8OVFM"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-400/60 flex items-center space-x-3 transition-all group card-hover-fx"
+                >
+                  <div className="w-8 h-8 rounded-lg bg-pink-600/20 text-pink-400 flex items-center justify-center text-sm group-hover:bg-pink-600 group-hover:text-white transition-colors">
+                    <i className="fa-brands fa-tiktok"></i>
+                  </div>
+                  <div>
+                    <span className="font-fco text-xs font-bold text-white block leading-tight">
+                      TikTok Đức Thén
+                    </span>
+                    <span className="text-[10px] text-slate-400">@duck.thens2601</span>
+                  </div>
+                </a>
+              )}
+
               <button
                 onClick={scrollToTop}
                 className={`w-full p-2.5 rounded-xl ${
@@ -249,7 +268,7 @@ const Footer: React.FC = () => {
           <p className="text-center sm:text-right">
             BAN TỔ CHỨC:{" "}
             <strong className={isDthen ? "text-blue-400" : "text-emerald-400"}>
-              {isDthen ? "ADMIN ĐTHÉN & TỔ TRỌNG TÀI" : "ADMIN PHAN LONG & BẠCH MINH QUANG"}
+              {isDthen ? "ADMIN ĐTHÉN & TỔ TRỌNG TÀI PHAN LONG" : "ADMIN PHAN LONG & BẠCH MINH QUANG"}
             </strong>
           </p>
         </div>

@@ -203,8 +203,7 @@ const Ltd: React.FC = () => {
                   <span className="text-xs text-slate-500 font-medium">Chuẩn phân nhánh FIFA</span>
                 </div>
 
-                {/* FIFA Pathways Diagram: 100% Đồng bộ nền sáng, thẻ pastel thanh lịch & đường kẻ SVG chuẩn xác */}
-                <div className="relative p-6 sm:p-10 rounded-2xl bg-gradient-to-b from-slate-50 via-emerald-50/20 to-teal-50/30 border border-slate-200 shadow-sm overflow-x-auto">
+                <div className="relative w-full max-w-full p-4 sm:p-10 rounded-2xl bg-gradient-to-b from-slate-50 via-emerald-50/20 to-teal-50/30 border border-slate-200 shadow-sm overflow-x-auto overscroll-x-contain">
                   
                   <div className="text-center mb-8">
                     <span className="text-[11px] font-oswald font-bold uppercase tracking-[0.25em] text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-full border border-emerald-200">
