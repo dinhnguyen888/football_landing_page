@@ -24,7 +24,7 @@ const DthenTheThuc: React.FC = () => {
 
               {/* Giai đoạn 1 */}
               <div className="space-y-1.5 pt-1">
-                <h4 className="font-bold text-slate-900">Giai đoạn 1 – Vòng bảng (Group Stage - Chuẩn World Cup)</h4>
+                <h4 className="font-bold text-slate-900">Giai đoạn 1 – Vòng bảng (Group Stage)</h4>
                 <ul className="list-disc list-inside space-y-1 pl-1">
                   <li>32 Huấn luyện viên được chia đều vào <strong>8 bảng đấu (Bảng A, B, C, D, E, F, G, H)</strong>, mỗi bảng 4 HLV.</li>
                   <li>Thi đấu theo thể thức <strong>vòng tròn 1 lượt</strong> tính điểm (thắng 3 điểm, hòa 1 điểm, thua 0 điểm).</li>
@@ -36,7 +36,7 @@ const DthenTheThuc: React.FC = () => {
               <div className="space-y-1.5 pt-2 border-t border-slate-100">
                 <h4 className="font-bold text-slate-900">Giai đoạn 2 – Vòng loại trực tiếp (Knockout Stage)</h4>
                 <ul className="list-disc list-inside space-y-1 pl-1">
-                  <li>16 HLV xuất sắc nhất thi đấu theo phân nhánh chuẩn World Cup: <strong>Vòng 1/8 (Round of 16) ➔ Tứ Kết ➔ Bán Kết ➔ Chung Kết & Tranh Hạng Ba</strong>.</li>
+                  <li>16 HLV xuất sắc nhất thi đấu theo phân nhánh trực tiếp: <strong>Vòng 1/8 (Round of 16) ➔ Tứ Kết ➔ Bán Kết ➔ Chung Kết & Tranh Hạng Ba</strong>.</li>
                   <li>Các trận đấu Knockout áp dụng thể thức <strong>BO3 (Best of 3)</strong>: HLV thắng 2/3 trận sẽ giành quyền đi tiếp.</li>
                   <li>Trận Chung kết phân định ngôi vương đỉnh cao của giải đấu.</li>
                 </ul>

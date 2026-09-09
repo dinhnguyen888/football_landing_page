@@ -181,7 +181,7 @@ const DthenTrangchu: React.FC = () => {
                   <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform text-amber-600 dark:text-amber-400"></i>
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1">
-                  Cơ chế chia 8 bảng chuẩn World Cup đá vòng tròn tính điểm (Top 2 vào Vòng 1/8) và phân nhánh Knockout BO3.
+                  Cơ chế chia 8 bảng đá vòng tròn tính điểm (Top 2 vào Vòng 1/8) và phân nhánh Knockout BO3.
                 </p>
               </div>
             </Link>

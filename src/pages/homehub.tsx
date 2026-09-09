@@ -102,10 +102,10 @@ const HomeHub: React.FC = () => {
       organizer: "Admin ĐThén & Tổ Trọng Tài Phan Long",
       theme: "blue",
       squadCap: "Quỹ Lương 305 Chuẩn",
-      mode: "32 Đội • 8 Bảng Đấu (Chuẩn World Cup)",
+      mode: "32 Đội • 8 Bảng Đấu",
       prize: "Cúp Lưu Niệm + Tiền Thưởng Nóng",
       playersCount: "32 Huấn Luyện Viên",
-      highlights: ["🌍 Chuẩn thể thức World Cup 32 đội", "🔥 8 bảng đấu tranh vé Vòng 1/8", "🛡️ Giám sát đội hình nghiêm ngặt"],
+      highlights: ["⚡ Quy mô 32 đội bóng tranh tài", "🔥 8 bảng đấu tranh vé Vòng 1/8", "🛡️ Giám sát đội hình nghiêm ngặt"],
     },
   ];
 

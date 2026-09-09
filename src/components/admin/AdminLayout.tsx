@@ -97,25 +97,21 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({
 
           {/* Status & Actions */}
           <div className="flex items-center justify-end space-x-2 sm:space-x-3">
-            {/* Firebase Status Badge */}
+            {/* Firebase Status Color Indicator (Color dot only, no text) */}
             <div className="flex items-center">
               {isFirebaseConfigured ? (
                 <div
-                  className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                  title="Đã kết nối Firebase Cloud Firestore trực tuyến"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 shadow-2xs cursor-default"
+                  title="Firebase Cloud Firestore: Đã kết nối trực tuyến (Online)"
                 >
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                  <span className="hidden md:inline font-oswald text-[11px] tracking-wide uppercase">Firestore Online</span>
-                  <span className="md:hidden text-[10px]">Cloud</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-sm shadow-emerald-500/50"></span>
                 </div>
               ) : (
                 <div
-                  className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
-                  title="Chưa cấu hình Firebase - Dữ liệu đang lưu tại Local Storage"
+                  className="w-8 h-8 rounded-xl flex items-center justify-center bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 shadow-2xs cursor-default"
+                  title="Chế độ Local Storage (Offline)"
                 >
-                  <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                  <span className="hidden md:inline font-oswald text-[11px] tracking-wide uppercase">Local Storage</span>
-                  <span className="md:hidden text-[10px]">Local</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></span>
                 </div>
               )}
             </div>

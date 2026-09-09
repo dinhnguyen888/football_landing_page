@@ -648,7 +648,7 @@ const AdminPortal: React.FC = () => {
                     <i className="fa-solid fa-bolt"></i>
                   </div>
                   <span className="px-3 py-1 rounded-full text-[11px] font-oswald font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-500/40">
-                    CHUẨN FIFA WORLD CUP
+                    QUY MÔ 32 ĐỘI
                   </span>
                 </div>
 
@@ -657,7 +657,7 @@ const AdminPortal: React.FC = () => {
                     ĐTHÉN FCO ™
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-300 mt-2 leading-relaxed">
-                    Giải đấu đỉnh cao ĐThén FCO do Founder Đức Thén sáng lập. Quy mô 8 bảng đấu (32 HLV), vòng 1/8, Tứ kết, Bán kết và Chung kết chuẩn FIFA World Cup.
+                    Giải đấu đỉnh cao ĐThén FCO do Founder Đức Thén sáng lập. Quy mô 8 bảng đấu (32 HLV), thi đấu vòng 1/8, Tứ kết, Bán kết và Chung kết.
                   </p>
                 </div>
 
@@ -826,7 +826,7 @@ const AdminPortal: React.FC = () => {
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                           {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/bảng •{' '}
-                          {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt (Chuẩn World Cup)'}
+                          {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt'}
                         </p>
                       </div>
 
@@ -1165,7 +1165,7 @@ const AdminPortal: React.FC = () => {
             <div className="space-y-1 text-center sm:text-left">
               <div className="inline-flex items-center space-x-2 px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-bold font-oswald uppercase border border-amber-500/30">
                 <i className="fa-solid fa-sitemap text-amber-400"></i>
-                <span>THỂ THỨC FIFA WORLD CUP BRACKET</span>
+                <span>SƠ ĐỒ PHÂN NHÁNH TRỰC TIẾP</span>
               </div>
               <h3 className="font-oswald text-xl font-bold uppercase text-white">
                 {tournament.knockoutStage?.isCompletedGroupStage
@@ -1578,7 +1578,7 @@ const AdminPortal: React.FC = () => {
                   >
                     <option value={2}>2 Bảng (A, B)</option>
                     <option value={4}>4 Bảng (A, B, C, D)</option>
-                    <option value={8}>8 Bảng (Chuẩn World Cup)</option>
+                    <option value={8}>8 Bảng (32 Đội)</option>
                   </select>
                 </div>
 
@@ -1629,7 +1629,7 @@ const AdminPortal: React.FC = () => {
                       />
                       <div>
                         <strong className="block text-sm font-oswald uppercase text-slate-900 dark:text-white">
-                          Vòng tròn 1 lượt (Chuẩn World Cup)
+                          Vòng tròn 1 lượt
                         </strong>
                         <span className="text-xs text-slate-500">Mỗi cặp đấu chỉ gặp nhau 1 trận</span>
                       </div>

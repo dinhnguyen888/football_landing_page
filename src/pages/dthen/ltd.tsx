@@ -415,7 +415,7 @@ const DthenLtd: React.FC = () => {
                   <div className="flex items-center space-x-2">
                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 font-fco font-bold text-xs uppercase">
                       <i className="fa-solid fa-trophy mr-1.5 text-amber-500"></i>
-                      CHUẨN PHÂN NHÁNH FIFA WORLD CUP (32 ĐỘI)
+                      SƠ ĐỒ PHÂN NHÁNH TRỰC TIẾP (32 ĐỘI)
                     </span>
                   </div>
                   <h3 className="font-oswald text-xl sm:text-3xl font-bold uppercase text-slate-900 dark:text-white">
@@ -684,12 +684,12 @@ const DthenLtd: React.FC = () => {
                     <i className="fa-solid fa-circle-info"></i>
                   </div>
                   <h4 className="font-oswald font-bold uppercase text-sm sm:text-lg text-blue-950 dark:text-blue-200 leading-tight">
-                    BẢNG QUY TẮC BỐC THĂM PHÂN CẶP THEO LUẬT WORLD CUP
+                    BẢNG QUY TẮC BỐC THĂM PHÂN CẶP VÒNG 1/8
                   </h4>
                 </div>
                 <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-2.5 sm:space-y-3 pl-0 sm:pl-10">
                   <p>
-                    Khi chưa kết thúc vòng bảng, sơ đồ cây hiển thị trước quy tắc phân nhánh chuẩn FIFA World Cup: <strong>Nhất bảng này gặp Nhì bảng kia</strong>.
+                    Khi chưa kết thúc vòng bảng, sơ đồ cây hiển thị trước quy tắc phân nhánh trực tiếp: <strong>Nhất bảng này gặp Nhì bảng kia</strong>.
                   </p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
                     <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-1.5">
