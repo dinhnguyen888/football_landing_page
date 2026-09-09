@@ -8,7 +8,6 @@ import {
   loadDthenTournamentData,
   createDefaultDthenTournament,
   buildFIFABracketFromGroups,
-  KnockoutMatch,
 } from '../../utils/tournamentEngine';
 
 const DthenLtd: React.FC = () => {
