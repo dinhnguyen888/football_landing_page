@@ -10,8 +10,12 @@ const Navbar: React.FC = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  // Hide entire navbar when on the Home Hub page (/)
-  if (location.pathname === "/") {
+  // Hide entire navbar when on the Home Hub page (/) or inside Admin Portal
+  if (
+    location.pathname === "/" ||
+    location.pathname.startsWith("/admin-portal") ||
+    location.pathname.startsWith("/quanlygiaidau")
+  ) {
     return null;
   }
 
@@ -450,17 +454,6 @@ const Navbar: React.FC = () => {
             <i className="fa-solid fa-arrow-up-right-from-square text-[10px] opacity-70"></i>
           </Link>
 
-          <Link
-            to="/quanlygiaidau"
-            onClick={() => setMobileMenuOpen(false)}
-            className="px-3.5 py-2.5 rounded-xl font-oswald text-xs font-bold uppercase text-white bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 flex items-center justify-between shadow-xs transition-all btn-shimmer"
-          >
-            <span className="flex items-center space-x-2.5">
-              <i className="fa-solid fa-lock text-white text-sm"></i>
-              <span>QUẢN TRỊ BTC (ADMIN PORTAL)</span>
-            </span>
-            <i className="fa-solid fa-shield-halved text-[10px] opacity-70"></i>
-          </Link>
         </div>
       )}
 

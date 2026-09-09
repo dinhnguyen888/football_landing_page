@@ -17,8 +17,8 @@ import Danhsachhlv from "./pages/danhsachhlv";
 import Ltd from "./pages/ltd";
 import Thethuc from "./pages/thethuc";
 import Giaithuong from "./pages/giaithuong";
-import Quanlygiaidau from "./pages/quanlygiaidau";
 import Taogiaidau from "./pages/taogiaidau";
+import AdminPortal from "./pages/adminPortal";
 
 // ĐThén FCO Pages
 import DthenTrangchu from "./pages/dthen/trangchu";
@@ -53,7 +53,10 @@ export default function App() {
         <Route path="/ltd" element={<Ltd />} />
         <Route path="/thethuc" element={<Thethuc />} />
         <Route path="/giaithuong" element={<Giaithuong />} />
-        <Route path="/quanlygiaidau" element={<Quanlygiaidau />} />
+        
+        {/* Dedicated Admin Portal Routes */}
+        <Route path="/admin-portal" element={<AdminPortal />} />
+        <Route path="/quanlygiaidau" element={<AdminPortal />} />
         <Route path="/taogiaidau" element={<Taogiaidau />} />
 
         {/* ĐThén FCO Tournament Routes */}
