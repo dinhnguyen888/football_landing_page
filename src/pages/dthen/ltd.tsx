@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Banner from '../../components/banner';
 import Footer from '../../components/footer';
 import Body from '../../components/body';
+import { StandingsTable } from '../../components/StandingsTable';
 import {
   TournamentData,
   calculateGroupStandings,
@@ -212,92 +213,13 @@ const DthenLtd: React.FC = () => {
               </div>
 
               {/* Standings Table */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden space-y-0">
-                <div className="p-3.5 sm:p-5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <h3 className="font-oswald text-base sm:text-xl font-bold uppercase text-slate-900 dark:text-white">
-                    BẢNG XẾP HẠNG – {currentGroup.name}
-                  </h3>
-                  <span className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/80 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider border border-blue-200 dark:border-blue-800">
-                    Top 2 Vào Vòng 1/8
-                  </span>
-                </div>
-
-                {/* Mobile horizontal scroll hint */}
-                <div className="sm:hidden px-3.5 py-1.5 bg-blue-50/70 dark:bg-blue-950/40 text-[11px] text-blue-800 dark:text-blue-300 flex items-center justify-between border-b border-blue-100 dark:border-blue-900/30">
-                  <span className="flex items-center gap-1.5 font-medium">
-                    <i className="fa-solid fa-arrows-left-right text-[10px] text-blue-600 dark:text-blue-400"></i>
-                    Vuốt ngang để xem đủ Trận, Hiệu số, Điểm
-                  </span>
-                  <i className="fa-solid fa-chevron-right text-[9px] opacity-60"></i>
-                </div>
-
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs sm:text-sm min-w-[560px]">
-                    <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 font-bold uppercase text-[11px] border-b border-slate-200 dark:border-slate-800">
-                      <tr>
-                        <th className="py-2.5 sm:py-3 px-2 sm:px-4 text-center w-10 sm:w-12">#</th>
-                        <th className="py-2.5 sm:py-3 px-3 sm:px-4 min-w-[170px]">Huấn Luyện Viên / CLB</th>
-                        <th className="py-2.5 sm:py-3 px-2 text-center w-12">Trận</th>
-                        <th className="py-2.5 sm:py-3 px-2 text-center w-10">T</th>
-                        <th className="py-2.5 sm:py-3 px-2 text-center w-10">H</th>
-                        <th className="py-2.5 sm:py-3 px-2 text-center w-10">B</th>
-                        <th className="py-2.5 sm:py-3 px-2 text-center w-12">BT</th>
-                        <th className="py-2.5 sm:py-3 px-2 text-center w-12">SBT</th>
-                        <th className="py-2.5 sm:py-3 px-2 text-center w-12">HS</th>
-                        <th className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-black text-blue-700 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/30 w-16">Điểm</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {standings.map((stat, idx) => (
-                        <tr
-                          key={stat.teamId}
-                          className={`hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors ${
-                            idx < 2 ? 'bg-blue-50/30 dark:bg-blue-950/20' : ''
-                          }`}
-                        >
-                          <td className="py-2.5 sm:py-3 px-2 sm:px-4 text-center">
-                            <span
-                              className={`w-6 h-6 rounded-full inline-flex items-center justify-center font-bold text-xs ${
-                                idx === 0
-                                  ? 'bg-amber-400 text-slate-900 font-black shadow-2xs'
-                                  : idx === 1
-                                  ? 'bg-blue-200 dark:bg-blue-800 text-blue-900 dark:text-blue-100'
-                                  : 'text-slate-400'
-                              }`}
-                            >
-                              {idx + 1}
-                            </span>
-                          </td>
-                          <td className="py-2.5 sm:py-3 px-3 sm:px-4 font-semibold text-slate-900 dark:text-white">
-                            <div>
-                              <span className="block leading-tight">{stat.teamName}</span>
-                              {stat.club && (
-                                <span className="block text-[11px] font-normal text-slate-500 dark:text-slate-400 mt-0.5">
-                                  {stat.club}
-                                </span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-2.5 sm:py-3 px-2 text-center text-slate-600 dark:text-slate-300">{stat.played}</td>
-                          <td className="py-2.5 sm:py-3 px-2 text-center text-emerald-700 dark:text-emerald-400 font-semibold">{stat.won}</td>
-                          <td className="py-2.5 sm:py-3 px-2 text-center text-amber-700 dark:text-amber-400 font-semibold">{stat.drawn}</td>
-                          <td className="py-2.5 sm:py-3 px-2 text-center text-rose-700 dark:text-rose-400 font-semibold">{stat.lost}</td>
-                          <td className="py-2.5 sm:py-3 px-2 text-center text-slate-600 dark:text-slate-300">{stat.goalsFor}</td>
-                          <td className="py-2.5 sm:py-3 px-2 text-center text-slate-600 dark:text-slate-300">{stat.goalsAgainst}</td>
-                          <td className="py-2.5 sm:py-3 px-2 text-center font-semibold text-slate-800 dark:text-slate-200">
-                            {stat.goalDifference > 0
-                              ? `+${stat.goalDifference}`
-                              : stat.goalDifference}
-                          </td>
-                          <td className="py-2.5 sm:py-3 px-3 sm:px-4 text-center font-black text-blue-700 dark:text-blue-400 text-sm sm:text-base bg-blue-50/50 dark:bg-blue-950/30">
-                            {stat.points}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+              <StandingsTable
+                groupName={currentGroup.name}
+                standings={standings}
+                matches={currentGroup.matches}
+                theme="blue"
+                qualificationNote="Top 1 & Top 2 giành vé trực tiếp vào Vòng 16 Đội (Knockout)"
+              />
 
               {/* Match Schedule / Results Grid */}
               <div className="space-y-4">

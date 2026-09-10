@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Banner from '../components/banner';
 import Footer from '../components/footer';
 import Body from '../components/body';
+import { StandingsTable } from '../components/StandingsTable';
 import {
   TournamentData,
   calculateGroupStandings,
@@ -424,7 +425,7 @@ const Ltd: React.FC = () => {
           {(!tournament.knockoutStage?.isCompletedGroupStage || viewStage === 'GROUP') && (
             <>
               {/* Group Navigation Tabs */}
-              <div className="flex flex-wrap items-center gap-2 border-b-2 border-slate-200 pb-2">
+              <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 w-fit">
                 {tournament.groups.map((grp, idx) => (
                   <button
                     key={grp.id}
@@ -432,109 +433,30 @@ const Ltd: React.FC = () => {
                       setActiveGroupIndex(idx);
                       setActiveRoundFilter('ALL');
                     }}
-                    className={`px-5 py-2 rounded-lg font-oswald text-sm font-bold uppercase tracking-wider transition-all ${
+                    className={`px-5 py-2.5 rounded-xl font-oswald text-sm font-bold uppercase tracking-wider transition-all flex items-center gap-2 ${
                       activeGroupIndex === idx
-                        ? 'bg-emerald-700 text-white shadow-sm'
-                        : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                        ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white shadow-md shadow-emerald-700/20'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-white/60 dark:hover:bg-slate-700/50'
                     }`}
                   >
+                    <i
+                      className={`fa-solid fa-layer-group text-xs ${
+                        activeGroupIndex === idx ? 'text-amber-300' : 'text-slate-400'
+                      }`}
+                    ></i>
                     {grp.name}
                   </button>
                 ))}
               </div>
 
-          {/* STANDINGS TABLE (BẢNG XẾP HẠNG) */}
-          <div className="p-6 sm:p-8 rounded-xl portal-card space-y-4">
-            <div className="border-b border-slate-200 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center space-x-2">
-                <i className="fa-solid fa-trophy text-amber-500"></i>
-                <h3 className="font-oswald text-xl font-bold uppercase text-slate-900">
-                  BẢNG XẾP HẠNG {activeGroup.name}
-                </h3>
-              </div>
-              <span className="text-xs text-slate-500 font-medium">
-                * Thắng 3 điểm | Hòa 1 điểm | Thua 0 điểm
-              </span>
-            </div>
-
-            {/* Table Container */}
-            <div className="overflow-x-auto rounded-lg border border-slate-200">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-[#0a192f] text-white font-oswald uppercase text-center">
-                  <tr>
-                    <th className="p-3 text-left w-12">#</th>
-                    <th className="p-3 text-left">Đội Bóng / HLV</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận đã chơi">ĐĐ</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận thắng">Thắng</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận hòa">H</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận thua">Thua</th>
-                    <th className="p-3 w-12 font-bold" title="Số bàn thắng">BT</th>
-                    <th className="p-3 w-12 font-bold" title="Số bàn thua">SBT</th>
-                    <th className="p-3 w-14 font-bold text-amber-300" title="Hiệu số bàn thắng">HS</th>
-                    <th className="p-3 w-14 font-bold text-emerald-400 bg-[#071324]" title="Tổng điểm">Đ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 bg-white text-center">
-                  {standings.map((teamStat, rankIdx) => {
-                    const isTop2 = rankIdx < 2;
-                    return (
-                      <tr
-                        key={teamStat.teamId}
-                        className={`hover:bg-slate-50 transition-colors ${
-                          isTop2 ? 'bg-emerald-50/40' : ''
-                        }`}
-                      >
-                        <td className="p-3 text-left font-bold font-oswald text-slate-900">
-                          <span
-                            className={`inline-block w-6 h-6 rounded text-center leading-6 text-xs font-bold ${
-                              rankIdx === 0
-                                ? 'bg-amber-400 text-slate-950'
-                                : rankIdx === 1
-                                ? 'bg-slate-300 text-slate-900'
-                                : rankIdx === 2
-                                ? 'bg-orange-300 text-slate-900'
-                                : 'bg-slate-100 text-slate-600'
-                            }`}
-                          >
-                            {rankIdx + 1}
-                          </span>
-                        </td>
-                        <td className="p-3 text-left">
-                          <strong className="text-slate-900 block font-bold text-sm">
-                            {teamStat.teamName}
-                          </strong>
-                          {teamStat.club && (
-                            <span className="text-[11px] text-slate-500 font-medium block">
-                              CLB: {teamStat.club}
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-3 font-semibold text-slate-800">{teamStat.played}</td>
-                        <td className="p-3 font-semibold text-emerald-700">{teamStat.won}</td>
-                        <td className="p-3 font-semibold text-amber-700">{teamStat.drawn}</td>
-                        <td className="p-3 font-semibold text-rose-700">{teamStat.lost}</td>
-                        <td className="p-3 text-slate-700">{teamStat.goalsFor}</td>
-                        <td className="p-3 text-slate-700">{teamStat.goalsAgainst}</td>
-                        <td className="p-3 font-bold font-mono text-slate-900">
-                          {teamStat.goalDifference > 0
-                            ? `+${teamStat.goalDifference}`
-                            : teamStat.goalDifference}
-                        </td>
-                        <td className="p-3 font-oswald font-bold text-base text-emerald-800 bg-emerald-50/60">
-                          {teamStat.points}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-
-            <div className="flex items-center space-x-2 text-[11px] text-slate-500 pt-1">
-              <span className="w-3 h-3 rounded bg-emerald-100 border border-emerald-400"></span>
-              <span>Top 1 & Top 2 giành vé trực tiếp vào Vòng 16 đội (Knockout)</span>
-            </div>
-          </div>
+              {/* STANDINGS TABLE (BẢNG XẾP HẠNG) */}
+              <StandingsTable
+                groupName={activeGroup.name}
+                standings={standings}
+                matches={activeGroup.matches}
+                theme="emerald"
+                qualificationNote="Top 1 & Top 2 giành vé trực tiếp vào Vòng 16 Đội (Knockout)"
+              />
 
           {/* MATCH FIXTURES */}
           <div className="p-6 sm:p-8 rounded-xl portal-card space-y-6">

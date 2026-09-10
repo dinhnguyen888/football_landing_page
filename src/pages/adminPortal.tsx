@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout, { AdminTab, TournamentSystem } from '../components/admin/AdminLayout';
+import { StandingsTable } from '../components/StandingsTable';
 import {
   TournamentData,
   calculateGroupStandings,
@@ -966,71 +967,13 @@ const AdminPortal: React.FC = () => {
           </div>
 
           {/* Live Standings Table */}
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between">
-              <h3 className="font-oswald text-lg font-black uppercase text-slate-900 dark:text-white">
-                BẢNG XẾP HẠNG {activeGroup.name} (TỰ ĐỘNG TÍNH ĐIỂM)
-              </h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
-                * Bảng điểm cập nhật theo thời gian thực khi bạn nhập tỉ số
-              </span>
-            </div>
-
-            <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
-              <table className="w-full text-left text-xs sm:text-sm">
-                <thead className="bg-slate-900 text-white font-oswald uppercase text-center text-xs">
-                  <tr>
-                    <th className="p-3 text-left w-12">#</th>
-                    <th className="p-3 text-left">Đội Bóng / HLV</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận đã chơi">ĐĐ</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận thắng">Thắng</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận hòa">H</th>
-                    <th className="p-3 w-12 font-bold" title="Số trận thua">Thua</th>
-                    <th className="p-3 w-12 font-bold" title="Số bàn thắng">BT</th>
-                    <th className="p-3 w-12 font-bold" title="Số bàn thua">SBT</th>
-                    <th className="p-3 w-14 font-bold text-amber-300" title="Hiệu số bàn thắng">HS</th>
-                    <th className="p-3 w-14 font-bold text-emerald-400 bg-slate-950" title="Tổng điểm">Đ</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200 dark:divide-slate-800 bg-white dark:bg-slate-950 text-center">
-                  {standings.map((teamStat, rankIdx) => (
-                    <tr
-                      key={teamStat.teamId}
-                      className={`hover:bg-slate-50 dark:hover:bg-slate-900/50 transition-colors ${
-                        rankIdx < 2 ? (isDthen ? 'bg-blue-50/40 dark:bg-blue-950/20' : 'bg-amber-50/40 dark:bg-amber-950/20') : ''
-                      }`}
-                    >
-                      <td className="p-3 text-left font-bold font-oswald text-slate-900 dark:text-white">
-                        {rankIdx + 1}
-                      </td>
-                      <td className="p-3 text-left">
-                        <strong className="text-slate-900 dark:text-white block font-bold text-sm">
-                          {teamStat.teamName}
-                        </strong>
-                        {teamStat.club && (
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
-                            CLB: {teamStat.club}
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3 font-semibold text-slate-800 dark:text-slate-200">{teamStat.played}</td>
-                      <td className="p-3 font-semibold text-emerald-600 dark:text-emerald-400">{teamStat.won}</td>
-                      <td className="p-3 font-semibold text-amber-600 dark:text-amber-400">{teamStat.drawn}</td>
-                      <td className="p-3 font-semibold text-rose-600 dark:text-rose-400">{teamStat.lost}</td>
-                      <td className="p-3 text-slate-700 dark:text-slate-300">{teamStat.goalsFor}</td>
-                      <td className="p-3 text-slate-700 dark:text-slate-300">{teamStat.goalsAgainst}</td>
-                      <td className="p-3 font-bold font-mono text-slate-900 dark:text-white">
-                        {teamStat.goalDifference > 0 ? `+${teamStat.goalDifference}` : teamStat.goalDifference}
-                      </td>
-                      <td className="p-3 font-oswald font-bold text-base text-amber-600 dark:text-amber-400 bg-amber-500/10">
-                        {teamStat.points}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
+          <StandingsTable
+            groupName={activeGroup.name}
+            standings={standings}
+            matches={activeGroup.matches}
+            theme={isDthen ? 'blue' : 'emerald'}
+            qualificationNote="Top 1 & Top 2 giành quyền vào vòng Knockout"
+          />
 
           {/* Match Score Input Section */}
           <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
