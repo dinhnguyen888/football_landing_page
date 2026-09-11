@@ -170,8 +170,9 @@ export class StageLedWall {
 
     // 3. Render Groups Columns
     const groupCount = Math.max(groups.length, 4);
-    const paddingX = 40;
-    const gapX = 24;
+    const isCompact = groupCount > 4;
+    const paddingX = isCompact ? 26 : 40;
+    const gapX = isCompact ? 14 : 24;
     const availableW = w - paddingX * 2 - gapX * (groupCount - 1);
     const colW = availableW / groupCount;
     const topY = 135;
@@ -203,7 +204,7 @@ export class StageLedWall {
       ctx.stroke();
 
       // Group Header (Top of each column)
-      const headerBoxH = 75;
+      const headerBoxH = isCompact ? 62 : 75;
       const colHeaderGrad = ctx.createLinearGradient(colX, topY, colX + colW, topY);
       colHeaderGrad.addColorStop(0, theme.primary);
       colHeaderGrad.addColorStop(1, theme.badge);
@@ -217,48 +218,56 @@ export class StageLedWall {
       const groupName = g ? g.name : `BẢNG ${letter}`;
 
       ctx.fillStyle = '#ffffff';
-      ctx.font = '900 36px "Oswald", -apple-system, sans-serif';
+      ctx.font = isCompact ? '900 24px "Oswald", -apple-system, sans-serif' : '900 36px "Oswald", -apple-system, sans-serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(groupName.toUpperCase(), colX + 24, topY + headerBoxH / 2);
+      ctx.fillText(groupName.toUpperCase(), colX + (isCompact ? 14 : 24), topY + headerBoxH / 2);
 
       const filledInGroup = g ? g.slots.filter((s) => s.team !== null).length : 0;
       const totalInGroup = g ? g.slots.length : 4;
       ctx.fillStyle = '#fef08a';
-      ctx.font = '900 24px "Oswald", -apple-system, sans-serif';
+      ctx.font = isCompact ? '900 18px "Oswald", -apple-system, sans-serif' : '900 24px "Oswald", -apple-system, sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText(`${filledInGroup}/${totalInGroup}`, colX + colW - 24, topY + headerBoxH / 2);
+      ctx.fillText(`${filledInGroup}/${totalInGroup}`, colX + colW - (isCompact ? 14 : 24), topY + headerBoxH / 2);
 
       // Render Slots Inside Column
       const slotCount = g ? g.slots.length : 4;
-      const slotStartY = topY + headerBoxH + 16;
-      const slotGap = 12;
-      const slotH = (colH - headerBoxH - 32 - slotGap * (slotCount - 1)) / slotCount;
+      const slotStartY = topY + headerBoxH + (isCompact ? 12 : 16);
+      const slotGap = isCompact ? 8 : 12;
+      const slotH = (colH - headerBoxH - (isCompact ? 24 : 32) - slotGap * (slotCount - 1)) / slotCount;
+
+      const slotPaddingX = isCompact ? 8 : 12;
+      const sBoxW = colW - slotPaddingX * 2;
+      const pillW = isCompact ? 36 : 48;
+      const pillH = isCompact ? 28 : 36;
+      const potW = isCompact ? 36 : 48;
+      const potH = isCompact ? 26 : 32;
 
       for (let sIdx = 0; sIdx < slotCount; sIdx++) {
         const slot = g?.slots[sIdx];
         const slotY = slotStartY + sIdx * (slotH + slotGap);
         const team = slot?.team || null;
         const isJustSlotted = slot?.isJustSlotted || false;
+        const sBoxX = colX + slotPaddingX;
 
+        ctx.save();
+
+        // 1. Slot Box Background & Border
         if (team) {
-          // FILLED SLOT
           if (isJustSlotted) {
-            // High-voltage golden pulse
             ctx.fillStyle = 'rgba(245, 158, 11, 0.45)';
             ctx.beginPath();
-            ctx.roundRect(colX + 12, slotY, colW - 24, slotH, 12);
+            ctx.roundRect(sBoxX, slotY, sBoxW, slotH, 10);
             ctx.fill();
-            ctx.lineWidth = 4;
+            ctx.lineWidth = 3;
             ctx.strokeStyle = '#fef08a';
             ctx.stroke();
           } else {
-            // Normal solid luxury navy slot
             ctx.fillStyle = 'rgba(15, 29, 58, 0.95)';
             ctx.beginPath();
-            ctx.roundRect(colX + 12, slotY, colW - 24, slotH, 12);
+            ctx.roundRect(sBoxX, slotY, sBoxW, slotH, 10);
             ctx.fill();
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 1.5;
             ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
             ctx.stroke();
           }
@@ -266,81 +275,106 @@ export class StageLedWall {
           // Left Accent Stripe
           ctx.fillStyle = theme.glow;
           ctx.beginPath();
-          ctx.roundRect(colX + 12, slotY, 6, slotH, [12, 0, 0, 12]);
+          ctx.roundRect(sBoxX, slotY, 5, slotH, [10, 0, 0, 10]);
           ctx.fill();
-
-          // Position Pill (e.g. A1, A2)
-          ctx.fillStyle = theme.badge;
+        } else {
+          ctx.fillStyle = 'rgba(2, 6, 23, 0.65)';
           ctx.beginPath();
-          ctx.roundRect(colX + 26, slotY + (slotH - 36) / 2, 48, 36, 8);
+          ctx.roundRect(sBoxX, slotY, sBoxW, slotH, 10);
           ctx.fill();
 
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '900 20px "Oswald", -apple-system, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(slot.positionName, colX + 50, slotY + slotH / 2);
+          ctx.lineWidth = 1.5;
+          ctx.setLineDash([4, 4]);
+          ctx.strokeStyle = 'rgba(100, 116, 139, 0.4)';
+          ctx.stroke();
+          ctx.setLineDash([]);
+        }
 
-          // Team Name (Large & Crisp)
-          ctx.fillStyle = '#ffffff';
-          ctx.font = '900 26px "Oswald", -apple-system, sans-serif';
-          ctx.textAlign = 'left';
+        // 2. Strict Clip inside slot to eliminate any possibility of overflowing
+        ctx.beginPath();
+        ctx.roundRect(sBoxX, slotY, sBoxW, slotH, 10);
+        ctx.clip();
 
-          let tName = team.name.toUpperCase();
-          if (tName.length > 18) ctx.font = '900 21px "Oswald", -apple-system, sans-serif';
-          ctx.fillText(tName, colX + 86, slotY + (team.club ? slotH / 2 - 12 : slotH / 2));
+        // 3. Position Pill (e.g. A1, B2)
+        const pillX = sBoxX + (isCompact ? 8 : 14);
+        const pillY = slotY + (slotH - pillH) / 2;
+        ctx.fillStyle = team ? theme.badge : 'rgba(30, 41, 59, 0.8)';
+        ctx.beginPath();
+        ctx.roundRect(pillX, pillY, pillW, pillH, 6);
+        ctx.fill();
 
-          // Club / Subtitle
-          if (team.club) {
-            ctx.fillStyle = '#94a3b8';
-            ctx.font = '700 16px "Inter", -apple-system, sans-serif';
-            ctx.fillText(team.club, colX + 86, slotY + slotH / 2 + 14);
-          }
+        ctx.fillStyle = team ? '#ffffff' : '#64748b';
+        ctx.font = isCompact ? '900 16px "Oswald", -apple-system, sans-serif' : '900 20px "Oswald", -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(slot ? slot.positionName : `${letter}${sIdx + 1}`, pillX + pillW / 2, slotY + slotH / 2);
 
-          // Pot Tag on Right
+        if (team) {
+          // 4. Pot Tag on Right
+          const potX = sBoxX + sBoxW - potW - (isCompact ? 6 : 10);
+          const potY = slotY + (slotH - potH) / 2;
           ctx.fillStyle = '#0f172a';
           ctx.beginPath();
-          ctx.roundRect(colX + colW - 74, slotY + (slotH - 32) / 2, 48, 32, 8);
+          ctx.roundRect(potX, potY, potW, potH, 6);
           ctx.fill();
           ctx.lineWidth = 1.5;
           ctx.strokeStyle = '#f59e0b';
           ctx.stroke();
 
           ctx.fillStyle = '#fbbf24';
-          ctx.font = '900 18px "Oswald", -apple-system, sans-serif';
+          ctx.font = isCompact ? '900 14px "Oswald", -apple-system, sans-serif' : '900 18px "Oswald", -apple-system, sans-serif';
           ctx.textAlign = 'center';
-          ctx.fillText(`P${team.pot}`, colX + colW - 50, slotY + slotH / 2);
-        } else {
-          // EMPTY SLOT
-          ctx.fillStyle = 'rgba(2, 6, 23, 0.65)';
-          ctx.beginPath();
-          ctx.roundRect(colX + 12, slotY, colW - 24, slotH, 12);
-          ctx.fill();
+          ctx.fillText(`P${team.pot}`, potX + potW / 2, slotY + slotH / 2);
 
-          ctx.lineWidth = 1.5;
-          ctx.setLineDash([6, 6]);
-          ctx.strokeStyle = 'rgba(100, 116, 139, 0.4)';
-          ctx.stroke();
-          ctx.setLineDash([]);
+          // 5. Team Name (Auto-fitted and truncated if necessary)
+          const textStartX = pillX + pillW + (isCompact ? 8 : 14);
+          const maxNameW = Math.max(30, potX - textStartX - 8);
 
-          // Position Pill
-          ctx.fillStyle = 'rgba(30, 41, 59, 0.8)';
-          ctx.beginPath();
-          ctx.roundRect(colX + 26, slotY + (slotH - 36) / 2, 48, 36, 8);
-          ctx.fill();
-
-          ctx.fillStyle = '#64748b';
-          ctx.font = '900 20px "Oswald", -apple-system, sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(slot ? slot.positionName : `${letter}${sIdx + 1}`, colX + 50, slotY + slotH / 2);
-
-          // Placeholder
-          ctx.fillStyle = '#475569';
-          ctx.font = '700 20px "Oswald", -apple-system, sans-serif';
+          ctx.fillStyle = '#ffffff';
+          ctx.font = isCompact ? '900 17px "Oswald", -apple-system, sans-serif' : '900 25px "Oswald", -apple-system, sans-serif';
           ctx.textAlign = 'left';
-          ctx.fillText('— CHƯA XÁC ĐỊNH —', colX + 86, slotY + slotH / 2);
+
+          let tName = team.name.toUpperCase();
+          while (tName.length > 2 && ctx.measureText(tName).width > maxNameW) {
+            tName = tName.slice(0, -1);
+          }
+          if (tName !== team.name.toUpperCase()) {
+            tName = tName.trim() + '…';
+          }
+
+          const hasClub = Boolean(team.club && !isCompact);
+          ctx.fillText(tName, textStartX, hasClub ? slotY + slotH / 2 - 10 : slotY + slotH / 2);
+
+          // Club / Subtitle (shown only when enough space)
+          if (hasClub && team.club) {
+            ctx.fillStyle = '#94a3b8';
+            ctx.font = '700 15px "Inter", -apple-system, sans-serif';
+            let clubText = team.club;
+            while (clubText.length > 2 && ctx.measureText(clubText).width > maxNameW) {
+              clubText = clubText.slice(0, -1);
+            }
+            if (clubText !== team.club) clubText = clubText.trim() + '…';
+            ctx.fillText(clubText, textStartX, slotY + slotH / 2 + 14);
+          }
+        } else {
+          // 6. Empty Placeholder (Clean, fits properly inside bounds)
+          const textStartX = pillX + pillW + (isCompact ? 8 : 14);
+          const maxPlaceholderW = Math.max(30, sBoxX + sBoxW - textStartX - 8);
+
+          ctx.fillStyle = '#475569';
+          ctx.font = isCompact ? '700 15px "Oswald", -apple-system, sans-serif' : '700 20px "Oswald", -apple-system, sans-serif';
+          ctx.textAlign = 'left';
+
+          const placeholderText = isCompact ? '— CHỜ BỐC —' : '— CHƯA XÁC ĐỊNH —';
+          let pText = placeholderText;
+          while (pText.length > 2 && ctx.measureText(pText).width > maxPlaceholderW) {
+            pText = pText.slice(0, -1);
+          }
+          if (pText !== placeholderText) pText = pText.trim() + '…';
+          ctx.fillText(pText, textStartX, slotY + slotH / 2);
         }
+
+        ctx.restore();
       }
     }
 

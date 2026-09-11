@@ -637,7 +637,7 @@ export default function BocthamPage() {
         <div className="flex items-center space-x-3">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded bg-red-600/90 text-white font-oswald text-[11px] font-black tracking-widest uppercase shadow-md shadow-red-600/30">
             <span className="w-2 h-2 rounded-full bg-white animate-pulse"></span>
-            LIVE 3D BROADCAST
+            LIVE
           </div>
           <div>
             <h1 className="font-oswald text-xs sm:text-sm font-black uppercase tracking-wider text-slate-100">
@@ -698,20 +698,6 @@ export default function BocthamPage() {
 
         {/* Right Controls */}
         <div className="flex items-center space-x-2">
-          {/* Online Room Modal / Mode Switcher */}
-          <button
-            type="button"
-            onClick={() => setShowRoomModal(true)}
-            className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-gradient-to-r from-blue-600/30 to-cyan-600/30 hover:from-blue-600/40 hover:to-cyan-600/40 border border-cyan-500/50 hover:border-cyan-400 text-cyan-300 hover:text-white text-xs font-oswald font-black uppercase tracking-wider transition-all shadow-md shadow-cyan-500/10"
-            title="Đổi chế độ bốc thăm Solo hoặc Phòng Online 2 Admin"
-          >
-            <i className="fa-solid fa-users text-cyan-400"></i>
-            <span className="hidden sm:inline">
-              {roomMode === 'SOLO' ? 'CHẾ ĐỘ: SOLO' : `PHÒNG: ${roomData?.roomId || 'ONLINE'}`}
-            </span>
-            <span className="sm:hidden">PHÒNG</span>
-          </button>
-
           {/* Quick Switch / Open Tournament Select Modal */}
           <button
             type="button"
@@ -855,33 +841,24 @@ export default function BocthamPage() {
       )}
 
       {/* ================= 5. BOTTOM DIRECTOR CONTROL BAR ================= */}
-      <footer className="absolute bottom-0 inset-x-0 z-30 bg-[#020617]/95 border-t border-slate-800/80 px-4 sm:px-8 py-3 flex flex-wrap items-center justify-between gap-3 shadow-2xl">
+      <footer className="absolute bottom-0 inset-x-0 z-30 bg-[#020617]/90 backdrop-blur-md border-t border-slate-800/70 px-3 sm:px-6 py-1.5 flex items-center justify-between gap-3 shadow-xl">
         {/* Status */}
-        <div className="flex items-center space-x-3">
-          <div className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></div>
-          <div>
-            <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
-              TRẠNG THÁI SÂN KHẤU (THREE.JS 3D)
+        <div className="flex items-center space-x-2.5 min-w-0">
+          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shrink-0"></div>
+          <div className="truncate">
+            <span className="text-[9px] font-mono text-slate-500 uppercase tracking-wider block leading-none">
+              TRẠNG THÁI SÂN KHẤU
             </span>
-            <span className="font-oswald text-xs sm:text-sm font-black uppercase text-cyan-300">
-              {drawState === 'IDLE' && 'SẴN SÀNG CHO LƯỢT TIẾP THEO'}
-              {drawState === 'CAMERA_FOCUS' && 'CAMERA TIẾN GẦN BÀN BỐC THĂM...'}
-              {drawState === 'MIXING' && 'CÁC QUẢ BÓNG ĐANG ĐẢO TRONG LỒNG CẦU...'}
-              {drawState === 'REACHING' && 'MC ĐƯA TAY VÀO LỒNG CẦU CHỌN BÓNG...'}
-              {drawState === 'GRABBING' && 'MC ĐÃ CẦM QUẢ BÓNG TRONG TAY!'}
-              {drawState === 'OPENING_BALL' && 'MC NÂNG BÓNG LÊN & TÁCH NẮP...'}
-              {drawState === 'TAKING_CARD' && 'RÚT TẤM THẺ KẾT QUẢ TỪ QUẢ BÓNG...'}
-              {drawState === 'OPENING_CARD' && 'ĐANG MỞ NẾP GẤP TẤM THẺ...'}
-              {drawState === 'SHOWING_CARD' && 'MC GIƠ TẤM THẺ ĐỐI DIỆN ỐNG KÍNH!'}
-              {drawState === 'REVEALING' && 'CÔNG BỐ KẾT QUẢ TRÊN THẺ 3D!'}
-              {drawState === 'RETURNING' && 'CAMERA ZOOM OUT & XẾP VÀO BẢNG ĐẤU...'}
-              {drawState === 'COMPLETED' && 'BUỔI LỄ BỐC THĂM ĐÃ HOÀN TẤT!'}
+            <span className="font-oswald text-xs sm:text-sm font-black uppercase text-cyan-300 truncate">
+              {isRunning
+                ? (drawState === 'REVEALING' || drawState === 'SHOWING_CARD' ? 'CÔNG BỐ KẾT QUẢ...' : 'ĐANG TIẾN HÀNH BỐC THĂM...')
+                : (remainingTeams.length === 0 ? 'BUỔI LỄ BỐC THĂM HOÀN TẤT' : 'SẴN SÀNG CHO LƯỢT TIẾP THEO')}
             </span>
           </div>
         </div>
 
-        {/* The Draw Button */}
-        <div className="flex items-center space-x-3">
+        {/* Right Actions: Draw Button + Reset Icon Button on same line */}
+        <div className="flex items-center space-x-2 shrink-0">
           {(() => {
             const isMyTurnInRoom = roomMode === 'SOLO' || (myRole === roomData?.currentTurnRole);
             const isWaitingGuest = roomMode === 'HOST' && !roomData?.guestAdmin;
@@ -897,14 +874,14 @@ export default function BocthamPage() {
               buttonLabel = 'ĐÃ HOÀN TẤT';
               iconClass = 'fa-check';
             } else if (isWaitingGuest) {
-              buttonLabel = 'CHỜ ADMIN 2 KẾT NỐI VÀO PHÒNG...';
+              buttonLabel = 'CHỜ ADMIN 2...';
               iconClass = 'fa-clock';
             } else if (!isMyTurnInRoom) {
               const otherName = roomData?.currentTurnRole === 'host' ? roomData.hostAdmin.name : roomData?.guestAdmin?.name;
-              buttonLabel = `CHỜ LƯỢT BỐC CỦA ${otherName || 'ADMIN KIA'}`;
+              buttonLabel = `CHỜ ${otherName || 'ADMIN KIA'}...`;
               iconClass = 'fa-lock';
             } else if (roomMode !== 'SOLO') {
-              buttonLabel = `BỐC THĂM (LƯỢT CỦA BẠN - ${myRole === 'host' ? mc1Name : mc2Name})`;
+              buttonLabel = `BỐC THĂM (${myRole === 'host' ? mc1Name : mc2Name})`;
             }
 
             return (
@@ -912,10 +889,10 @@ export default function BocthamPage() {
                 type="button"
                 disabled={isDisabled}
                 onClick={handleStartDraw}
-                className={`px-8 py-3 rounded-2xl font-oswald text-sm sm:text-base font-black uppercase tracking-widest shadow-2xl flex items-center gap-2.5 transition-all cursor-pointer ${
+                className={`px-5 sm:px-7 py-2 rounded-xl font-oswald text-xs sm:text-sm font-black uppercase tracking-wider shadow-lg flex items-center gap-2 transition-all cursor-pointer ${
                   isDisabled
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed opacity-60'
-                    : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 hover:scale-105 shadow-amber-500/30 animate-pulse'
+                    : 'bg-gradient-to-r from-amber-400 via-yellow-400 to-amber-500 text-slate-950 hover:scale-105 shadow-amber-500/25 animate-pulse'
                 }`}
               >
                 <i className={`fa-solid ${iconClass}`}></i>
@@ -923,19 +900,16 @@ export default function BocthamPage() {
               </button>
             );
           })()}
-        </div>
 
-        {/* Right Utility */}
-        <div className="flex items-center space-x-2">
+          {/* Reset Button - Icon Only */}
           <button
             type="button"
             disabled={isRunning}
             onClick={() => initializeGroups(numGroups, teamsPerGroup, teams)}
-            className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 hover:text-white text-xs font-oswald font-bold uppercase transition-all"
-            title="Làm lại từ đầu"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-400 hover:text-red-400 flex items-center justify-center transition-all shadow"
+            title="Đặt lại từ đầu"
           >
-            <i className="fa-solid fa-rotate-left mr-1.5 text-red-400"></i>
-            <span>Đặt Lại</span>
+            <i className="fa-solid fa-rotate-left text-xs sm:text-sm text-red-400"></i>
           </button>
         </div>
       </footer>
