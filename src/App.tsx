@@ -1,8 +1,9 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { ThemeProvider } from "./utils/themeContext";
 import HomeHub from "./pages/homehub";
 import Trangchu from "./pages/trangchu";
+import BocthamPage from "./pages/boctham";
 
 import Navbar from "./components/navbar";
 import Dieukien from "./pages/dieukien";
@@ -32,10 +33,19 @@ import DthenXephang from "./pages/dthen/xephangthoidai";
 import DthenAdmin from "./pages/dthen/admin";
 
 export default function App() {
+  const location = useLocation();
+  const isStandalonePage =
+    location.pathname.startsWith("/boctham") ||
+    location.pathname.startsWith("/draw");
+
   return (
     <ThemeProvider>
-      <Navbar />
+      {!isStandalonePage && <Navbar />}
       <Routes>
+        {/* Dedicated Standalone Tournament Draw Stages */}
+        <Route path="/boctham" element={<BocthamPage />} />
+        <Route path="/draw" element={<BocthamPage />} />
+
         {/* Hub Selection Portal */}
         <Route path="/" element={<HomeHub />} />
 
@@ -74,3 +84,4 @@ export default function App() {
     </ThemeProvider>
   );
 }
+

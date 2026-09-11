@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Banner from '../components/banner';
 import Footer from '../components/footer';
 import Body from '../components/body';
 import { StandingsTable } from '../components/StandingsTable';
+import { TournamentStatsView } from '../components/TournamentStatsView';
 import {
   TournamentData,
   calculateGroupStandings,
@@ -36,9 +38,23 @@ const Ltd: React.FC = () => {
     return null;
   });
 
-  const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT'>(() => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT' | 'STATS'>(() => {
+    const tabParam = searchParams.get('tab') || searchParams.get('stage');
+    if (tabParam) {
+      const upper = tabParam.toUpperCase();
+      if (upper === 'STATS' || upper === 'THONGKE') return 'STATS';
+      if (upper === 'KNOCKOUT') return 'KNOCKOUT';
+      if (upper === 'GROUP') return 'GROUP';
+    }
     return tournament?.knockoutStage?.isCompletedGroupStage ? 'KNOCKOUT' : 'GROUP';
   });
+
+  const handleStageChange = (stage: 'GROUP' | 'KNOCKOUT' | 'STATS') => {
+    setViewStage(stage);
+    setSearchParams({ tab: stage.toLowerCase() });
+  };
+
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
   const [activeRoundFilter, setActiveRoundFilter] = useState<number | 'ALL'>('ALL');
 
@@ -181,45 +197,60 @@ const Ltd: React.FC = () => {
                 {tournament.tournamentName} - {tournament.season}
               </span>
               <h2 className="font-oswald text-xl sm:text-2xl font-bold uppercase text-slate-900">
-                {tournament.knockoutStage?.isCompletedGroupStage && viewStage === 'KNOCKOUT'
+                {viewStage === 'STATS'
+                  ? 'SỐ LIỆU THỐNG KÊ TOÀN DIỆN GIẢI ĐẤU'
+                  : tournament.knockoutStage?.isCompletedGroupStage && viewStage === 'KNOCKOUT'
                   ? 'VÒNG LOẠI TRỰC TIẾP (KNOCKOUT STAGE)'
                   : `${tournament.numGroups} BẢNG ĐẤU (${tournament.teamsPerGroup} ĐỘI/BẢNG) - ${tournament.legType === 'double' ? 'VÒNG TRÒN 2 LƯỢT' : 'VÒNG TRÒN 1 LƯỢT'}`}
               </h2>
             </div>
             
-            {/* Stage Switcher if Knockout is ready */}
-            {tournament.knockoutStage?.isCompletedGroupStage && (
-              <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-slate-100 border border-slate-200">
-                <button
-                  type="button"
-                  onClick={() => setViewStage('KNOCKOUT')}
-                  className={`px-4 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all ${
-                    viewStage === 'KNOCKOUT'
-                      ? 'bg-amber-500 text-slate-950 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <i className="fa-solid fa-trophy mr-1.5"></i>
-                  Vòng Knockout
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setViewStage('GROUP')}
-                  className={`px-4 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all ${
-                    viewStage === 'GROUP'
-                      ? 'bg-emerald-700 text-white shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <i className="fa-solid fa-list-ol mr-1.5"></i>
-                  Vòng Bảng
-                </button>
-              </div>
-            )}
+            {/* Stage Switcher: Vòng Bảng / Vòng Knockout / Thống Kê */}
+            <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => handleStageChange('GROUP')}
+                className={`px-3.5 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center cursor-pointer ${
+                  viewStage === 'GROUP'
+                    ? 'bg-emerald-700 text-white shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                <i className="fa-solid fa-list-ol mr-1.5"></i>
+                Vòng Bảng
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleStageChange('KNOCKOUT')}
+                className={`px-3.5 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center cursor-pointer ${
+                  viewStage === 'KNOCKOUT'
+                    ? 'bg-amber-500 text-slate-950 shadow-sm font-black'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                <i className="fa-solid fa-trophy mr-1.5 text-amber-500"></i>
+                Vòng Knockout
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleStageChange('STATS')}
+                className={`px-3.5 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center cursor-pointer ${
+                  viewStage === 'STATS'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm font-black'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                <i className="fa-solid fa-chart-column mr-1.5 text-amber-300"></i>
+                Thống Kê
+              </button>
+            </div>
           </div>
 
           {/* ================= STAGE 1: KNOCKOUT BRACKET VIEW ================= */}
-          {tournament.knockoutStage?.isCompletedGroupStage && viewStage === 'KNOCKOUT' && (
+          {viewStage === 'KNOCKOUT' && (
+            tournament.knockoutStage?.isCompletedGroupStage ? (
             <div className="space-y-8">
               {/* Bracket Tree */}
               <div className="p-6 sm:p-8 rounded-2xl portal-card space-y-6">
@@ -419,10 +450,46 @@ const Ltd: React.FC = () => {
                 </div>
               </div>
             </div>
+            ) : (
+              <div className="p-8 sm:p-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-4">
+                <div className="w-16 h-16 rounded-2xl bg-amber-500/15 text-amber-500 flex items-center justify-center text-3xl mx-auto">
+                  <i className="fa-solid fa-hourglass-half"></i>
+                </div>
+                <div className="max-w-md mx-auto">
+                  <h3 className="font-oswald text-xl font-bold uppercase text-slate-900 dark:text-white">
+                    Vòng Bảng Đang Diễn Ra
+                  </h3>
+                  <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+                    Sơ đồ phân nhánh Vòng Knockout sẽ tự động kích hoạt ngay sau khi các lượt trận vòng bảng khép lại và xác định chính thức các tấm vé đi tiếp!
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => handleStageChange('GROUP')}
+                    className="px-4 py-2 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-oswald text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Xem Lịch &amp; BXH Vòng Bảng
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleStageChange('STATS')}
+                    className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-oswald text-xs font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                  >
+                    Xem Thống Kê Giải Đấu
+                  </button>
+                </div>
+              </div>
+            )
           )}
 
-          {/* ================= STAGE 2: GROUP STAGE VIEW ================= */}
-          {(!tournament.knockoutStage?.isCompletedGroupStage || viewStage === 'GROUP') && (
+          {/* ================= STAGE 2: TOURNAMENT STATS VIEW ================= */}
+          {viewStage === 'STATS' && (
+            <TournamentStatsView tournament={tournament} theme="emerald" />
+          )}
+
+          {/* ================= STAGE 3: GROUP STAGE VIEW ================= */}
+          {viewStage === 'GROUP' && (
             <>
               {/* Group Navigation Tabs */}
               <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 w-fit">

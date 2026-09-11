@@ -17,11 +17,13 @@ import {
   fetchAndSyncSaoVangTournament,
   fetchAndSyncArchiveTournaments,
 } from '../utils/tournamentEngine';
+import { StandingsStatsModal } from '../components/StandingsStatsModal';
 
 const SECRET_PIN = '020604';
 
 const Quanlygiaidau: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [showStatsModal, setShowStatsModal] = useState<boolean>(false);
   const [pinInput, setPinInput] = useState<string>('');
   const [pinError, setPinError] = useState<string>('');
   const [isCloudLoaded, setIsCloudLoaded] = useState<boolean>(false);
@@ -579,13 +581,24 @@ const Quanlygiaidau: React.FC = () => {
 
               {/* LIVE STANDINGS */}
               <div className="p-6 sm:p-8 rounded-xl portal-card space-y-4">
-                <div className="border-b border-slate-200 pb-2 flex items-center justify-between">
+                <div className="border-b border-slate-200 pb-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <h3 className="font-oswald text-xl font-bold uppercase text-slate-900">
                     BẢNG XẾP HẠNG {activeGroup.name} (TỰ ĐỘNG CẬP NHẬT)
                   </h3>
-                  <span className="text-xs text-slate-500 font-medium">
-                    * Bảng điểm tự tính lại ngay khi bạn điền tỉ số bên dưới
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowStatsModal(true)}
+                      className="text-xs px-3.5 py-1.5 rounded-full font-oswald font-bold uppercase tracking-wider bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border border-emerald-500/50 shadow-xs active:scale-95 flex items-center gap-1.5 cursor-pointer"
+                      title="Xem số liệu thống kê chi tiết của bảng đấu"
+                    >
+                      <i className="fa-solid fa-chart-column text-amber-300 text-[11px]"></i>
+                      <span>Số liệu thống kê</span>
+                    </button>
+                    <span className="text-xs text-slate-500 font-medium hidden md:inline">
+                      * Bảng điểm tự tính lại ngay khi bạn điền tỉ số bên dưới
+                    </span>
+                  </div>
                 </div>
 
                 <div className="overflow-x-auto rounded-lg border border-slate-200">
@@ -1284,6 +1297,18 @@ const Quanlygiaidau: React.FC = () => {
           )}
         </div>
       </Body>
+
+      {/* Standings Statistics Modal */}
+      {activeGroup && (
+        <StandingsStatsModal
+          isOpen={showStatsModal}
+          onClose={() => setShowStatsModal(false)}
+          groupName={activeGroup.name}
+          standings={standings}
+          matches={activeGroup.matches}
+          theme="emerald"
+        />
+      )}
 
       <Footer />
     </>

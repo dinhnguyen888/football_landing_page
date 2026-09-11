@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TeamStats, Match } from '../utils/tournamentEngine';
+import { StandingsStatsModal } from './StandingsStatsModal';
 
 export interface StandingsTableProps {
   groupName: string;
@@ -67,6 +68,7 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
   qualificationNote = 'Top 1 & Top 2 giành vé trực tiếp vào Vòng 16 Đội (Knockout)',
   showForm = true,
 }) => {
+  const [showStatsModal, setShowStatsModal] = useState(false);
   const isEmerald = theme === 'emerald';
 
   return (
@@ -118,8 +120,23 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           </div>
         </div>
 
-        {/* Qualification Quota Badge */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        {/* Action Buttons & Qualification Badge */}
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          {/* Nút Số Liệu Thống Kê */}
+          <button
+            type="button"
+            onClick={() => setShowStatsModal(true)}
+            className={`text-xs px-3.5 py-1.5 rounded-full font-oswald font-bold uppercase tracking-wider border transition-all duration-200 cursor-pointer shadow-xs active:scale-95 flex items-center gap-1.5 ${
+              isEmerald
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white border-emerald-500/50 shadow-emerald-700/20'
+                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white border-blue-500/50 shadow-blue-700/20'
+            }`}
+            title="Xem số liệu thống kê chi tiết của bảng đấu"
+          >
+            <i className="fa-solid fa-chart-column text-amber-300 text-[11px]"></i>
+            <span>Số liệu thống kê</span>
+          </button>
+
           <span
             className={`text-xs px-3 py-1 rounded-full font-oswald font-bold uppercase tracking-wider border ${
               isEmerald
@@ -427,6 +444,17 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
           </span>
         </div>
       </div>
+
+      {/* Standings Statistics Modal */}
+      <StandingsStatsModal
+        isOpen={showStatsModal}
+        onClose={() => setShowStatsModal(false)}
+        groupName={groupName}
+        standings={standings}
+        matches={matches}
+        theme={theme}
+      />
     </div>
   );
 };
+

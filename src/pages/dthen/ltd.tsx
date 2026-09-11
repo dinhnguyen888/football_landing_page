@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import Banner from '../../components/banner';
 import Footer from '../../components/footer';
 import Body from '../../components/body';
 import { StandingsTable } from '../../components/StandingsTable';
+import { TournamentStatsView } from '../../components/TournamentStatsView';
 import {
   TournamentData,
   calculateGroupStandings,
@@ -26,7 +28,23 @@ const DthenLtd: React.FC = () => {
     return createDefaultDthenTournament();
   });
 
-  const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT'>('GROUP');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT' | 'STATS'>(() => {
+    const tabParam = searchParams.get('tab') || searchParams.get('stage');
+    if (tabParam) {
+      const upper = tabParam.toUpperCase();
+      if (upper === 'STATS' || upper === 'THONGKE') return 'STATS';
+      if (upper === 'KNOCKOUT') return 'KNOCKOUT';
+      if (upper === 'GROUP') return 'GROUP';
+    }
+    return 'GROUP';
+  });
+
+  const handleStageChange = (stage: 'GROUP' | 'KNOCKOUT' | 'STATS') => {
+    setViewStage(stage);
+    setSearchParams({ tab: stage.toLowerCase() });
+  };
+
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
   const [activeRoundFilter, setActiveRoundFilter] = useState<number | 'ALL'>('ALL');
   const [syncStatus, setSyncStatus] = useState<'cloud' | 'local'>('local');
@@ -153,10 +171,11 @@ const DthenLtd: React.FC = () => {
             </div>
 
             {/* Stage Switcher */}
-            <div className="grid grid-cols-2 sm:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl w-full sm:w-auto">
+            <div className="grid grid-cols-3 sm:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl w-full sm:w-auto">
               <button
-                onClick={() => setViewStage('GROUP')}
-                className={`px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center ${
+                type="button"
+                onClick={() => handleStageChange('GROUP')}
+                className={`px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer ${
                   viewStage === 'GROUP'
                     ? 'bg-blue-700 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -167,8 +186,9 @@ const DthenLtd: React.FC = () => {
               </button>
 
               <button
-                onClick={() => setViewStage('KNOCKOUT')}
-                className={`px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center ${
+                type="button"
+                onClick={() => handleStageChange('KNOCKOUT')}
+                className={`px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer ${
                   viewStage === 'KNOCKOUT'
                     ? 'bg-blue-700 text-white shadow-xs'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -177,10 +197,25 @@ const DthenLtd: React.FC = () => {
                 <i className="fa-solid fa-trophy mr-1.5 text-amber-400"></i>
                 KNOCKOUT
               </button>
+
+              <button
+                type="button"
+                onClick={() => handleStageChange('STATS')}
+                className={`px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer ${
+                  viewStage === 'STATS'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs font-black'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <i className="fa-solid fa-chart-column mr-1.5 text-cyan-300"></i>
+                THỐNG KÊ
+              </button>
             </div>
           </div>
 
-          {viewStage === 'GROUP' ? (
+          {viewStage === 'STATS' ? (
+            <TournamentStatsView tournament={tournament} theme="blue" />
+          ) : viewStage === 'GROUP' ? (
             <>
               {/* Group Tabs: Smooth horizontal swipe on mobile, clean flex-wrap on desktop */}
               <div className="w-full space-y-1.5">
