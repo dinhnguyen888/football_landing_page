@@ -552,6 +552,8 @@ export class PresenterRig {
     cardMesh.visible = true;
   }
 
+  private static readonly _camPos = new THREE.Vector3();
+
   // Render loop update
   public update(delta: number, camera?: THREE.Camera) {
     if (this.mixer) {
@@ -564,13 +566,12 @@ export class PresenterRig {
       }
     }
 
-    // Nameplate floating and billboarding
+    // Nameplate floating and billboarding (zero per-frame object allocations)
     if (this.nameplateMesh) {
       this.nameplateMesh.position.y = 2.48 + Math.sin(Date.now() * 0.0025) * 0.015;
       if (camera) {
-        const camPos = new THREE.Vector3();
-        camera.getWorldPosition(camPos);
-        this.nameplateMesh.lookAt(camPos);
+        camera.getWorldPosition(PresenterRig._camPos);
+        this.nameplateMesh.lookAt(PresenterRig._camPos);
       }
     }
   }

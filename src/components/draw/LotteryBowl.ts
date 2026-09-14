@@ -23,16 +23,15 @@ export class LotteryBowl {
     this.tableMesh = new THREE.Group();
 
     // Table Top (Circular glass slab)
-    const tableTopGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.04, 48);
+    const tableTopGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.04, 32);
     const tableGlassMat = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
-      transmission: 0.9,
-      opacity: 1,
       transparent: true,
-      roughness: 0.08,
-      ior: 1.5,
+      opacity: 0.35,
+      roughness: 0.05,
+      metalness: 0.1,
       clearcoat: 1.0,
-      clearcoatRoughness: 0.05,
+      clearcoatRoughness: 0.08,
     });
     const tableTopMesh = new THREE.Mesh(tableTopGeo, tableGlassMat);
     tableTopMesh.position.y = 0.9;
@@ -40,7 +39,7 @@ export class LotteryBowl {
     this.tableMesh.add(tableTopMesh);
 
     // Table Column (Sleek dark navy & gold pedestal)
-    const columnGeo = new THREE.CylinderGeometry(0.22, 0.3, 0.9, 32);
+    const columnGeo = new THREE.CylinderGeometry(0.22, 0.3, 0.9, 24);
     const columnMat = new THREE.MeshStandardMaterial({
       color: 0x071126,
       metalness: 0.85,
@@ -53,7 +52,7 @@ export class LotteryBowl {
     this.tableMesh.add(columnMesh);
 
     // Gold decorative accent rings
-    const ringGeo = new THREE.TorusGeometry(0.25, 0.018, 16, 32);
+    const ringGeo = new THREE.TorusGeometry(0.25, 0.018, 12, 24);
     const goldMat = new THREE.MeshStandardMaterial({
       color: 0xf59e0b,
       metalness: 0.9,
@@ -71,18 +70,17 @@ export class LotteryBowl {
 
     this.group.add(this.tableMesh);
 
-    // 2. Transparent Spherical Glass Lottery Bowl
-    const bowlGeo = new THREE.SphereGeometry(0.34, 48, 36, 0, Math.PI * 2, 0, Math.PI * 0.78);
+    // 2. Transparent Spherical Glass Lottery Bowl (Crystal clear, ultra-fast)
+    const bowlGeo = new THREE.SphereGeometry(0.34, 32, 24, 0, Math.PI * 2, 0, Math.PI * 0.78);
     const bowlGlassMat = new THREE.MeshPhysicalMaterial({
-      color: 0x93c5fd,
-      transmission: 0.85,
-      opacity: 0.9,
+      color: 0xbae6fd,
       transparent: true,
-      roughness: 0.08,
-      ior: 1.45,
+      opacity: 0.38,
+      roughness: 0.05,
+      metalness: 0.1,
       clearcoat: 1.0,
       clearcoatRoughness: 0.05,
-      side: THREE.DoubleSide,
+      side: THREE.FrontSide,
     });
     this.bowlMesh = new THREE.Mesh(bowlGeo, bowlGlassMat);
     this.bowlMesh.position.set(0, 1.20, 0);

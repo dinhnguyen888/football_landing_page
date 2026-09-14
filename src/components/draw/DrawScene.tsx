@@ -27,6 +27,7 @@ export interface DrawSceneHandle {
   updateLedBoard: (groups: DrawGroup[], title?: string) => void;
   setDualMode: (isDual: boolean, mc1Name?: string, mc2Name?: string) => void;
   updateMcNames: (mc1Name?: string, mc2Name?: string) => void;
+  setQualityMode: (mode: 'high' | 'performance') => void;
 }
 
 interface DrawSceneProps {
@@ -36,6 +37,7 @@ interface DrawSceneProps {
   isDualMode?: boolean;
   mc1Name?: string;
   mc2Name?: string;
+  qualityMode?: 'high' | 'performance';
 }
 
 export const DrawScene: React.FC<DrawSceneProps> = ({
@@ -45,6 +47,7 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
   isDualMode = false,
   mc1Name = 'MC PHAN LONG',
   mc2Name = 'MC MINH QUÂN',
+  qualityMode = 'high',
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -83,16 +86,19 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
     const cameraController = new CameraController(camera, canvasRef.current);
     cameraControllerRef.current = cameraController;
 
-    // 3. Renderer Setup
+    // 3. Renderer Setup (Ultra-optimized for locked 60 FPS across all devices)
+    const isMobile = typeof navigator !== 'undefined' && (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768);
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
-      antialias: true,
+      antialias: !isMobile,
       powerPreference: 'high-performance',
+      precision: isMobile ? 'mediump' : 'highp',
     });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const targetPixelRatio = isMobile || qualityMode === 'performance' ? 1.0 : Math.min(window.devicePixelRatio, 1.25);
+    renderer.setPixelRatio(targetPixelRatio);
+    renderer.shadowMap.enabled = !isMobile && qualityMode !== 'performance';
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.25;
     rendererRef.current = renderer;
@@ -186,7 +192,7 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
 
     const animate = () => {
       animFrameIdRef.current = requestAnimationFrame(animate);
-      const delta = clock.getDelta();
+      const delta = Math.min(clock.getDelta(), 0.1);
 
       cameraController.update();
       lotteryBowl.update(delta);
@@ -474,6 +480,18 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
       updateLedBoard: (newGroups: DrawGroup[], title?: string) => {
         ledWallRef.current?.update(newGroups, title || tournamentTitle);
       },
+
+      setQualityMode: (mode: 'high' | 'performance') => {
+        if (!rendererRef.current) return;
+        if (mode === 'performance') {
+          rendererRef.current.shadowMap.enabled = false;
+          rendererRef.current.setPixelRatio(1.0);
+        } else {
+          const isMobile = typeof navigator !== 'undefined' && (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768);
+          rendererRef.current.shadowMap.enabled = !isMobile;
+          rendererRef.current.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
+        }
+      },
     };
 
     onHandleReadyRef.current(handle);
@@ -490,6 +508,19 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Synchronize dynamic quality mode updates
+  useEffect(() => {
+    if (!rendererRef.current) return;
+    if (qualityMode === 'performance') {
+      rendererRef.current.shadowMap.enabled = false;
+      rendererRef.current.setPixelRatio(1.0);
+    } else {
+      const isMobile = typeof navigator !== 'undefined' && (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768);
+      rendererRef.current.shadowMap.enabled = !isMobile;
+      rendererRef.current.setPixelRatio(isMobile ? 1.0 : Math.min(window.devicePixelRatio, 1.25));
+    }
+  }, [qualityMode]);
 
   // Synchronize dynamic background LED Board whenever groups or tournament title change
   useEffect(() => {

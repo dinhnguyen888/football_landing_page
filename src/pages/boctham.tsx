@@ -154,6 +154,16 @@ export default function BocthamPage() {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [customTextList, setCustomTextList] = useState('');
 
+  // Performance mode state (auto-detects mobile or low-end device by default)
+  const [qualityMode, setQualityMode] = useState<'high' | 'performance'>(() => {
+    if (typeof window !== 'undefined') {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth < 768;
+      const lowMem = (navigator as unknown as { deviceMemory?: number }).deviceMemory && (navigator as unknown as { deviceMemory?: number }).deviceMemory! <= 4;
+      if (isMobile || lowMem) return 'performance';
+    }
+    return 'high';
+  });
+
   const totalSlots = numGroups * teamsPerGroup;
   const drawnCount = totalSlots - remainingTeams.length;
   const isRunning = drawState !== 'IDLE' && drawState !== 'COMPLETED';
@@ -629,6 +639,7 @@ export default function BocthamPage() {
           isDualMode={isDualMode}
           mc1Name={mc1Name}
           mc2Name={mc2Name}
+          qualityMode={qualityMode}
         />
       </div>
 
@@ -721,6 +732,30 @@ export default function BocthamPage() {
               <span className="font-oswald font-black text-amber-400 text-xs">POT {currentPot}</span>
             </div>
           )}
+
+          {/* Quick 60FPS / Quality Toggle */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextMode = qualityMode === 'high' ? 'performance' : 'high';
+              setQualityMode(nextMode);
+              sceneHandleRef.current?.setQualityMode(nextMode);
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-xs font-oswald font-bold uppercase transition-all flex items-center gap-1.5 ${
+              qualityMode === 'performance'
+                ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300 hover:bg-emerald-500/30'
+                : 'bg-slate-900/80 border-slate-700 text-cyan-300 hover:bg-slate-800'
+            }`}
+            title={qualityMode === 'performance' ? 'Đang bật 60 FPS Mượt (Bấm để chuyển Đồ họa Cao)' : 'Đang bật Đồ họa Cao (Bấm để chuyển 60 FPS Mượt)'}
+          >
+            <i className={`fa-solid ${qualityMode === 'performance' ? 'fa-bolt text-emerald-400' : 'fa-wand-magic-sparkles text-cyan-400'}`}></i>
+            <span className="hidden sm:inline">
+              {qualityMode === 'performance' ? '60 FPS MƯỢT' : 'ĐỒ HỌA CAO'}
+            </span>
+            <span className="sm:hidden">
+              {qualityMode === 'performance' ? '60FPS' : 'HQ'}
+            </span>
+          </button>
 
           <button
             type="button"

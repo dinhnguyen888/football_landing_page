@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export class ParticleSparkles {
   public points: THREE.Points;
   private velocities: number[] = [];
-  private count: number = 80;
+  private count: number = 48;
 
   constructor() {
     const geo = new THREE.BufferGeometry();

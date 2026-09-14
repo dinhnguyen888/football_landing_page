@@ -19,8 +19,8 @@ export class StageLighting {
     this.spotLight = new THREE.SpotLight(0xffffff, 18, 30, Math.PI / 5, 0.45, 1.2);
     this.spotLight.position.set(0, 8, 4);
     this.spotLight.castShadow = true;
-    this.spotLight.shadow.mapSize.width = 1024;
-    this.spotLight.shadow.mapSize.height = 1024;
+    this.spotLight.shadow.mapSize.width = 512;
+    this.spotLight.shadow.mapSize.height = 512;
     this.spotLight.shadow.bias = -0.001;
 
     this.spotLightTarget = new THREE.Object3D();
@@ -30,12 +30,10 @@ export class StageLighting {
     this.group.add(this.spotLight);
     this.group.add(this.spotLightTarget);
 
-    // 2. Directional Key Light for soft depth shadows
+    // 2. Directional Key Light for soft depth (shadow disabled for ultra-smooth 60fps)
     this.dirLight = new THREE.DirectionalLight(0xffffff, 3.2);
     this.dirLight.position.set(4, 7, 5);
-    this.dirLight.castShadow = true;
-    this.dirLight.shadow.mapSize.width = 1024;
-    this.dirLight.shadow.mapSize.height = 1024;
+    this.dirLight.castShadow = false;
     this.group.add(this.dirLight);
 
     // 3. Studio Ambient & Rim Hemisphere Light (Deep navy sky, dark ground)

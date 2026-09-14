@@ -12,6 +12,7 @@ import * as THREE from 'three';
 export class FootballStageDecor {
   public group: THREE.Group;
   private trophyGroup: THREE.Group;
+  private trophyCupGroup: THREE.Group | null = null;
   private matchBallMesh: THREE.Mesh | null = null;
   private ledRibbonCanvas: HTMLCanvasElement;
   private ledRibbonTexture: THREE.CanvasTexture;
@@ -195,6 +196,7 @@ export class FootballStageDecor {
     // --- High-Gloss Metallic Gold Trophy Mesh ---
     const trophyCupGroup = new THREE.Group();
     trophyCupGroup.position.y = 0.98;
+    this.trophyCupGroup = trophyCupGroup;
 
     const goldMat = new THREE.MeshStandardMaterial({
       color: 0xffd700,
@@ -515,15 +517,6 @@ export class FootballStageDecor {
     beamMesh.position.set(0, 0, 0.12);
     bankHead.add(beamMesh);
 
-    // 3. Real Dynamic SpotLight casting authentic lighting down to center stage
-    const realSpot = new THREE.SpotLight(0xfffbeb, 6.5, 12, Math.PI / 3.6, 0.45, 1.1);
-    realSpot.position.set(0, 0, 0.1);
-    const targetObj = new THREE.Object3D();
-    targetObj.position.set(0, -3.8, 4.2);
-    bankHead.add(targetObj);
-    realSpot.target = targetObj;
-    bankHead.add(realSpot);
-
     tower.add(bankHead);
     return tower;
   }
@@ -541,15 +534,16 @@ export class FootballStageDecor {
     canvas.height = 128;
     const ctx = canvas.getContext('2d')!;
 
-    this.drawLedRibbon(ctx, 0);
+    // Render once during initialization
+    this.drawLedRibbon(ctx);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.ClampToEdgeWrapping;
-    texture.repeat.x = -1; // Un-mirror text when viewed on curved cylinder from camera
+    texture.repeat.x = -2; // Repeat text smoothly across curved cylinder
 
     // Curved barrier in the foreground
-    const boardGeo = new THREE.CylinderGeometry(3.6, 3.6, 0.22, 64, 1, true, Math.PI * 0.18, Math.PI * 0.64);
+    const boardGeo = new THREE.CylinderGeometry(3.6, 3.6, 0.22, 48, 1, true, Math.PI * 0.18, Math.PI * 0.64);
     const boardMat = new THREE.MeshBasicMaterial({
       map: texture,
       side: THREE.DoubleSide,
@@ -562,7 +556,7 @@ export class FootballStageDecor {
     return { mesh, canvas, texture };
   }
 
-  private drawLedRibbon(ctx: CanvasRenderingContext2D, offset: number) {
+  private drawLedRibbon(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = '#020617';
     ctx.fillRect(0, 0, 1024, 128);
 
@@ -572,23 +566,19 @@ export class FootballStageDecor {
     ctx.fillStyle = '#38bdf8';
     ctx.fillRect(0, 122, 1024, 6);
 
-    // Scrolling text banner
+    // Scrolling text banner drawn seamlessly
     ctx.save();
-    ctx.font = 'bold 36px "Oswald", Impact, sans-serif';
+    ctx.font = 'bold 32px "Oswald", Impact, sans-serif';
     ctx.fillStyle = '#ffffff';
 
-    const text = '  ⚽ SAO VÀNG CUP ™   ★   OFFICIAL DRAW CEREMONY   ★   FC ONLINE   ★   ROAD TO CHAMPIONS   ★   BỐC THĂM CHIA BẢNG ĐẤU ⚽  ';
-    const textW = ctx.measureText(text).width;
-
-    const x = -((offset * 120) % textW);
-    for (let i = -1; i < 3; i++) {
-      ctx.fillText(text, x + i * textW, 76);
-    }
+    const text = '★ SAO VÀNG CUP ™ ★ OFFICIAL LIVE DRAW ★ FC ONLINE ★ ROAD TO CHAMPIONS ★ ';
+    ctx.fillText(text, 10, 74);
+    ctx.fillText(text, 522, 74);
     ctx.restore();
   }
 
   // -------------------------------------------------------------
-  // ANIMATION LOOP UPDATE
+  // ANIMATION LOOP UPDATE (100% Lightweight GPU Driven)
   // -------------------------------------------------------------
   public update(delta: number) {
     // 1. Slowly rotate Match Ball
@@ -598,27 +588,19 @@ export class FootballStageDecor {
     }
 
     // 2. Trophy subtle sparkle / gleam rotation
-    if (this.trophyGroup) {
-      const cup = this.trophyGroup.getObjectByName('ChampionshipTrophy');
-      if (cup) {
-        cup.rotation.y += delta * 0.15;
-      }
+    if (this.trophyCupGroup) {
+      this.trophyCupGroup.rotation.y += delta * 0.15;
     }
 
-    // 3. Scroll LED ribbon
-    this.scrollOffset += delta;
-    if (this.ledRibbonCanvas && this.ledRibbonTexture) {
-      const ctx = this.ledRibbonCanvas.getContext('2d');
-      if (ctx) {
-        this.drawLedRibbon(ctx, this.scrollOffset);
-        this.ledRibbonTexture.needsUpdate = true;
-      }
+    // 3. Scroll LED ribbon purely via GPU UV offset (ZERO CPU-GPU texture uploads!)
+    if (this.ledRibbonTexture) {
+      this.ledRibbonTexture.offset.x -= delta * 0.08;
     }
 
     // 4. Floodlight volumetric beam atmospheric shimmer
     const time = Date.now() * 0.003;
-    this.beamMaterials.forEach((mat, idx) => {
-      mat.opacity = 0.35 + Math.sin(time + idx * 2.1) * 0.05;
-    });
+    for (let idx = 0; idx < this.beamMaterials.length; idx++) {
+      this.beamMaterials[idx].opacity = 0.35 + Math.sin(time + idx * 2.1) * 0.05;
+    }
   }
 }

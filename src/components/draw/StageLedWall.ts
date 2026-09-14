@@ -13,10 +13,10 @@ export class StageLedWall {
     this.group = new THREE.Group();
     this.group.name = 'StageLedWallGroup';
 
-    // 1. Setup 2K Canvas (2048 x 1024)
+    // 1. Setup Optimized Canvas (1024 x 512) - 4x less VRAM & faster uploads
     this.canvas = document.createElement('canvas');
-    this.canvas.width = 2048;
-    this.canvas.height = 1024;
+    this.canvas.width = 1024;
+    this.canvas.height = 512;
     this.ctx = this.canvas.getContext('2d')!;
 
     // 2. Setup Texture
@@ -26,9 +26,8 @@ export class StageLedWall {
     this.texture.generateMipmaps = false;
 
     // 3. Curved LED Screen Mesh (Width: 8.8m, Height: 3.8m)
-    // We bend the plane vertices smoothly to form a concave curved stadium display
-    const segX = 32;
-    const segY = 4;
+    const segX = 20;
+    const segY = 2;
     const screenW = 8.8;
     const screenH = 3.8;
     const screenGeo = new THREE.PlaneGeometry(screenW, screenH, segX, segY);
@@ -42,13 +41,9 @@ export class StageLedWall {
     }
     screenGeo.computeVertexNormals();
 
-    const screenMat = new THREE.MeshStandardMaterial({
+    // Self-illuminated LED screen uses MeshBasicMaterial for blazing fast rendering (no dynamic lighting pass)
+    const screenMat = new THREE.MeshBasicMaterial({
       map: this.texture,
-      roughness: 0.35,
-      metalness: 0.15,
-      emissive: 0xffffff,
-      emissiveMap: this.texture,
-      emissiveIntensity: 0.8, // Radiant stadium LED luminescence
       side: THREE.FrontSide,
     });
 
@@ -89,11 +84,14 @@ export class StageLedWall {
     this.update([], title);
   }
 
-  // Render Live Groups Standings on the 2048 x 1024 Canvas
+  // Render Live Groups Standings on the optimized Canvas
   public update(groups: DrawGroup[], tournamentTitle: string) {
     const ctx = this.ctx;
-    const w = this.canvas.width;
-    const h = this.canvas.height;
+    ctx.save();
+    // Scale 2048x1024 coordinates down to 1024x512 canvas seamlessly
+    ctx.scale(0.5, 0.5);
+    const w = 2048;
+    const h = 1024;
 
     // 1. Dark Stadium LED Glass Background
     const bgGrad = ctx.createLinearGradient(0, 0, 0, h);
@@ -103,9 +101,9 @@ export class StageLedWall {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, w, h);
 
-    // Subtle Hexagonal / Dot Matrix LED Pattern Grid
+    // Subtle Hexagonal / Dot Matrix LED Pattern Grid (optimized spacing)
     ctx.fillStyle = 'rgba(255, 255, 255, 0.018)';
-    const dotSpacing = 28;
+    const dotSpacing = 48;
     for (let x = 0; x < w; x += dotSpacing) {
       for (let y = 0; y < h; y += dotSpacing) {
         ctx.fillRect(x, y, 2, 2);
@@ -378,6 +376,7 @@ export class StageLedWall {
       }
     }
 
+    ctx.restore();
     this.texture.needsUpdate = true;
   }
 }
