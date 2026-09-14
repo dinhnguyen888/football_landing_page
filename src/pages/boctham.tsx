@@ -17,6 +17,10 @@ import {
   buildFIFABracketFromGroups,
   saveTournamentData,
   saveDthenTournamentData,
+  loadArchiveTournaments,
+  saveArchiveTournaments,
+  loadArchiveDthenTournaments,
+  saveArchiveDthenTournaments,
 } from '../utils/tournamentEngine';
 import {
   OnlineRoomModal,
@@ -40,6 +44,26 @@ import {
   GroupSlot,
   CameraPresetName,
 } from '../components/draw/DrawTypes';
+
+// Local Storage Key for Auto-Saving Draw Draft
+const DRAFT_STORAGE_KEY = 'SAOVANG_DRAW_DRAFT_V1';
+
+export interface DrawDraftState {
+  tournamentTitle: string;
+  subTitle: string;
+  numGroups: number;
+  teamsPerGroup: number;
+  isSeeded: boolean;
+  teams: DrawTeam[];
+  remainingTeams: DrawTeam[];
+  groups: DrawGroup[];
+  currentPot: number;
+  selectedConfig: SelectedTournamentConfig | null;
+  roomMode: 'SOLO' | 'HOST' | 'GUEST';
+  mc1Name: string;
+  mc2Name: string;
+  savedAt: number;
+}
 
 // Preset Teams (Fallback)
 const PRESET_CHAMPIONS_16: DrawTeam[] = [
@@ -106,7 +130,24 @@ export default function BocthamPage() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   // Online Multiplayer Room & MC Customization State
-  const [showRoomModal, setShowRoomModal] = useState(true);
+  const [showRoomModal, setShowRoomModal] = useState(() => {
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (raw) {
+        const draft = JSON.parse(raw);
+        if (
+          draft &&
+          Array.isArray(draft.remainingTeams) &&
+          Array.isArray(draft.teams) &&
+          draft.remainingTeams.length < draft.teams.length &&
+          draft.remainingTeams.length > 0
+        ) {
+          return false; // Stay directly on draw stage if draft exists!
+        }
+      }
+    } catch {}
+    return true;
+  });
   const [roomMode, setRoomMode] = useState<'SOLO' | 'HOST' | 'GUEST'>('SOLO');
   const [myRole, setMyRole] = useState<'solo' | 'host' | 'guest'>('solo');
   const [roomData, setRoomData] = useState<DrawRoomData | null>(null);
@@ -168,8 +209,54 @@ export default function BocthamPage() {
   const drawnCount = totalSlots - remainingTeams.length;
   const isRunning = drawState !== 'IDLE' && drawState !== 'COMPLETED';
 
+  // Auto-saved Draft State
+  const [restoredDraftBanner, setRestoredDraftBanner] = useState<{
+    drawn: number;
+    total: number;
+    timeStr: string;
+  } | null>(null);
+
+  // Auto-save draft to localStorage
+  const saveDraftToStorage = (
+    updatedGroups: DrawGroup[],
+    updatedRemaining: DrawTeam[],
+    pot: number
+  ) => {
+    try {
+      const draft: DrawDraftState = {
+        tournamentTitle,
+        subTitle,
+        numGroups,
+        teamsPerGroup,
+        isSeeded,
+        teams,
+        remainingTeams: updatedRemaining,
+        groups: updatedGroups,
+        currentPot: pot,
+        selectedConfig: selectedConfigRef.current,
+        roomMode,
+        mc1Name,
+        mc2Name,
+        savedAt: Date.now(),
+      };
+      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+    } catch (err) {
+      console.warn('Cannot save draw draft:', err);
+    }
+  };
+
+  // Clear draft from localStorage
+  const clearDraftFromStorage = () => {
+    try {
+      localStorage.removeItem(DRAFT_STORAGE_KEY);
+    } catch {}
+  };
+
   // Initialize or Reset Groups
   const initializeGroups = (gCount = numGroups, tCount = teamsPerGroup, teamList = teams) => {
+    clearDraftFromStorage();
+    setRestoredDraftBanner(null);
+
     const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
     const newGroups: DrawGroup[] = [];
 
@@ -412,15 +499,85 @@ export default function BocthamPage() {
 
     if (config.system === 'SAO_VANG') {
       saveTournamentData(updatedTour);
+      const archives = loadArchiveTournaments();
+      const existingIdx = archives.findIndex((t) => t.id === updatedTour.id);
+      if (existingIdx >= 0) {
+        archives[existingIdx] = updatedTour;
+        saveArchiveTournaments(archives);
+      }
     } else {
       saveDthenTournamentData(updatedTour);
+      const archives = loadArchiveDthenTournaments();
+      const existingIdx = archives.findIndex((t) => t.id === updatedTour.id);
+      if (existingIdx >= 0) {
+        archives[existingIdx] = updatedTour;
+        saveArchiveDthenTournaments(archives);
+      }
     }
 
     setIsSavedToCloud(true);
+    clearDraftFromStorage();
   };
 
   useEffect(() => {
-    initializeGroups(numGroups, teamsPerGroup, teams);
+    let hasRestored = false;
+    try {
+      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+      if (raw) {
+        const draft: DrawDraftState = JSON.parse(raw);
+        if (
+          draft &&
+          Array.isArray(draft.groups) &&
+          draft.groups.length > 0 &&
+          Array.isArray(draft.teams) &&
+          Array.isArray(draft.remainingTeams) &&
+          draft.remainingTeams.length < draft.teams.length &&
+          draft.remainingTeams.length > 0
+        ) {
+          // Normalize groups to clear any lingering animation flags
+          const cleanGroups = draft.groups.map((g) => ({
+            ...g,
+            slots: g.slots.map((s) => ({ ...s, isJustSlotted: false })),
+          }));
+
+          setTournamentTitle(draft.tournamentTitle);
+          setSubTitle(draft.subTitle);
+          setNumGroups(draft.numGroups);
+          setTeamsPerGroup(draft.teamsPerGroup);
+          setIsSeeded(draft.isSeeded);
+          setTeams(draft.teams);
+          setRemainingTeams(draft.remainingTeams);
+          setGroups(cleanGroups);
+          setCurrentPot(draft.currentPot || 1);
+          setSelectedConfig(draft.selectedConfig);
+          setMc1Name(draft.mc1Name || 'MC Phan Long');
+          setMc2Name(draft.mc2Name || 'MC Minh Quân');
+          setActiveMcName(draft.mc1Name || 'MC Phan Long');
+          setRoomMode(draft.roomMode || 'SOLO');
+          setShowRoomModal(false);
+          setShowSelectModal(false);
+
+          const drawn = draft.teams.length - draft.remainingTeams.length;
+          setRestoredDraftBanner({
+            drawn,
+            total: draft.teams.length,
+            timeStr: new Date(draft.savedAt).toLocaleTimeString('vi-VN', {
+              hour: '2-digit',
+              minute: '2-digit',
+            }),
+          });
+
+          hasRestored = true;
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to restore draw draft:', e);
+    }
+
+    if (!hasRestored) {
+      initializeGroups(numGroups, teamsPerGroup, teams);
+    }
+
     drawAudio.startAuditoriumTone();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -500,7 +657,10 @@ export default function BocthamPage() {
         } else if (newState === 'REVEALING') {
           drawAudio.playBroadcastReveal();
           setTimeout(() => drawAudio.playPoliteApplause(), 500);
-        } else if (newState === 'RETURNING') {
+
+          // Update board immediately when card reveals the team name!
+          let updatedGroupsForDraft: DrawGroup[] = groupsRef.current;
+
           if (destinationSlot) {
             drawAudio.playSlotTeam();
             setGroups((prevGroups) => {
@@ -514,8 +674,9 @@ export default function BocthamPage() {
                   }),
                 };
               });
+              updatedGroupsForDraft = updated;
               if (roomData?.roomId && myRole === 'host') {
-                updateRoomGroupsState(roomData.roomId, updated, 'RETURNING');
+                updateRoomGroupsState(roomData.roomId, updated, 'REVEALING');
               }
               return updated;
             });
@@ -533,24 +694,34 @@ export default function BocthamPage() {
                   };
                 })
               );
-            }, 1500);
+            }, 2000);
           }
 
           setRemainingTeams((prev) => {
             const updated = prev.filter((t) => t.id !== chosenTeam.id);
+            let nextPot = currentPot;
             if (isSeeded) {
               const inPot = updated.filter((t) => t.pot === currentPot);
               if (inPot.length === 0 && updated.length > 0) {
-                setCurrentPot((p) => p + 1);
+                nextPot = currentPot + 1;
+                setCurrentPot(nextPot);
               }
             }
+
+            // AUTO-SAVE DRAFT TO LOCALSTORAGE ON EVERY DRAWN BALL!
+            saveDraftToStorage(updatedGroupsForDraft, updated, nextPot);
+
             return updated;
           });
+        } else if (newState === 'RETURNING') {
+          // Camera zooms back out to wide shot
         }
       },
       () => {
         setRemainingTeams((prev) => {
           if (prev.length === 0) {
+            clearDraftFromStorage();
+            setRestoredDraftBanner(null);
             setDrawState('COMPLETED');
             drawAudio.playCelebration();
             triggerConfetti();
@@ -633,6 +804,9 @@ export default function BocthamPage() {
         <DrawScene
           onHandleReady={(handle) => {
             sceneHandleRef.current = handle;
+            if (groupsRef.current.length > 0) {
+              handle.updateLedBoard(groupsRef.current, tournamentTitle);
+            }
           }}
           tournamentTitle={tournamentTitle}
           groups={groups}
@@ -654,8 +828,14 @@ export default function BocthamPage() {
             <h1 className="font-oswald text-xs sm:text-sm font-black uppercase tracking-wider text-slate-100">
               {tournamentTitle}
             </h1>
-            <div className="text-[10px] text-cyan-400 font-mono">
-              {subTitle} • {drawnCount}/{totalSlots} TEAMS DRAWN
+            <div className="text-[10px] text-cyan-400 font-mono flex items-center gap-2">
+              <span>{subTitle} • {drawnCount}/{totalSlots} TEAMS DRAWN</span>
+              {drawnCount > 0 && remainingTeams.length > 0 && (
+                <span className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[9px] font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                  ĐÃ TỰ LƯU NHÁP
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -799,6 +979,46 @@ export default function BocthamPage() {
         </div>
       </header>
 
+      {/* ================= 2b. RESTORED DRAFT NOTIFICATION TOAST ================= */}
+      {restoredDraftBanner && (
+        <div className="absolute top-14 inset-x-4 sm:inset-x-auto sm:left-6 z-40 bg-slate-900/95 border border-amber-500/50 rounded-2xl p-3 sm:px-4 shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-bold shrink-0">
+            <i className="fa-solid fa-clock-rotate-left"></i>
+          </div>
+          <div className="text-xs">
+            <div className="font-oswald font-black text-amber-300 uppercase tracking-wider">
+              ĐÃ KHÔI PHỤC TIẾN TRÌNH BỐC THĂM ({restoredDraftBanner.drawn}/{restoredDraftBanner.total} ĐỘI)
+            </div>
+            <div className="text-slate-400 text-[11px]">
+              Tự động lưu lúc {restoredDraftBanner.timeStr} • Bạn có thể tiếp tục bốc ngay!
+            </div>
+          </div>
+          <div className="flex items-center gap-1.5 ml-auto">
+            <button
+              type="button"
+              onClick={() => setRestoredDraftBanner(null)}
+              className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-oswald font-bold uppercase transition-all"
+            >
+              Tiếp Tục
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (window.confirm('Bạn có chắc muốn xóa bản nháp này và bắt đầu bốc lại từ đầu?')) {
+                  clearDraftFromStorage();
+                  setRestoredDraftBanner(null);
+                  initializeGroups(numGroups, teamsPerGroup, teams);
+                }
+              }}
+              className="px-2.5 py-1 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-oswald font-bold uppercase transition-all"
+              title="Xóa bản nháp và bốc lại từ đầu"
+            >
+              Bốc Lại
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ================= 3. BROADCAST LOWER-THIRD GRAPHIC ================= */}
       <BroadcastLowerThird
         team={pendingResult}
@@ -940,7 +1160,15 @@ export default function BocthamPage() {
           <button
             type="button"
             disabled={isRunning}
-            onClick={() => initializeGroups(numGroups, teamsPerGroup, teams)}
+            onClick={() => {
+              if (drawnCount > 0) {
+                if (window.confirm('Bạn có chắc muốn xóa bản nháp và đặt lại từ đầu không?')) {
+                  initializeGroups(numGroups, teamsPerGroup, teams);
+                }
+              } else {
+                initializeGroups(numGroups, teamsPerGroup, teams);
+              }
+            }}
             className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-700 text-slate-400 hover:text-red-400 flex items-center justify-center transition-all shadow"
             title="Đặt lại từ đầu"
           >

@@ -398,10 +398,10 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
             });
           },
           undefined,
-          '+=3.6'
+          '+=2.2'
         );
 
-        // 13.2s: Finished sequence
+        // Finished sequence
         tl.call(
           () => {
             activePres.playAction(PRESENTER_ANIMATIONS.idle, 0.5);
