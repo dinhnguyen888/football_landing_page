@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { drawAudio } from '../utils/drawAudio';
+import { drawAudio, BackgroundMusicType } from '../utils/drawAudio';
 import { triggerConfetti } from '../utils/confettiHelper';
 import { DrawScene, DrawSceneHandle } from '../components/draw/DrawScene';
 import { BroadcastLowerThird } from '../components/draw/BroadcastLowerThird';
@@ -37,6 +37,11 @@ import {
   dispatchRoomDrawAction,
   updateRoomGroupsState,
 } from '../services/drawRoomService';
+import {
+  saveLiveDrawStateToFirestore,
+  getLiveDrawStateFromFirestore,
+  clearLiveDrawStateFromFirestore,
+} from '../services/tournamentService';
 import {
   DrawState,
   DrawTeam,
@@ -130,24 +135,7 @@ export default function BocthamPage() {
   const [showCompletionModal, setShowCompletionModal] = useState(false);
 
   // Online Multiplayer Room & MC Customization State
-  const [showRoomModal, setShowRoomModal] = useState(() => {
-    try {
-      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (raw) {
-        const draft = JSON.parse(raw);
-        if (
-          draft &&
-          Array.isArray(draft.remainingTeams) &&
-          Array.isArray(draft.teams) &&
-          draft.remainingTeams.length < draft.teams.length &&
-          draft.remainingTeams.length > 0
-        ) {
-          return false; // Stay directly on draw stage if draft exists!
-        }
-      }
-    } catch {}
-    return true;
-  });
+  const [showRoomModal, setShowRoomModal] = useState(false);
   const [roomMode, setRoomMode] = useState<'SOLO' | 'HOST' | 'GUEST'>('SOLO');
   const [myRole, setMyRole] = useState<'solo' | 'host' | 'guest'>('solo');
   const [roomData, setRoomData] = useState<DrawRoomData | null>(null);
@@ -190,6 +178,8 @@ export default function BocthamPage() {
 
   // UI state
   const [isMuted, setIsMuted] = useState(false);
+  const [bgmTrack, setBgmTrack] = useState<BackgroundMusicType>('champions');
+  const [showAudioMenu, setShowAudioMenu] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showSideBoard, setShowSideBoard] = useState(true);
   const [showConfigModal, setShowConfigModal] = useState(false);
@@ -209,15 +199,15 @@ export default function BocthamPage() {
   const drawnCount = totalSlots - remainingTeams.length;
   const isRunning = drawState !== 'IDLE' && drawState !== 'COMPLETED';
 
-  // Auto-saved Draft State
+  // Cloud Restored Draft State
   const [restoredDraftBanner, setRestoredDraftBanner] = useState<{
     drawn: number;
     total: number;
     timeStr: string;
   } | null>(null);
 
-  // Auto-save draft to localStorage
-  const saveDraftToStorage = (
+  // Gửi trực tiếp tiến trình bốc thăm lên Cloud Firestore (không lưu local nữa)
+  const saveDraftToCloud = (
     updatedGroups: DrawGroup[],
     updatedRemaining: DrawTeam[],
     pot: number
@@ -239,22 +229,29 @@ export default function BocthamPage() {
         mc2Name,
         savedAt: Date.now(),
       };
-      localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draft));
+      // Gửi thẳng lên Cloud Firestore
+      saveLiveDrawStateToFirestore(draft);
+      try {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch {}
     } catch (err) {
-      console.warn('Cannot save draw draft:', err);
+      console.warn('Cannot save live draw to cloud:', err);
     }
   };
 
-  // Clear draft from localStorage
-  const clearDraftFromStorage = () => {
+  // Xóa tiến trình bốc thăm trên Cloud Firestore
+  const clearDraftFromCloud = () => {
     try {
-      localStorage.removeItem(DRAFT_STORAGE_KEY);
+      clearLiveDrawStateFromFirestore();
+      try {
+        localStorage.removeItem(DRAFT_STORAGE_KEY);
+      } catch {}
     } catch {}
   };
 
   // Initialize or Reset Groups
   const initializeGroups = (gCount = numGroups, tCount = teamsPerGroup, teamList = teams) => {
-    clearDraftFromStorage();
+    clearDraftFromCloud();
     setRestoredDraftBanner(null);
 
     const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -446,8 +443,12 @@ export default function BocthamPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [roomMode, roomData?.roomId, mc2Name]);
 
-  // Save the drawn groups and fixtures directly to Firestore & LocalStorage
-  const saveDrawResultsToEngine = (finalGroups: DrawGroup[], config: SelectedTournamentConfig | null) => {
+  // Save the drawn groups and fixtures directly to Cloud Firestore
+  const saveDrawResultsToEngine = (
+    finalGroups: DrawGroup[],
+    config: SelectedTournamentConfig | null,
+    isFinalCompleted: boolean = false
+  ) => {
     if (!config) return;
 
     // Convert DrawGroup[] to tournamentEngine Group[]
@@ -516,15 +517,21 @@ export default function BocthamPage() {
     }
 
     setIsSavedToCloud(true);
-    clearDraftFromStorage();
+    if (isFinalCompleted) {
+      clearDraftFromCloud();
+    }
   };
 
+  // Khôi phục tiến trình bốc thăm trực tiếp từ Cloud Firestore khi mở trang / F5
   useEffect(() => {
-    let hasRestored = false;
-    try {
-      const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
-      if (raw) {
-        const draft: DrawDraftState = JSON.parse(raw);
+    let isMounted = true;
+
+    const restoreFromCloud = async () => {
+      let hasRestored = false;
+      try {
+        const draft = await getLiveDrawStateFromFirestore<DrawDraftState>();
+        if (!isMounted) return;
+
         if (
           draft &&
           Array.isArray(draft.groups) &&
@@ -534,7 +541,7 @@ export default function BocthamPage() {
           draft.remainingTeams.length < draft.teams.length &&
           draft.remainingTeams.length > 0
         ) {
-          // Normalize groups to clear any lingering animation flags
+          // Chuẩn hóa slots
           const cleanGroups = draft.groups.map((g) => ({
             ...g,
             slots: g.slots.map((s) => ({ ...s, isJustSlotted: false })),
@@ -569,16 +576,23 @@ export default function BocthamPage() {
 
           hasRestored = true;
         }
+      } catch (e) {
+        console.warn('Failed to restore live draw from Firestore cloud:', e);
       }
-    } catch (e) {
-      console.warn('Failed to restore draw draft:', e);
-    }
 
-    if (!hasRestored) {
-      initializeGroups(numGroups, teamsPerGroup, teams);
-    }
+      if (!hasRestored && isMounted) {
+        initializeGroups(numGroups, teamsPerGroup, teams);
+        setShowRoomModal(true);
+      }
+    };
 
+    restoreFromCloud();
     drawAudio.startAuditoriumTone();
+
+    return () => {
+      isMounted = false;
+      drawAudio.stopBackgroundMusic();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -708,8 +722,13 @@ export default function BocthamPage() {
               }
             }
 
-            // AUTO-SAVE DRAFT TO LOCALSTORAGE ON EVERY DRAWN BALL!
-            saveDraftToStorage(updatedGroupsForDraft, updated, nextPot);
+            // GỬI THẲNG DỮ LIỆU LÊN CLOUD FIRESTORE NGAY KHI BỐC TRÚNG TÊN (KHÔNG LƯU LOCAL NỮA)
+            saveDraftToCloud(updatedGroupsForDraft, updated, nextPot);
+
+            // Đồng bộ kết quả bảng đấu lên Cloud Firestore ngay lập tức
+            if (selectedConfigRef.current) {
+              saveDrawResultsToEngine(updatedGroupsForDraft, selectedConfigRef.current, false);
+            }
 
             return updated;
           });
@@ -720,14 +739,14 @@ export default function BocthamPage() {
       () => {
         setRemainingTeams((prev) => {
           if (prev.length === 0) {
-            clearDraftFromStorage();
+            clearDraftFromCloud();
             setRestoredDraftBanner(null);
             setDrawState('COMPLETED');
             drawAudio.playCelebration();
             triggerConfetti();
 
             if (selectedConfigRef.current) {
-              saveDrawResultsToEngine(groupsRef.current, selectedConfigRef.current);
+              saveDrawResultsToEngine(groupsRef.current, selectedConfigRef.current, true);
             }
             setShowCompletionModal(true);
           } else {
@@ -831,9 +850,9 @@ export default function BocthamPage() {
             <div className="text-[10px] text-cyan-400 font-mono flex items-center gap-2">
               <span>{subTitle} • {drawnCount}/{totalSlots} TEAMS DRAWN</span>
               {drawnCount > 0 && remainingTeams.length > 0 && (
-                <span className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 text-[9px] font-bold">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                  ĐÃ TỰ LƯU NHÁP
+                <span className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 text-[9px] font-bold">
+                  <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                  ☁️ CLOUD SYNC ({drawnCount}/{totalSlots})
                 </span>
               )}
             </div>
@@ -946,6 +965,72 @@ export default function BocthamPage() {
             {showSideBoard ? 'Ẩn Bảng' : 'Hiện Bảng'}
           </button>
 
+          {/* Background Music Selector Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowAudioMenu((prev) => !prev)}
+              className={`px-2.5 py-1 rounded-lg border text-xs font-oswald font-bold uppercase transition-all flex items-center gap-1.5 ${
+                bgmTrack !== 'none' && !isMuted
+                  ? 'bg-amber-500/20 border-amber-500/50 text-amber-300 hover:bg-amber-500/30 shadow-md shadow-amber-500/10'
+                  : 'bg-slate-900/80 border-slate-700 text-slate-400 hover:text-white'
+              }`}
+              title="Chọn nhạc nền buổi lễ bốc thăm"
+            >
+              <i className={`fa-solid ${bgmTrack !== 'none' && !isMuted ? 'fa-music animate-pulse text-amber-400' : 'fa-volume-xmark text-slate-500'}`}></i>
+              <span className="hidden sm:inline">
+                {bgmTrack === 'champions'
+                  ? 'NHẠC: CHAMPIONS LEAGUE'
+                  : bgmTrack === 'gala'
+                  ? 'NHẠC: GALA SYMPHONY'
+                  : bgmTrack === 'ambient'
+                  ? 'NHẠC: KHÁN PHÒNG'
+                  : 'TẮT NHẠC NỀN'}
+              </span>
+              <span className="sm:hidden">NHẠC</span>
+              <i className="fa-solid fa-chevron-down text-[10px] ml-0.5"></i>
+            </button>
+
+            {showAudioMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setShowAudioMenu(false)}
+                />
+                <div className="absolute right-0 mt-2 w-56 bg-slate-950/95 border border-slate-800 rounded-xl p-2 shadow-2xl backdrop-blur-xl z-50 text-xs space-y-1 animate-in fade-in zoom-in-95">
+                  <div className="text-[10px] uppercase font-mono text-slate-400 px-2 py-1 font-bold border-b border-slate-800">
+                    NHẠC NỀN BUỔI LỄ BỐC THĂM
+                  </div>
+                  {[
+                    { key: 'champions', label: '🏆 UEFA Champions League', desc: 'Hành khúc kinh điển, hào hùng' },
+                    { key: 'gala', label: '🎻 Gala Symphony', desc: 'Giao hưởng sang trọng, đẳng cấp' },
+                    { key: 'ambient', label: '🎙️ Khán Phòng Gala', desc: 'Không khí trang trọng, nhẹ nhàng' },
+                    { key: 'none', label: '🔇 Tắt Nhạc Nền', desc: 'Chỉ nghe hiệu ứng bốc thăm' },
+                  ].map((item) => (
+                    <button
+                      key={item.key}
+                      type="button"
+                      onClick={() => {
+                        const t = item.key as BackgroundMusicType;
+                        setBgmTrack(t);
+                        drawAudio.setTrack(t);
+                        setShowAudioMenu(false);
+                      }}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-lg transition-all flex flex-col ${
+                        bgmTrack === item.key
+                          ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
+                          : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                      }`}
+                    >
+                      <span className="text-xs font-semibold">{item.label}</span>
+                      <span className="text-[10px] text-slate-400">{item.desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
           <button
             type="button"
             onClick={toggleMute}
@@ -1005,7 +1090,7 @@ export default function BocthamPage() {
               type="button"
               onClick={() => {
                 if (window.confirm('Bạn có chắc muốn xóa bản nháp này và bắt đầu bốc lại từ đầu?')) {
-                  clearDraftFromStorage();
+                  clearDraftFromCloud();
                   setRestoredDraftBanner(null);
                   initializeGroups(numGroups, teamsPerGroup, teams);
                 }

@@ -8,7 +8,29 @@ export const CLOUD_KEYS = {
   SAO_VANG: 'sao_vang',
   ARCHIVE: 'archive',
   ARCHIVE_DTHEN: 'archive_dthen',
+  DRAW_LIVE_STATE: 'draw_live_state',
 } as const;
+
+/**
+ * Save live draw ongoing progress directly to Cloud Firestore.
+ */
+export async function saveLiveDrawStateToFirestore(data: unknown): Promise<boolean> {
+  return saveTournamentToFirestore(CLOUD_KEYS.DRAW_LIVE_STATE, data);
+}
+
+/**
+ * Fetch live draw ongoing progress directly from Cloud Firestore.
+ */
+export async function getLiveDrawStateFromFirestore<T>(): Promise<T | null> {
+  return getTournamentFromFirestore<T>(CLOUD_KEYS.DRAW_LIVE_STATE);
+}
+
+/**
+ * Clear live draw progress from Cloud Firestore when tournament draw is completed.
+ */
+export async function clearLiveDrawStateFromFirestore(): Promise<boolean> {
+  return saveTournamentToFirestore(CLOUD_KEYS.DRAW_LIVE_STATE, null);
+}
 
 /**
  * Save tournament data to Firebase Cloud Firestore.

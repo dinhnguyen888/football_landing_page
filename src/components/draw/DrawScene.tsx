@@ -323,6 +323,8 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
             card.mesh.visible = true;
             activePres.attachCardToHand(card.mesh);
             card.mesh.scale.set(0.1, 0.1, 0.1);
+            // Pre-draw team name immediately so canvas & texture are uploaded to GPU well in advance!
+            card.updateContent(team, tournamentName || tournamentTitle, destinationLabel);
             gsap.to(card.mesh.scale, { x: 1, y: 1, z: 1, duration: 0.6, ease: 'back.out(1.4)' });
           },
           undefined,
@@ -334,23 +336,27 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
           () => {
             onStateChange('OPENING_CARD');
             activePres.playAction(PRESENTER_ANIMATIONS.openCard, 0.5);
+            card.updateContent(team, tournamentName || tournamentTitle, destinationLabel);
           },
           undefined,
-          '+=1.0'
+          '+=0.9'
         );
 
-        // 7.4s: SHOWING_CARD & REVEALING (Presenter holds card up facing camera)
+        // 7.4s: SHOWING_CARD & REVEALING (Presenter holds card up facing camera - Instant Team Name!)
         tl.call(
           () => {
-            onStateChange('SHOWING_CARD');
+            // Immediate texture update to guarantee zero delay when presenter lifts card
+            card.updateContent(team, tournamentName || tournamentTitle, destinationLabel);
+            onStateChange('REVEALING');
+
             if (isDual) {
               const cardCamPos = activePres.group.position.clone().add(new THREE.Vector3(0, 1.63, 0.88));
               const cardTarget = activePres.group.position.clone().add(new THREE.Vector3(0, 1.62, 0.07));
-              cam.moveToCustom(cardCamPos, cardTarget, 0.8);
+              cam.moveToCustom(cardCamPos, cardTarget, 0.7);
             } else {
-              cam.moveTo('card', 0.8);
+              cam.moveTo('card', 0.7);
             }
-            activePres.playAction(PRESENTER_ANIMATIONS.showCard, 0.8);
+            activePres.playAction(PRESENTER_ANIMATIONS.showCard, 0.7);
 
             // Co-presenter claps in admiration!
             if (idlePres) {
@@ -360,23 +366,13 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
             // Focus stage spotlight directly on card's world position
             const cardPos = new THREE.Vector3();
             card.mesh.getWorldPosition(cardPos);
-            light.focusSpotlight(cardPos, 16, 0.8);
+            light.focusSpotlight(cardPos, 16, 0.7);
           },
           undefined,
-          '+=0.6'
+          '+=0.5'
         );
 
-        // 8.2s: REVEALING RESULT TEXT ON CARD & LOWER-THIRD
-        tl.call(
-          () => {
-            onStateChange('REVEALING');
-            card.updateContent(team, tournamentName || tournamentTitle, destinationLabel);
-          },
-          undefined,
-          '+=0.8'
-        );
-
-        // 11.8s: RETURNING (Zoom camera out, presenter lowers card, reset)
+        // 10.0s: RETURNING (Zoom camera out, presenter lowers card, reset)
         tl.call(
           () => {
             onStateChange('RETURNING');
@@ -398,7 +394,7 @@ export const DrawScene: React.FC<DrawSceneProps> = ({
             });
           },
           undefined,
-          '+=2.2'
+          '+=2.6'
         );
 
         // Finished sequence
