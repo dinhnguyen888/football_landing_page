@@ -1,18 +1,18 @@
 // Web Audio API Professional Orchestral & Broadcast Sound Engine
-// Realistic Gala SFX & Procedural UEFA / Champions League Orchestral Soundtrack
+// Realistic Gala SFX & Multi-Genre Broadcast Soundtracks
 // Zero external asset dependencies - 100% reliable, zero latency!
 
-export type BackgroundMusicType = 'champions' | 'gala' | 'ambient' | 'none';
+export type BackgroundMusicType = 'champions' | 'hype' | 'gala' | 'none';
 
 class DrawAudioEngine {
   private ctx: AudioContext | null = null;
   private isMuted: boolean = false;
-  private musicVolume: number = 0.35;
+  private musicVolume: number = 0.45;
   private sfxVolume: number = 0.75;
   private currentTrack: BackgroundMusicType = 'champions';
   private isMusicPlayingState: boolean = false;
 
-  // Background Ambience / Pad nodes
+  // Background Ambience
   private ambientGain: GainNode | null = null;
   private isAmbientRunning: boolean = false;
 
@@ -21,7 +21,7 @@ class DrawAudioEngine {
   private musicGainNode: GainNode | null = null;
   private musicStep: number = 0;
 
-  private initCtx(): AudioContext | null {
+  public initCtx(): AudioContext | null {
     if (typeof window === 'undefined') return null;
     if (!this.ctx) {
       const AudioContextClass =
@@ -42,7 +42,7 @@ class DrawAudioEngine {
     this.isMuted = muted;
     if (this.ambientGain && this.ctx) {
       this.ambientGain.gain.setValueAtTime(
-        muted ? 0 : 0.04,
+        muted ? 0 : 0.035,
         this.ctx.currentTime
       );
     }
@@ -71,11 +71,17 @@ class DrawAudioEngine {
 
   public setTrack(track: BackgroundMusicType) {
     this.currentTrack = track;
-    if (this.isMusicPlayingState) {
-      this.stopBackgroundMusic();
-      if (track !== 'none') {
-        this.startBackgroundMusic();
-      }
+    const ctx = this.initCtx();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
+
+    // Always stop current sequence
+    this.stopBackgroundMusic();
+    this.musicStep = 0;
+
+    if (track !== 'none') {
+      this.startBackgroundMusic();
     }
   }
 
@@ -88,7 +94,6 @@ class DrawAudioEngine {
   }
 
   // ================= 1. WARM AUDITORIUM AMBIENCE =================
-  // Replaced the harsh 55Hz sawtooth buzzing with warm, prestigious room air & soft murmurs
   public startAuditoriumTone() {
     if (this.isAmbientRunning || this.isMuted) return;
     try {
@@ -100,7 +105,6 @@ class DrawAudioEngine {
       const output = noiseBuffer.getChannelData(0);
       let lastOut = 0.0;
 
-      // Generate soft pink noise (warm acoustic air)
       for (let i = 0; i < bufferSize; i++) {
         const white = Math.random() * 2 - 1;
         output[i] = (lastOut + 0.02 * white) / 1.02;
@@ -112,7 +116,6 @@ class DrawAudioEngine {
       whiteNoise.buffer = noiseBuffer;
       whiteNoise.loop = true;
 
-      // Warm acoustic room filter
       const filter = ctx.createBiquadFilter();
       filter.type = 'bandpass';
       filter.frequency.setValueAtTime(320, ctx.currentTime);
@@ -131,20 +134,22 @@ class DrawAudioEngine {
       whiteNoise.start();
       this.isAmbientRunning = true;
 
-      // Start background music automatically if configured
+      // Start music
       if (this.currentTrack !== 'none' && !this.isMusicPlayingState) {
         this.startBackgroundMusic();
       }
     } catch {}
   }
 
-  // ================= 2. PROCEDURAL UEFA / GALA BACKGROUND MUSIC =================
-  // Rich, harmonic orchestral chord progression with lush strings, cello bass, and timpani
+  // ================= 2. MULTI-GENRE DISTINCTIVE BACKGROUND TRACKS =================
   public startBackgroundMusic() {
     if (this.musicIntervalId !== null) return;
     try {
       const ctx = this.initCtx();
       if (!ctx) return;
+      if (ctx.state === 'suspended') {
+        ctx.resume().catch(() => {});
+      }
 
       this.musicGainNode = ctx.createGain();
       this.musicGainNode.gain.setValueAtTime(
@@ -154,114 +159,309 @@ class DrawAudioEngine {
       this.musicGainNode.connect(ctx.destination);
       this.isMusicPlayingState = true;
 
-      // Chord progressions in D Major / B Minor (Classic UEFA Champions League harmony)
-      const uefaChords = [
-        // Chord 1: D Major (Majestic, noble)
-        { bass: 73.42, notes: [293.66, 369.99, 440.0, 587.33, 739.99] },
-        // Chord 2: G Major (Expansive, soaring)
-        { bass: 98.0, notes: [293.66, 392.0, 493.88, 587.33, 783.99] },
-        // Chord 3: A Major (Triumphant buildup)
-        { bass: 110.0, notes: [277.18, 329.63, 440.0, 554.37, 880.0] },
-        // Chord 4: B Minor (Dramatic prestige)
-        { bass: 61.74, notes: [293.66, 369.99, 440.0, 587.33, 739.99] },
-      ];
+      // Set tempo and step duration based on genre
+      const tempo = this.currentTrack === 'hype' ? 124 : this.currentTrack === 'champions' ? 104 : 76;
+      const beatDuration = 60 / tempo; // seconds per beat
 
-      const galaChords = [
-        // Elegant cinematic strings
-        { bass: 65.41, notes: [261.63, 329.63, 392.0, 523.25, 659.25] },
-        { bass: 87.31, notes: [261.63, 349.23, 440.0, 523.25, 698.46] },
-        { bass: 98.0, notes: [293.66, 392.0, 493.88, 587.33, 783.99] },
-        { bass: 110.0, notes: [277.18, 329.63, 440.0, 554.37, 880.0] },
-      ];
+      // Track Step Interval:
+      // 'hype': 1 measure = 4 beats
+      // 'champions': 1 measure = 4 beats
+      // 'gala': 1 measure = 4 beats
+      const measureDuration = beatDuration * 4;
 
-      const stepDuration = 2.4; // seconds per chord measure
-
-      const playNextMeasure = () => {
+      const playCurrentTrackMeasure = () => {
         if (!this.ctx || !this.musicGainNode || !this.isMusicPlayingState) return;
         const now = this.ctx.currentTime;
-        const chords = this.currentTrack === 'gala' ? galaChords : uefaChords;
-        const currentChord = chords[this.musicStep % chords.length];
+        const step = this.musicStep;
         this.musicStep++;
 
-        // A. Warm Bowed Cello / Double Bass
-        const bassOsc = this.ctx.createOscillator();
-        const bassFilter = this.ctx.createBiquadFilter();
-        const bassGain = this.ctx.createGain();
-
-        bassOsc.type = 'sawtooth';
-        bassOsc.frequency.setValueAtTime(currentChord.bass, now);
-
-        bassFilter.type = 'lowpass';
-        bassFilter.frequency.setValueAtTime(180, now);
-
-        bassGain.gain.setValueAtTime(0.001, now);
-        bassGain.gain.linearRampToValueAtTime(0.18 * this.musicVolume, now + 0.5);
-        bassGain.gain.linearRampToValueAtTime(0.14 * this.musicVolume, now + stepDuration - 0.3);
-        bassGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration);
-
-        bassOsc.connect(bassFilter);
-        bassFilter.connect(bassGain);
-        bassGain.connect(this.musicGainNode);
-
-        bassOsc.start(now);
-        bassOsc.stop(now + stepDuration);
-
-        // B. Pulsing Baroque Strings Arpeggio (Just like the Champions League Zadok the Priest intro!)
-        const noteDuration = stepDuration / 8; // 8 sixteenth-note pulses
-        for (let i = 0; i < 8; i++) {
-          const noteTime = now + i * noteDuration;
-          const noteFreq = currentChord.notes[i % currentChord.notes.length];
-
-          const strOsc = this.ctx.createOscillator();
-          const strFilter = this.ctx.createBiquadFilter();
-          const strGain = this.ctx.createGain();
-
-          strOsc.type = 'triangle';
-          strOsc.frequency.setValueAtTime(noteFreq, noteTime);
-
-          // Subtle string acoustic resonance
-          strFilter.type = 'bandpass';
-          strFilter.frequency.setValueAtTime(noteFreq * 1.5, noteTime);
-          strFilter.Q.setValueAtTime(1.4, noteTime);
-
-          strGain.gain.setValueAtTime(0.001, noteTime);
-          strGain.gain.linearRampToValueAtTime(0.08 * this.musicVolume, noteTime + 0.04);
-          strGain.gain.exponentialRampToValueAtTime(0.001, noteTime + noteDuration * 0.9);
-
-          strOsc.connect(strFilter);
-          strFilter.connect(strGain);
-          strGain.connect(this.musicGainNode);
-
-          strOsc.start(noteTime);
-          strOsc.stop(noteTime + noteDuration);
+        if (this.currentTrack === 'champions') {
+          this.renderChampionsMeasure(now, step, measureDuration, beatDuration);
+        } else if (this.currentTrack === 'hype') {
+          this.renderHypeMeasure(now, step, measureDuration, beatDuration);
+        } else if (this.currentTrack === 'gala') {
+          this.renderGalaMeasure(now, step, measureDuration, beatDuration);
         }
-
-        // C. Soft Warm Brass Harmony Pad
-        const padOsc = this.ctx.createOscillator();
-        const padFilter = this.ctx.createBiquadFilter();
-        const padGain = this.ctx.createGain();
-
-        padOsc.type = 'sine';
-        padOsc.frequency.setValueAtTime(currentChord.notes[1], now);
-
-        padFilter.type = 'lowpass';
-        padFilter.frequency.setValueAtTime(500, now);
-
-        padGain.gain.setValueAtTime(0.001, now);
-        padGain.gain.linearRampToValueAtTime(0.1 * this.musicVolume, now + 0.6);
-        padGain.gain.exponentialRampToValueAtTime(0.001, now + stepDuration);
-
-        padOsc.connect(padFilter);
-        padFilter.connect(padGain);
-        padGain.connect(this.musicGainNode);
-
-        padOsc.start(now);
-        padOsc.stop(now + stepDuration);
       };
 
-      playNextMeasure();
-      this.musicIntervalId = window.setInterval(playNextMeasure, stepDuration * 1000);
-    } catch {}
+      // Play immediate first beat!
+      playCurrentTrackMeasure();
+      this.musicIntervalId = window.setInterval(playCurrentTrackMeasure, measureDuration * 1000);
+    } catch (e) {
+      console.warn('Audio play error:', e);
+    }
+  }
+
+  // ---------------- TRACK A: 🏆 UEFA CHAMPIONS LEAGUE (Zadok The Priest) ----------------
+  private renderChampionsMeasure(now: number, step: number, measureDur: number, beatDur: number) {
+    if (!this.ctx || !this.musicGainNode) return;
+
+    // D Major / B Minor / G Major classical royal chord sequence
+    const chords = [
+      { bass: 73.42, chord: [293.66, 369.99, 440.0, 587.33] }, // D Major
+      { bass: 98.00, chord: [293.66, 392.00, 493.88, 587.33] }, // G Major
+      { bass: 110.0, chord: [277.18, 329.63, 440.00, 554.37] }, // A Major
+      { bass: 61.74, chord: [293.66, 369.99, 440.00, 587.33] }, // B Minor
+    ];
+    const cur = chords[step % chords.length];
+
+    // 1. Cello / Double Bass Bowed Tone
+    const bass = this.ctx.createOscillator();
+    const bassFilter = this.ctx.createBiquadFilter();
+    const bassGain = this.ctx.createGain();
+
+    bass.type = 'sawtooth';
+    bass.frequency.setValueAtTime(cur.bass, now);
+    bassFilter.type = 'lowpass';
+    bassFilter.frequency.setValueAtTime(160, now);
+
+    bassGain.gain.setValueAtTime(0.001, now);
+    bassGain.gain.linearRampToValueAtTime(0.24 * this.musicVolume, now + 0.3);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, now + measureDur);
+
+    bass.connect(bassFilter);
+    bassFilter.connect(bassGain);
+    bassGain.connect(this.musicGainNode);
+    bass.start(now);
+    bass.stop(now + measureDur);
+
+    // 2. Rapid 16th-Note Baroque Violin Arpeggio (Iconic Champions League strings!)
+    const sixteenthDur = measureDur / 16;
+    for (let i = 0; i < 16; i++) {
+      const noteTime = now + i * sixteenthDur;
+      const noteFreq = cur.chord[i % cur.chord.length];
+
+      const vln = this.ctx.createOscillator();
+      const vlnFilter = this.ctx.createBiquadFilter();
+      const vlnGain = this.ctx.createGain();
+
+      vln.type = 'triangle';
+      vln.frequency.setValueAtTime(noteFreq, noteTime);
+
+      vlnFilter.type = 'bandpass';
+      vlnFilter.frequency.setValueAtTime(noteFreq * 1.8, noteTime);
+      vlnFilter.Q.setValueAtTime(1.8, noteTime);
+
+      vlnGain.gain.setValueAtTime(0.001, noteTime);
+      vlnGain.gain.linearRampToValueAtTime(0.12 * this.musicVolume, noteTime + 0.02);
+      vlnGain.gain.exponentialRampToValueAtTime(0.001, noteTime + sixteenthDur * 0.85);
+
+      vln.connect(vlnFilter);
+      vlnFilter.connect(vlnGain);
+      vlnGain.connect(this.musicGainNode);
+      vln.start(noteTime);
+      vln.stop(noteTime + sixteenthDur);
+    }
+
+    // 3. Royal Horn / Trumpet Melody (Melodic Champions League Theme)
+    const melodyNotes = [587.33, 659.25, 739.99, 880.0]; // D5, E5, F#5, A5
+    const horn = this.ctx.createOscillator();
+    const hornFilter = this.ctx.createBiquadFilter();
+    const hornGain = this.ctx.createGain();
+
+    horn.type = 'sawtooth';
+    horn.frequency.setValueAtTime(melodyNotes[step % melodyNotes.length], now);
+
+    hornFilter.type = 'lowpass';
+    hornFilter.frequency.setValueAtTime(1200, now);
+    hornFilter.Q.setValueAtTime(2.0, now);
+
+    hornGain.gain.setValueAtTime(0.001, now);
+    hornGain.gain.linearRampToValueAtTime(0.16 * this.musicVolume, now + 0.4);
+    hornGain.gain.exponentialRampToValueAtTime(0.001, now + measureDur * 0.9);
+
+    horn.connect(hornFilter);
+    hornFilter.connect(hornGain);
+    hornGain.connect(this.musicGainNode);
+    horn.start(now);
+    horn.stop(now + measureDur);
+  }
+
+  // ---------------- TRACK B: 🔥 STADIUM EDM & HYPE BEAT ----------------
+  private renderHypeMeasure(now: number, step: number, measureDur: number, beatDur: number) {
+    if (!this.ctx || !this.musicGainNode) return;
+
+    // 1. Four-on-the-floor Punchy Stadium Kick Drum
+    for (let b = 0; b < 4; b++) {
+      const kickTime = now + b * beatDur;
+      const kickOsc = this.ctx.createOscillator();
+      const kickGain = this.ctx.createGain();
+
+      kickOsc.type = 'sine';
+      kickOsc.frequency.setValueAtTime(140, kickTime);
+      kickOsc.frequency.exponentialRampToValueAtTime(36, kickTime + 0.08);
+
+      kickGain.gain.setValueAtTime(0.35 * this.musicVolume, kickTime);
+      kickGain.gain.exponentialRampToValueAtTime(0.001, kickTime + 0.12);
+
+      kickOsc.connect(kickGain);
+      kickGain.connect(this.musicGainNode);
+      kickOsc.start(kickTime);
+      kickOsc.stop(kickTime + 0.13);
+    }
+
+    // 2. Off-beat Sizzle Hi-Hats (Electronic dance groove)
+    for (let b = 0; b < 4; b++) {
+      const hatTime = now + (b + 0.5) * beatDur;
+      const bufSize = Math.floor(this.ctx.sampleRate * 0.04);
+      const buf = this.ctx.createBuffer(1, bufSize, this.ctx.sampleRate);
+      const data = buf.getChannelData(0);
+      for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+
+      const hatNoise = this.ctx.createBufferSource();
+      hatNoise.buffer = buf;
+
+      const hatFilter = this.ctx.createBiquadFilter();
+      hatFilter.type = 'highpass';
+      hatFilter.frequency.setValueAtTime(7000, hatTime);
+
+      const hatGain = this.ctx.createGain();
+      hatGain.gain.setValueAtTime(0.12 * this.musicVolume, hatTime);
+      hatGain.gain.exponentialRampToValueAtTime(0.001, hatTime + 0.035);
+
+      hatNoise.connect(hatFilter);
+      hatFilter.connect(hatGain);
+      hatGain.connect(this.musicGainNode);
+      hatNoise.start(hatTime);
+    }
+
+    // 3. Pumping Stadium Synth Bassline (16th notes groove)
+    const baseFreqs = [55.0, 65.41, 73.42, 82.41]; // A1, C2, D2, E2
+    const currentBase = baseFreqs[step % baseFreqs.length];
+
+    for (let i = 0; i < 8; i++) {
+      const bassTime = now + i * (beatDur / 2);
+      const bassOsc = this.ctx.createOscillator();
+      const bassFilter = this.ctx.createBiquadFilter();
+      const bassGain = this.ctx.createGain();
+
+      bassOsc.type = 'sawtooth';
+      bassOsc.frequency.setValueAtTime(currentBase, bassTime);
+
+      bassFilter.type = 'lowpass';
+      bassFilter.frequency.setValueAtTime(450, bassTime);
+      bassFilter.Q.setValueAtTime(2.5, bassTime);
+
+      bassGain.gain.setValueAtTime(0.001, bassTime);
+      bassGain.gain.linearRampToValueAtTime(0.18 * this.musicVolume, bassTime + 0.02);
+      bassGain.gain.exponentialRampToValueAtTime(0.001, bassTime + beatDur * 0.45);
+
+      bassOsc.connect(bassFilter);
+      bassFilter.connect(bassGain);
+      bassGain.connect(this.musicGainNode);
+      bassOsc.start(bassTime);
+      bassOsc.stop(bassTime + beatDur * 0.5);
+    }
+
+    // 4. Stadium Synth Lead Chord Stabs
+    const stabChords = [
+      [220.0, 261.63, 329.63], // Am
+      [261.63, 329.63, 392.00], // C
+      [293.66, 369.99, 440.00], // D
+      [329.63, 392.00, 493.88], // Em
+    ];
+    const stabChord = stabChords[step % stabChords.length];
+
+    [0, 1.5, 3].forEach((pos) => {
+      const stabTime = now + pos * beatDur;
+      stabChord.forEach((f) => {
+        if (!this.ctx || !this.musicGainNode) return;
+        const stabOsc = this.ctx.createOscillator();
+        const stabFilter = this.ctx.createBiquadFilter();
+        const stabGain = this.ctx.createGain();
+
+        stabOsc.type = 'sawtooth';
+        stabOsc.frequency.setValueAtTime(f, stabTime);
+
+        stabFilter.type = 'lowpass';
+        stabFilter.frequency.setValueAtTime(2200, stabTime);
+        stabFilter.Q.setValueAtTime(1.5, stabTime);
+
+        stabGain.gain.setValueAtTime(0.001, stabTime);
+        stabGain.gain.linearRampToValueAtTime(0.12 * this.musicVolume, stabTime + 0.03);
+        stabGain.gain.exponentialRampToValueAtTime(0.001, stabTime + beatDur * 0.35);
+
+        stabOsc.connect(stabFilter);
+        stabFilter.connect(stabGain);
+        stabGain.connect(this.musicGainNode);
+        stabOsc.start(stabTime);
+        stabOsc.stop(stabTime + beatDur * 0.4);
+      });
+    });
+  }
+
+  // ---------------- TRACK C: 🎻 GALA CINEMATIC SYMPHONY ----------------
+  private renderGalaMeasure(now: number, step: number, measureDur: number, beatDur: number) {
+    if (!this.ctx || !this.musicGainNode) return;
+
+    // Sweeping Hollywood cinematic orchestral chords: G Minor -> Eb Major -> Bb Major -> F Major
+    const cinematicChords = [
+      { bass: 48.99, mid: [196.0, 233.08, 293.66, 392.0] }, // Gm
+      { bass: 38.89, mid: [155.56, 196.0, 233.08, 311.13] }, // Eb
+      { bass: 58.27, mid: [233.08, 293.66, 349.23, 466.16] }, // Bb
+      { bass: 43.65, mid: [174.61, 220.0, 261.63, 349.23] }, // F
+    ];
+    const cur = cinematicChords[step % cinematicChords.length];
+
+    // 1. Deep Contrabass & Cello Swell
+    const bass = this.ctx.createOscillator();
+    const bassFilter = this.ctx.createBiquadFilter();
+    const bassGain = this.ctx.createGain();
+
+    bass.type = 'sawtooth';
+    bass.frequency.setValueAtTime(cur.bass, now);
+    bassFilter.type = 'lowpass';
+    bassFilter.frequency.setValueAtTime(120, now);
+
+    bassGain.gain.setValueAtTime(0.001, now);
+    bassGain.gain.linearRampToValueAtTime(0.28 * this.musicVolume, now + 1.0);
+    bassGain.gain.exponentialRampToValueAtTime(0.001, now + measureDur);
+
+    bass.connect(bassFilter);
+    bassFilter.connect(bassGain);
+    bassGain.connect(this.musicGainNode);
+    bass.start(now);
+    bass.stop(now + measureDur);
+
+    // 2. Sweeping Lush String Section Pads
+    cur.mid.forEach((f) => {
+      if (!this.ctx || !this.musicGainNode) return;
+      const str = this.ctx.createOscillator();
+      const strFilter = this.ctx.createBiquadFilter();
+      const strGain = this.ctx.createGain();
+
+      str.type = 'triangle';
+      str.frequency.setValueAtTime(f, now);
+
+      strFilter.type = 'lowpass';
+      strFilter.frequency.setValueAtTime(800, now);
+      strFilter.Q.setValueAtTime(1.0, now);
+
+      strGain.gain.setValueAtTime(0.001, now);
+      strGain.gain.linearRampToValueAtTime(0.14 * this.musicVolume, now + 0.8);
+      strGain.gain.exponentialRampToValueAtTime(0.001, now + measureDur);
+
+      str.connect(strFilter);
+      strFilter.connect(strGain);
+      strGain.connect(this.musicGainNode);
+      str.start(now);
+      str.stop(now + measureDur);
+    });
+
+    // 3. Orchestral Timpani Strike at the top of each measure
+    const timp = this.ctx.createOscillator();
+    const timpGain = this.ctx.createGain();
+    timp.type = 'sine';
+    timp.frequency.setValueAtTime(65, now);
+    timp.frequency.exponentialRampToValueAtTime(38, now + 0.25);
+
+    timpGain.gain.setValueAtTime(0.28 * this.musicVolume, now);
+    timpGain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+    timp.connect(timpGain);
+    timpGain.connect(this.musicGainNode);
+    timp.start(now);
+    timp.stop(now + 0.36);
   }
 
   public stopBackgroundMusic() {
@@ -331,7 +531,6 @@ class DrawAudioEngine {
         const delay = i * 0.11 + Math.random() * 0.05;
 
         osc.type = 'triangle';
-        // Resonance of smooth polished lottery sphere
         const baseFreq = 420 + Math.random() * 180;
         osc.frequency.setValueAtTime(baseFreq, now + delay);
         osc.frequency.exponentialRampToValueAtTime(110, now + delay + 0.035);
@@ -375,7 +574,6 @@ class DrawAudioEngine {
   }
 
   // ================= 6. CINEMATIC TIMPANI DRUM ROLL & TENSION RISER =================
-  // Replaced the harsh dual-sawtooth siren with a grand orchestral Timpani drum roll
   public playSuspenseRiser() {
     if (this.isMuted) return;
     try {
@@ -384,18 +582,16 @@ class DrawAudioEngine {
 
       const now = ctx.currentTime;
       const duration = 1.4;
-      const hitCount = 16; // rapid alternating orchestral timpani strokes
+      const hitCount = 16;
 
-      // A. Rapid Timpani Drum Strokes (Crescendo)
       for (let i = 0; i < hitCount; i++) {
         const hitTime = now + (i / hitCount) * duration;
-        const progress = i / hitCount; // 0.0 -> 1.0
+        const progress = i / hitCount;
 
         const timpOsc = ctx.createOscillator();
         const timpGain = ctx.createGain();
 
         timpOsc.type = 'triangle';
-        // Deep timpani skin resonance
         const f = 62 + progress * 24;
         timpOsc.frequency.setValueAtTime(f, hitTime);
         timpOsc.frequency.exponentialRampToValueAtTime(f * 0.75, hitTime + 0.07);
@@ -411,14 +607,13 @@ class DrawAudioEngine {
         timpOsc.stop(hitTime + 0.075);
       }
 
-      // B. Low Symphonic Tension Drone Swell
       const droneOsc = ctx.createOscillator();
       const droneFilter = ctx.createBiquadFilter();
       const droneGain = ctx.createGain();
 
       droneOsc.type = 'sawtooth';
       droneOsc.frequency.setValueAtTime(110, now);
-      droneOsc.frequency.linearRampToValueAtTime(146.83, now + duration); // A2 -> D3
+      droneOsc.frequency.linearRampToValueAtTime(146.83, now + duration);
 
       droneFilter.type = 'lowpass';
       droneFilter.frequency.setValueAtTime(200, now);
@@ -438,7 +633,6 @@ class DrawAudioEngine {
   }
 
   // ================= 7. MAJESTIC BROADCAST BRASS FANFARE & STADIUM CHIME =================
-  // Replaced the 5 cheap triangle bleeps with a triumphant Royal Brass Section chord & Stadium Bell
   public playBroadcastReveal() {
     if (this.isMuted) return;
     try {
@@ -447,13 +641,12 @@ class DrawAudioEngine {
 
       const now = ctx.currentTime;
 
-      // A. Royal Brass Section Chord: D3, A3, F#4, D5, A5 (Major Triumphant Majesty)
       const brassNotes = [
-        { freq: 146.83, gain: 0.2 },  // Trombone/Bass
-        { freq: 220.0, gain: 0.18 },  // French Horn
-        { freq: 369.99, gain: 0.16 }, // Tenor Trumpet
-        { freq: 587.33, gain: 0.18 }, // Lead Trumpet
-        { freq: 880.0, gain: 0.14 },  // High Trumpet
+        { freq: 146.83, gain: 0.2 },
+        { freq: 220.0, gain: 0.18 },
+        { freq: 369.99, gain: 0.16 },
+        { freq: 587.33, gain: 0.18 },
+        { freq: 880.0, gain: 0.14 },
       ];
 
       brassNotes.forEach((note) => {
@@ -462,12 +655,10 @@ class DrawAudioEngine {
         const filter = ctx.createBiquadFilter();
         const gain = ctx.createGain();
 
-        // Sawtooth with resonant filter generates the authentic "brass bite"
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(note.freq, now);
 
         filter.type = 'lowpass';
-        // Brass acoustic envelope: bright attack opening quickly then settling
         filter.frequency.setValueAtTime(400, now);
         filter.frequency.exponentialRampToValueAtTime(3200, now + 0.05);
         filter.frequency.exponentialRampToValueAtTime(900, now + 1.8);
@@ -485,8 +676,7 @@ class DrawAudioEngine {
         osc.stop(now + 2.1);
       });
 
-      // B. Golden Stadium Chime / Tubular Bell
-      const chimeFreqs = [1174.66, 1760.0, 2349.32]; // High D harmonics
+      const chimeFreqs = [1174.66, 1760.0, 2349.32];
       chimeFreqs.forEach((freq, idx) => {
         if (!ctx) return;
         const chimeOsc = ctx.createOscillator();
@@ -505,7 +695,6 @@ class DrawAudioEngine {
         chimeOsc.stop(now + 2.5);
       });
 
-      // C. Deep Sub-Bass Impact Boom
       const boomOsc = ctx.createOscillator();
       const boomGain = ctx.createGain();
 
@@ -525,7 +714,6 @@ class DrawAudioEngine {
   }
 
   // ================= 8. REALISTIC AUDITORIUM APPLAUSE =================
-  // Replaced the 24 random chirping sine beeps with multi-layered acoustic handclaps
   public playPoliteApplause() {
     if (this.isMuted) return;
     try {
@@ -533,17 +721,15 @@ class DrawAudioEngine {
       if (!ctx) return;
 
       const now = ctx.currentTime;
-      const clapCount = 38; // 38 realistic individual handclaps over 2.4 seconds
+      const clapCount = 38;
 
       for (let i = 0; i < clapCount; i++) {
-        // Claps cluster with natural audience distribution
         const delay = (i / clapCount) * 2.2 + Math.random() * 0.08;
         const osc = ctx.createOscillator();
         const filter = ctx.createBiquadFilter();
         const gain = ctx.createGain();
 
         osc.type = 'triangle';
-        // Acoustic resonance of hands clapping: 1100Hz - 2200Hz
         const centerFreq = 1200 + Math.random() * 900;
         osc.frequency.setValueAtTime(centerFreq, now + delay);
         osc.frequency.exponentialRampToValueAtTime(280, now + delay + 0.025);
@@ -552,7 +738,6 @@ class DrawAudioEngine {
         filter.frequency.setValueAtTime(centerFreq, now + delay);
         filter.Q.setValueAtTime(1.5, now + delay);
 
-        // Envelope: Swells in the middle, decays naturally
         const intensity = Math.sin((i / clapCount) * Math.PI);
         const clapGain = (0.05 + intensity * 0.12) * this.sfxVolume;
 
@@ -581,8 +766,8 @@ class DrawAudioEngine {
       const gain = ctx.createGain();
 
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, now); // D5
-      osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.1); // A5
+      osc.frequency.setValueAtTime(587.33, now);
+      osc.frequency.exponentialRampToValueAtTime(880.0, now + 0.1);
 
       gain.gain.setValueAtTime(0.15 * this.sfxVolume, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
@@ -603,7 +788,6 @@ class DrawAudioEngine {
       if (!ctx) return;
 
       const now = ctx.currentTime;
-      // Grand coronation chord sequence: D4 -> G4 -> A4 -> D5
       const fanfareChords = [
         { time: 0.0, notes: [293.66, 369.99, 440.0], dur: 0.35 },
         { time: 0.38, notes: [392.0, 493.88, 587.33], dur: 0.35 },
@@ -640,7 +824,6 @@ class DrawAudioEngine {
         });
       });
 
-      // Accompany with enthusiastic crowd applause
       setTimeout(() => {
         this.playPoliteApplause();
       }, 700);

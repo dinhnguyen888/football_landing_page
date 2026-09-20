@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import AdminLayout, { AdminTab, TournamentSystem } from '../components/admin/AdminLayout';
 import { StandingsTable } from '../components/StandingsTable';
 import {
@@ -7,16 +7,19 @@ import {
   calculateGroupStandings,
   loadTournamentData,
   saveTournamentData,
-  createDefaultTournament,
   loadDthenTournamentData,
   saveDthenTournamentData,
-  createDefaultDthenTournament,
   generateRoundRobinMatches,
   loadArchiveTournaments,
   saveArchiveTournaments,
   loadArchiveDthenTournaments,
   saveArchiveDthenTournaments,
   buildFIFABracketFromGroups,
+  generatePureKnockoutBracket,
+  isValidTournament,
+  saveTournamentBoth,
+  cleanAllTournaments,
+  createEmptyTournament,
   Team,
   Group,
   fetchAndSyncSaoVangTournament,
@@ -28,6 +31,7 @@ import { isFirebaseConfigured } from '../services/firebase';
 import {
   saveTournamentToFirestore,
   getTournamentFromFirestore,
+  clearLiveDrawStateFromFirestore,
   CLOUD_KEYS,
 } from '../services/tournamentService';
 
@@ -36,6 +40,7 @@ const SESSION_AUTH_KEY = 'admin_portal_authenticated_session';
 const SESSION_SYSTEM_KEY = 'admin_portal_selected_system';
 
 const AdminPortal: React.FC = () => {
+  const navigate = useNavigate();
   // Session authentication
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
     return sessionStorage.getItem(SESSION_AUTH_KEY) === 'true';
@@ -60,7 +65,10 @@ const AdminPortal: React.FC = () => {
 
   // Active tournament state
   const [tournament, setTournament] = useState<TournamentData>(() => {
-    return createDefaultTournament();
+    const sys = selectedSystem || 'SAO_VANG';
+    const existing = sys === 'SAO_VANG' ? loadTournamentData() : loadDthenTournamentData();
+    if (existing && isValidTournament(existing)) return existing;
+    return createEmptyTournament(sys);
   });
 
   // Archive list of tournaments state
@@ -72,12 +80,16 @@ const AdminPortal: React.FC = () => {
 
   // Create wizard states
   const [createStep, setCreateStep] = useState<1 | 2>(1);
+  const [createFormatInput, setCreateFormatInput] = useState<'group_knockout' | 'pure_knockout'>('group_knockout');
+  const [knockoutSizeInput, setKnockoutSizeInput] = useState<number>(16);
+  const [pairingModeInput, setPairingModeInput] = useState<'random' | 'draw'>('random');
   const [tourNameInput, setTourNameInput] = useState('SAO VÀNG CUP ™');
   const [seasonInput, setSeasonInput] = useState('MÙA 3');
   const [numGroupsInput, setNumGroupsInput] = useState<number>(4);
   const [teamsPerGroupInput, setTeamsPerGroupInput] = useState<number>(5);
   const [legTypeInput, setLegTypeInput] = useState<'single' | 'double'>('double');
   const [groupTeamsInput, setGroupTeamsInput] = useState<{ name: string; club: string }[][]>([]);
+  const [knockoutTeamsInput, setKnockoutTeamsInput] = useState<{ name: string; club: string }[]>([]);
 
   // Load data for the selected tournament system
   const loadSystemData = useCallback(async (sys: TournamentSystem) => {
@@ -86,21 +98,31 @@ const AdminPortal: React.FC = () => {
     if (sys === 'SAO_VANG') {
       // 1. Local fallback initial load
       const existing = loadTournamentData();
-      const initial = existing && existing.groups?.length > 0 ? existing : createDefaultTournament();
-      setTournament(initial);
-
       const archive = loadArchiveTournaments();
-      setSavedTournaments(archive.length > 0 ? archive : [initial]);
+      const validExisting = isValidTournament(existing) ? existing! : null;
+
+      setSavedTournaments(archive);
+      setTournament(validExisting || (archive.length > 0 ? archive[0] : createEmptyTournament('SAO_VANG')));
 
       // 2. Fetch from Cloud Firestore
       try {
         const cloud = await fetchAndSyncSaoVangTournament();
-        if (cloud && cloud.groups?.length > 0) {
-          setTournament(cloud);
-        }
         const cloudArchive = await fetchAndSyncArchiveTournaments();
-        if (cloudArchive && cloudArchive.length > 0) {
+
+        if (cloudArchive && Array.isArray(cloudArchive)) {
           setSavedTournaments(cloudArchive);
+          if (isValidTournament(cloud)) {
+            setTournament(cloud!);
+          } else if (cloudArchive.length > 0) {
+            setTournament(cloudArchive[0]);
+          } else {
+            setTournament(createEmptyTournament('SAO_VANG'));
+          }
+        } else if (isValidTournament(cloud)) {
+          setTournament(cloud!);
+        } else if (!archive || archive.length === 0) {
+          setSavedTournaments([]);
+          setTournament(createEmptyTournament('SAO_VANG'));
         }
       } catch (err) {
         console.warn('Error fetching Sao Vang cloud data:', err);
@@ -114,21 +136,31 @@ const AdminPortal: React.FC = () => {
     } else {
       // DTHEN system
       const existing = loadDthenTournamentData();
-      const initial = existing && existing.groups?.length > 0 ? existing : createDefaultDthenTournament();
-      setTournament(initial);
-
       const archive = loadArchiveDthenTournaments();
-      setSavedTournaments(archive.length > 0 ? archive : [initial]);
+      const validExisting = isValidTournament(existing) ? existing! : null;
+
+      setSavedTournaments(archive);
+      setTournament(validExisting || (archive.length > 0 ? archive[0] : createEmptyTournament('DTHEN')));
 
       // Fetch from Cloud Firestore
       try {
         const cloud = await fetchAndSyncDthenTournament();
-        if (cloud && cloud.groups?.length > 0) {
-          setTournament(cloud);
-        }
         const cloudArchive = await fetchAndSyncArchiveDthenTournaments();
-        if (cloudArchive && cloudArchive.length > 0) {
+
+        if (cloudArchive && Array.isArray(cloudArchive)) {
           setSavedTournaments(cloudArchive);
+          if (isValidTournament(cloud)) {
+            setTournament(cloud!);
+          } else if (cloudArchive.length > 0) {
+            setTournament(cloudArchive[0]);
+          } else {
+            setTournament(createEmptyTournament('DTHEN'));
+          }
+        } else if (isValidTournament(cloud)) {
+          setTournament(cloud!);
+        } else if (!archive || archive.length === 0) {
+          setSavedTournaments([]);
+          setTournament(createEmptyTournament('DTHEN'));
         }
       } catch (err) {
         console.warn('Error fetching Dthen cloud data:', err);
@@ -289,6 +321,11 @@ const AdminPortal: React.FC = () => {
     });
 
     setSavedTournaments(updatedList);
+    if (selectedSystem === 'SAO_VANG') {
+      saveArchiveTournaments(updatedList);
+    } else {
+      saveArchiveDthenTournaments(updatedList);
+    }
 
     const activeTour = updatedList.find((t) => t.isVisible);
     if (activeTour) {
@@ -317,7 +354,11 @@ const AdminPortal: React.FC = () => {
     } else {
       saveDthenTournamentData(selected);
     }
-    setActiveTab('SCORES');
+    if (selected.format === 'pure_knockout') {
+      setActiveTab('KNOCKOUT');
+    } else {
+      setActiveTab('SCORES');
+    }
     setActiveGroupIndex(0);
     setActiveRoundFilter('ALL');
   };
@@ -327,10 +368,112 @@ const AdminPortal: React.FC = () => {
     if (window.confirm('Bạn có chắc chắn muốn xóa giải đấu này?')) {
       const list = savedTournaments.filter((t) => t.id !== tourId);
       setSavedTournaments(list);
-      if (list.length > 0) {
-        setTournament(list[0]);
+      const nextTour = list.length > 0 ? list[0] : createEmptyTournament(selectedSystem || 'SAO_VANG');
+      setTournament(nextTour);
+      if (selectedSystem === 'SAO_VANG') {
+        saveTournamentData(list.length > 0 ? nextTour : null);
+        saveArchiveTournaments(list);
+      } else {
+        saveDthenTournamentData(list.length > 0 ? nextTour : null);
+        saveArchiveDthenTournaments(list);
       }
     }
+  };
+
+  // Dọn sạch toàn bộ giải đấu (chỉ xóa giải đấu, giữ nguyên dữ liệu khác)
+  const handleCleanAllTournaments = async () => {
+    if (
+      !window.confirm(
+        '⚠ CẢNH BÁO XÓA DỮ LIỆU:\n\n' +
+        'Bạn có chắc chắn muốn DỌN SẠCH TẤT CẢ GIẢI ĐẤU của hệ thống?\n\n' +
+        '✓ Chỉ toàn bộ các giải đấu và sơ đồ thi đấu sẽ bị xóa.\n' +
+        '✓ Các dữ liệu khác (tài khoản, cài đặt, giao diện...) được giữ nguyên 100%.\n\n' +
+        'Bấm OK để xác nhận xóa.'
+      )
+    ) {
+      return;
+    }
+
+    try {
+      await cleanAllTournaments();
+      const empty = createEmptyTournament(selectedSystem || 'SAO_VANG');
+      setSavedTournaments([]);
+      setTournament(empty);
+      alert('✓ Đã dọn sạch tất cả giải đấu thành công trên trình duyệt và Cloud Firestore!');
+    } catch (err) {
+      console.error(err);
+      alert('Đã xảy ra lỗi khi dọn sạch giải đấu.');
+    }
+  };
+
+  // Chuyển thẳng sang sân khấu Bốc Thăm 3D cho giải đấu đã chọn mà không hỏi lại
+  const handleGoToDraw = (tour: TournamentData) => {
+    const sys = selectedSystem || (tour.id.includes('dthen') ? 'DTHEN' : 'SAO_VANG');
+    let teamsForDraw: { id: string; name: string; club: string; pot: number }[] = [];
+
+    if (tour.format === 'pure_knockout') {
+      if (tour.knockoutStage?.rounds?.[0]?.matches?.length) {
+        tour.knockoutStage.rounds[0].matches.forEach((m) => {
+          if (m.homeTeamName && !m.homeTeamName.includes('Thắng')) {
+            teamsForDraw.push({
+              id: `team_${teamsForDraw.length + 1}`,
+              name: m.homeTeamName,
+              club: m.homeTeamClub || '',
+              pot: 1,
+            });
+          }
+          if (m.awayTeamName && !m.awayTeamName.includes('Thắng')) {
+            teamsForDraw.push({
+              id: `team_${teamsForDraw.length + 1}`,
+              name: m.awayTeamName,
+              club: m.awayTeamClub || '',
+              pot: 1,
+            });
+          }
+        });
+      }
+      if (teamsForDraw.length === 0) {
+        const total = tour.totalTeams || 16;
+        for (let i = 1; i <= total; i++) {
+          teamsForDraw.push({
+            id: `team_${i}`,
+            name: `HLV ${i}`,
+            club: '',
+            pot: 1,
+          });
+        }
+      }
+    } else if (Array.isArray(tour.groups) && tour.groups.length > 0) {
+      tour.groups.forEach((g, gIdx) => {
+        g.teams.forEach((t) => {
+          teamsForDraw.push({
+            id: t.id,
+            name: t.name,
+            club: t.club || '',
+            pot: gIdx + 1,
+          });
+        });
+      });
+    }
+
+    const drawPayload = {
+      tourId: tour.id,
+      system: sys,
+      tournamentTitle: tour.tournamentName,
+      season: tour.season,
+      numGroups: tour.format === 'pure_knockout' ? Math.max(1, Math.floor(teamsForDraw.length / 2)) : (tour.numGroups || 4),
+      teamsPerGroup: tour.format === 'pure_knockout' ? 2 : (tour.teamsPerGroup || 4),
+      teams: teamsForDraw,
+      format: tour.format || 'group_knockout',
+      selectedTournamentData: tour,
+      createdAt: Date.now(),
+    };
+
+    try {
+      localStorage.setItem('SAOVANG_DRAW_DIRECT_SETUP', JSON.stringify(drawPayload));
+    } catch {}
+
+    navigate(`/boctham?tourId=${tour.id}&system=${sys}`);
   };
 
   // Score change in group matches
@@ -374,30 +517,182 @@ const AdminPortal: React.FC = () => {
 
   // Wizard: Step 1 -> Step 2
   const handleSetupStep2 = () => {
-    const initialGroups: { name: string; club: string }[][] = [];
-    for (let g = 0; g < numGroupsInput; g++) {
-      const teams: { name: string; club: string }[] = [];
-      for (let t = 0; t < teamsPerGroupInput; t++) {
-        teams.push({
-          name: `HLV ${String.fromCharCode(65 + g)}${t + 1}`,
-          club: `CLB ${t + 1}`,
-        });
+    if (createFormatInput === 'group_knockout') {
+      const initialGroups: { name: string; club: string }[][] = [];
+      for (let g = 0; g < numGroupsInput; g++) {
+        const teams: { name: string; club: string }[] = [];
+        for (let t = 0; t < teamsPerGroupInput; t++) {
+          teams.push({
+            name: `HLV ${String.fromCharCode(65 + g)}${t + 1}`,
+            club: `CLB ${t + 1}`,
+          });
+        }
+        initialGroups.push(teams);
       }
-      initialGroups.push(teams);
+      setGroupTeamsInput(initialGroups);
+    } else {
+      const sampleHlvNames = [
+        'HLV Phan Long',
+        'HLV Quốc Cường',
+        'HLV Minh Quân',
+        'HLV Hải Đăng',
+        'HLV Tuấn Anh',
+        'HLV Hoàng Phúc',
+        'HLV Bảo Long',
+        'HLV Thanh Tùng',
+        'HLV Trọng Nghĩa',
+        'HLV Hữu Đạt',
+        'HLV Thế Anh',
+        'HLV Văn Đức',
+        'HLV Quang Minh',
+        'HLV Gia Huy',
+        'HLV Tấn Tài',
+        'HLV Thành Đạt',
+        'HLV Hoàng Nam',
+        'HLV Duy Mạnh',
+        'HLV Tiến Dũng',
+        'HLV Công Phượng',
+        'HLV Quang Hải',
+        'HLV Văn Toàn',
+        'HLV Hùng Dũng',
+        'HLV Tuấn Hải',
+        'HLV Việt Hưng',
+        'HLV Hoàng Đức',
+        'HLV Văn Quyết',
+        'HLV Tấn Sinh',
+        'HLV Đức Chinh',
+        'HLV Văn Hậu',
+        'HLV Đình Trọng',
+        'HLV Xuân Trường',
+      ];
+      const initialKo: { name: string; club: string }[] = [];
+      for (let i = 0; i < knockoutSizeInput; i++) {
+        initialKo.push({ name: sampleHlvNames[i] || `HLV ${i + 1}`, club: '' });
+      }
+      setKnockoutTeamsInput(initialKo);
     }
-    setGroupTeamsInput(initialGroups);
     setCreateStep(2);
   };
 
-  // Wizard: Change team name/club
+  // Wizard: Change team name/club (Group)
   const handleTeamNameChange = (gIdx: number, tIdx: number, field: 'name' | 'club', val: string) => {
     const updated = [...groupTeamsInput];
     updated[gIdx][tIdx][field] = val;
     setGroupTeamsInput(updated);
   };
 
+  // Wizard: Change team name/club (Knockout)
+  const handleKnockoutTeamNameChange = (tIdx: number, field: 'name' | 'club', val: string) => {
+    setKnockoutTeamsInput((prev) => {
+      const updated = [...prev];
+      if (updated[tIdx]) {
+        updated[tIdx] = { ...updated[tIdx], [field]: val };
+      }
+      return updated;
+    });
+  };
+
   // Wizard: Finish create tournament
-  const handleFinishCreateTournament = () => {
+  const handleFinishCreateTournament = async () => {
+    if (createFormatInput === 'pure_knockout') {
+      if (pairingModeInput === 'draw') {
+        const tourId = `tour_ko_${selectedSystem?.toLowerCase()}_${Date.now()}`;
+        const drawTeams = knockoutTeamsInput.map((t, idx) => ({
+          id: `draw_team_${idx + 1}`,
+          name: t.name.trim() || `HLV ${idx + 1}`,
+          club: '',
+          pot: Math.floor(idx / 4) + 1,
+        }));
+
+        const newTour: TournamentData = {
+          id: tourId,
+          tournamentName: tourNameInput,
+          season: seasonInput,
+          numGroups: 0,
+          teamsPerGroup: 2,
+          legType: 'single',
+          groups: [],
+          format: 'pure_knockout',
+          pairingMode: 'draw',
+          totalTeams: knockoutTeamsInput.length,
+          createdAt: new Date().toISOString(),
+          isVisible: true,
+        };
+
+        // Lưu giải đấu chờ bốc thăm vào cả active và archive ngay lập tức
+        saveTournamentBoth(newTour, selectedSystem || 'SAO_VANG');
+
+        const updatedArchive = savedTournaments.map((t) => ({ ...t, isVisible: false }));
+        setTournament(newTour);
+        setSavedTournaments([newTour, ...updatedArchive]);
+
+        const drawPayload = {
+          tourId,
+          system: selectedSystem,
+          tournamentTitle: tourNameInput,
+          season: seasonInput,
+          format: 'pure_knockout',
+          pairingMode: 'draw',
+          totalTeams: knockoutTeamsInput.length,
+          numGroups: knockoutTeamsInput.length / 2,
+          teamsPerGroup: 2,
+          teams: drawTeams,
+          selectedTournamentData: newTour,
+          createdAt: Date.now(),
+        };
+
+        // Xóa hoàn toàn bản nháp bốc thăm dở dang cũ trên Local và Cloud để bắt đầu mới 100%
+        try {
+          localStorage.removeItem('saovang_draw_draft');
+          localStorage.setItem('SAOVANG_DRAW_DIRECT_SETUP', JSON.stringify(drawPayload));
+        } catch {}
+        try {
+          await clearLiveDrawStateFromFirestore();
+        } catch {}
+
+        alert('🏆 Giải đấu đã được tạo và lưu vào hệ thống! Đang chuyển tới sân khấu Bốc Thăm 3D để bắt đầu bốc thăm...');
+        navigate(`/boctham?tourId=${tourId}&system=${selectedSystem || 'SAO_VANG'}`);
+        return;
+      }
+
+      // Random Knockout Creation
+      const teams: Team[] = knockoutTeamsInput.map((t, idx) => ({
+        id: `ko_team_${idx + 1}`,
+        name: t.name.trim() || `HLV ${idx + 1}`,
+        club: t.club.trim() || '',
+      }));
+      const knockoutStage = generatePureKnockoutBracket(teams, true);
+      const newTour: TournamentData = {
+        id: `tour_ko_${selectedSystem?.toLowerCase()}_${Date.now()}`,
+        tournamentName: tourNameInput,
+        season: seasonInput,
+        numGroups: 0,
+        teamsPerGroup: 2,
+        legType: 'single',
+        groups: [],
+        format: 'pure_knockout',
+        pairingMode: 'random',
+        totalTeams: teams.length,
+        knockoutStage,
+        createdAt: new Date().toISOString(),
+        isVisible: true,
+      };
+
+      saveTournamentBoth(newTour, selectedSystem || 'SAO_VANG');
+
+      const updatedArchive = savedTournaments.map((t) => ({ ...t, isVisible: false }));
+      const finalList = [newTour, ...updatedArchive];
+
+      setTournament(newTour);
+      setSavedTournaments(finalList);
+
+      setActiveTab('KNOCKOUT');
+      setCreateStep(1);
+      alert(`🎉 Đã tạo và xếp cặp ngẫu nhiên Cúp Loại Trực Tiếp cho ${selectedSystem === 'DTHEN' ? 'ĐThén FCO' : 'Sao Vàng Cup'} thành công! Dữ liệu đã lưu vào hệ thống và Cloud.`);
+      return;
+    }
+
+    // Group Knockout Creation
     const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const groups: Group[] = groupTeamsInput.map((teamsInput, gIdx) => {
       const groupLetter = alphabet[gIdx] || `${gIdx + 1}`;
@@ -429,6 +724,8 @@ const AdminPortal: React.FC = () => {
       isVisible: true,
     };
 
+    saveTournamentBoth(newTour, selectedSystem || 'SAO_VANG');
+
     const updatedArchive = savedTournaments.map((t) => ({ ...t, isVisible: false }));
     const finalList = [newTour, ...updatedArchive];
 
@@ -439,11 +736,11 @@ const AdminPortal: React.FC = () => {
     setCreateStep(1);
     setActiveGroupIndex(0);
     setActiveRoundFilter('ALL');
-    alert(`🎉 Đã tạo giải đấu mới cho ${selectedSystem === 'DTHEN' ? 'ĐThén FCO' : 'Sao Vàng Cup'} & xuất bản thành công!`);
+    alert(`🎉 Đã tạo giải đấu mới cho ${selectedSystem === 'DTHEN' ? 'ĐThén FCO' : 'Sao Vàng Cup'} & xuất bản thành công! Dữ liệu đã lưu vào hệ thống và Cloud.`);
   };
 
   // Active Group Standings
-  const activeGroup = tournament.groups[activeGroupIndex] || tournament.groups[0];
+  const activeGroup = Array.isArray(tournament.groups) && tournament.groups.length > 0 ? (tournament.groups[activeGroupIndex] || tournament.groups[0]) : null;
   const standings = activeGroup ? calculateGroupStandings(activeGroup) : [];
 
   const teamMap = activeGroup
@@ -760,7 +1057,7 @@ const AdminPortal: React.FC = () => {
                 </p>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={handleSwitchSystem}
@@ -769,6 +1066,16 @@ const AdminPortal: React.FC = () => {
                 >
                   <i className="fa-solid fa-repeat"></i>
                   <span>Đổi Giải Đấu</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleCleanAllTournaments}
+                  className="px-3.5 py-2 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800/80 font-oswald text-xs font-bold uppercase tracking-wider flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+                  title="Dọn sạch toàn bộ giải đấu (chỉ xóa giải đấu, giữ nguyên dữ liệu khác)"
+                >
+                  <i className="fa-solid fa-trash-can"></i>
+                  <span>Dọn Sạch Giải</span>
                 </button>
 
                 <button
@@ -787,9 +1094,28 @@ const AdminPortal: React.FC = () => {
             </div>
 
             {savedTournaments.length === 0 ? (
-              <div className="text-center py-12 text-slate-500">
+              <div className="text-center py-16 bg-slate-50 dark:bg-slate-900/50 rounded-2xl border border-slate-200 dark:border-slate-800 space-y-3">
                 <i className="fa-solid fa-folder-open text-4xl text-slate-400 mb-2 block"></i>
-                <p className="font-oswald text-sm uppercase font-bold">Chưa có giải đấu nào trong hệ thống này</p>
+                <h3 className="font-oswald text-lg uppercase font-bold text-slate-800 dark:text-white">
+                  Chưa có giải đấu nào trong hệ thống
+                </h3>
+                <p className="text-xs text-slate-500 max-w-md mx-auto">
+                  Toàn bộ giải đấu cũ đã được dọn sạch thành công. Bạn hãy bấm nút <strong>Tạo Giải Mới</strong> để khởi tạo giải đấu mới.
+                </p>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('CREATE')}
+                    className={`px-5 py-2.5 rounded-xl font-oswald text-xs font-black uppercase tracking-wider shadow-md inline-flex items-center space-x-2 cursor-pointer ${
+                      isDthen
+                        ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
+                        : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/25'
+                    }`}
+                  >
+                    <i className="fa-solid fa-plus"></i>
+                    <span>TẠO GIẢI MỚI NGAY</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -825,14 +1151,23 @@ const AdminPortal: React.FC = () => {
                             </span>
                           )}
                         </div>
-                        <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                          {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/bảng •{' '}
-                          {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt'}
-                        </p>
+                        {tour.format === 'pure_knockout' ? (
+                          <p className="text-xs text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1.5">
+                            <i className="fa-solid fa-trophy text-amber-500"></i>
+                            <span>
+                              Cúp Loại Trực Tiếp • {tour.totalTeams || (tour.knockoutStage?.rounds?.[0]?.matches?.length ? tour.knockoutStage.rounds[0].matches.length * 2 : 16)} HLV • {tour.pairingMode === 'draw' ? 'Bốc Thăm 3D 🏆' : 'Xếp Cặp Ngẫu Nhiên 🎲'}
+                            </span>
+                          </p>
+                        ) : (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
+                            {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/bảng •{' '}
+                            {tour.legType === 'double' ? 'Vòng tròn 2 lượt (Đi & Về)' : 'Vòng tròn 1 lượt'}
+                          </p>
+                        )}
                       </div>
 
                       {/* Controls */}
-                      <div className="flex items-center space-x-3 flex-shrink-0">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 flex-shrink-0">
                         {/* Visibility Toggle */}
                         <div className="flex items-center space-x-2">
                           <span
@@ -861,6 +1196,31 @@ const AdminPortal: React.FC = () => {
                           </button>
                         </div>
 
+                        {/* View Public Page Link */}
+                        <a
+                          href={`${isDthen ? '/dthen/ltd' : '/ltd'}?tourId=${tour.id}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-3 py-2 rounded-xl text-xs font-oswald font-bold uppercase flex items-center space-x-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-all shadow-xs cursor-pointer"
+                          title="Mở xem lịch thi đấu công khai cho người hâm mộ"
+                        >
+                          <i className="fa-solid fa-arrow-up-right-from-square"></i>
+                          <span>Xem Public ↗</span>
+                        </a>
+
+                        {/* Bốc Thăm 3D: CHỈ hiển thị khi tạo giải mới ở trạng thái chờ bốc thăm */}
+                        {tour.format === 'pure_knockout' && tour.pairingMode === 'draw' && (!tour.knockoutStage || !tour.knockoutStage.rounds || tour.knockoutStage.rounds.length === 0) && (
+                          <button
+                            type="button"
+                            onClick={() => handleGoToDraw(tour)}
+                            className="px-3 py-2 rounded-xl text-xs font-oswald font-bold uppercase flex items-center space-x-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-xs cursor-pointer animate-pulse"
+                            title="Giải đấu mới tạo đang chờ bốc thăm phân cặp"
+                          >
+                            <i className="fa-solid fa-trophy"></i>
+                            <span>Bốc Thăm 3D</span>
+                          </button>
+                        )}
+
                         {/* Edit Scores Button */}
                         <button
                           type="button"
@@ -871,8 +1231,8 @@ const AdminPortal: React.FC = () => {
                               : 'bg-amber-500 hover:bg-amber-400 text-slate-950'
                           }`}
                         >
-                          <i className="fa-solid fa-pen-to-square"></i>
-                          <span>Chỉnh Tỉ Số</span>
+                          <i className={`fa-solid ${tour.format === 'pure_knockout' ? 'fa-sitemap' : 'fa-pen-to-square'}`}></i>
+                          <span>{tour.format === 'pure_knockout' ? 'Sơ Đồ Cúp' : 'Chỉnh Tỉ Số'}</span>
                         </button>
 
                         {/* Delete Button */}
@@ -944,159 +1304,182 @@ const AdminPortal: React.FC = () => {
             </div>
           </div>
 
-          {/* Group Tabs Bar */}
-          <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-            {tournament.groups.map((grp, idx) => (
+          {/* Group Tabs Bar & Matches OR Pure Knockout notice */}
+          {!activeGroup || tournament.format === 'pure_knockout' ? (
+            <div className="p-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center space-y-4">
+              <i className="fa-solid fa-trophy text-4xl text-amber-500 block"></i>
+              <h3 className="font-oswald text-xl font-bold uppercase text-slate-900 dark:text-white">
+                Giải Đấu Loại Trực Tiếp (Không Có Vòng Bảng)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+                Giải đấu "{tournament.tournamentName}" đang áp dụng thể thức Cúp Knockout thuần túy. Hãy chuyển sang tab <strong>Sơ Đồ Knockout</strong> để theo dõi và cập nhật tỉ số các trận đấu.
+              </p>
               <button
-                key={grp.id}
-                onClick={() => {
-                  setActiveGroupIndex(idx);
-                  setActiveRoundFilter('ALL');
-                }}
-                className={`px-5 py-2 rounded-xl font-oswald text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
-                  activeGroupIndex === idx
-                    ? isDthen
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
-                      : 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                    : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
-                }`}
+                type="button"
+                onClick={() => setActiveTab('KNOCKOUT')}
+                className="px-6 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-oswald text-xs font-bold uppercase tracking-wider cursor-pointer shadow-md inline-flex items-center space-x-2"
               >
-                {grp.name}
+                <i className="fa-solid fa-sitemap"></i>
+                <span>Chuyển Sang Sơ Đồ Knock-out →</span>
               </button>
-            ))}
-          </div>
-
-          {/* Live Standings Table */}
-          <StandingsTable
-            groupName={activeGroup.name}
-            standings={standings}
-            matches={activeGroup.matches}
-            theme={isDthen ? 'blue' : 'emerald'}
-            qualificationNote="Top 1 & Top 2 giành quyền vào vòng Knockout"
-          />
-
-          {/* Match Score Input Section */}
-          <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-            <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div>
-                <h3 className="font-oswald text-lg font-black uppercase text-slate-900 dark:text-white">
-                  ĐIỀN TỈ SỐ TRẬN ĐẤU ({activeGroup.name})
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Nhập số bàn thắng vào các ô tỉ số bên dưới. Dữ liệu sẽ tự động lưu và đồng bộ tức thì.
-                </p>
-              </div>
-
-              {/* Round Filter */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                <button
-                  type="button"
-                  onClick={() => setActiveRoundFilter('ALL')}
-                  className={`px-3 py-1 text-xs font-oswald font-bold uppercase rounded-lg cursor-pointer ${
-                    activeRoundFilter === 'ALL'
-                      ? 'bg-slate-800 text-white'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                  }`}
-                >
-                  Tất cả vòng
-                </button>
-                {distinctRounds.map((rnd) => (
+            </div>
+          ) : (
+            <>
+              {/* Group Tabs Bar */}
+              <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
+                {tournament.groups.map((grp, idx) => (
                   <button
-                    key={rnd}
-                    type="button"
-                    onClick={() => setActiveRoundFilter(rnd)}
-                    className={`px-2.5 py-1 text-xs font-oswald font-bold rounded-lg cursor-pointer ${
-                      activeRoundFilter === rnd
-                        ? isDthen ? 'bg-blue-600 text-white' : 'bg-amber-500 text-slate-950'
-                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                    key={grp.id}
+                    onClick={() => {
+                      setActiveGroupIndex(idx);
+                      setActiveRoundFilter('ALL');
+                    }}
+                    className={`px-5 py-2 rounded-xl font-oswald text-xs sm:text-sm font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      activeGroupIndex === idx
+                        ? isDthen
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                          : 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
+                        : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100'
                     }`}
                   >
-                    Vòng {rnd}
+                    {grp.name}
                   </button>
                 ))}
               </div>
-            </div>
 
-            {/* Matches list */}
-            <div className="space-y-3">
-              {filteredMatches.map((match) => {
-                const home = teamMap[match.homeTeamId] || { name: match.homeTeamId };
-                const away = teamMap[match.awayTeamId] || { name: match.awayTeamId };
+              {/* Live Standings Table */}
+              <StandingsTable
+                groupName={activeGroup.name}
+                standings={standings}
+                matches={activeGroup.matches}
+                theme={isDthen ? 'blue' : 'emerald'}
+                qualificationNote="Top 1 & Top 2 giành quyền vào vòng Knockout"
+              />
 
-                return (
-                  <div
-                    key={match.id}
-                    className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 transition-all flex flex-col sm:flex-row items-center justify-between gap-4"
-                  >
-                    <span className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-oswald text-xs font-bold uppercase flex-shrink-0">
-                      VÒNG {match.round}
-                    </span>
-
-                    <div className="flex-1 flex items-center justify-center space-x-3 sm:space-x-6 w-full max-w-xl">
-                      <div className="flex-1 text-right">
-                        <span className="font-bold text-sm text-slate-900 dark:text-white block leading-tight">
-                          {home.name}
-                        </span>
-                        {home.club && (
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
-                            {home.club}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center space-x-2 flex-shrink-0">
-                        <input
-                          type="number"
-                          min="0"
-                          max="99"
-                          value={match.homeScore !== null ? match.homeScore : ''}
-                          onChange={(e) => handleScoreChange(match.id, 'homeScore', e.target.value)}
-                          placeholder="-"
-                          className={`w-12 h-10 text-center font-oswald font-bold text-xl border-2 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 shadow-inner ${
-                            isDthen ? 'border-blue-500 focus:ring-blue-400' : 'border-amber-500 focus:ring-amber-400'
-                          }`}
-                        />
-                        <span className="font-bold text-slate-400 text-sm">:</span>
-                        <input
-                          type="number"
-                          min="0"
-                          max="99"
-                          value={match.awayScore !== null ? match.awayScore : ''}
-                          onChange={(e) => handleScoreChange(match.id, 'awayScore', e.target.value)}
-                          placeholder="-"
-                          className={`w-12 h-10 text-center font-oswald font-bold text-xl border-2 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 shadow-inner ${
-                            isDthen ? 'border-blue-500 focus:ring-blue-400' : 'border-amber-500 focus:ring-amber-400'
-                          }`}
-                        />
-                      </div>
-
-                      <div className="flex-1 text-left">
-                        <span className="font-bold text-sm text-slate-900 dark:text-white block leading-tight">
-                          {away.name}
-                        </span>
-                        {away.club && (
-                          <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
-                            {away.club}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="text-right flex-shrink-0">
-                      {match.played ? (
-                        <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center space-x-1">
-                          <i className="fa-solid fa-circle-check"></i>
-                          <span>Đã ghi nhận</span>
-                        </span>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 font-medium">Chưa đá</span>
-                      )}
-                    </div>
+              {/* Match Score Input Section */}
+              <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+                <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-oswald text-lg font-black uppercase text-slate-900 dark:text-white">
+                      ĐIỀN TỈ SỐ TRẬN ĐẤU ({activeGroup.name})
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      Nhập số bàn thắng vào các ô tỉ số bên dưới. Dữ liệu sẽ tự động lưu và đồng bộ tức thì.
+                    </p>
                   </div>
-                );
-              })}
-            </div>
-          </div>
+
+                  {/* Round Filter */}
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setActiveRoundFilter('ALL')}
+                      className={`px-3 py-1 text-xs font-oswald font-bold uppercase rounded-lg cursor-pointer ${
+                        activeRoundFilter === 'ALL'
+                          ? 'bg-slate-800 text-white'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                      }`}
+                    >
+                      Tất cả vòng
+                    </button>
+                    {distinctRounds.map((rnd) => (
+                      <button
+                        key={rnd}
+                        type="button"
+                        onClick={() => setActiveRoundFilter(rnd)}
+                        className={`px-2.5 py-1 text-xs font-oswald font-bold rounded-lg cursor-pointer ${
+                          activeRoundFilter === rnd
+                            ? isDthen ? 'bg-blue-600 text-white' : 'bg-amber-500 text-slate-950'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                        }`}
+                      >
+                        Vòng {rnd}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Matches list */}
+                <div className="space-y-3">
+                  {filteredMatches.map((match) => {
+                    const home = teamMap[match.homeTeamId] || { name: match.homeTeamId };
+                    const away = teamMap[match.awayTeamId] || { name: match.awayTeamId };
+
+                    return (
+                      <div
+                        key={match.id}
+                        className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 hover:bg-white dark:hover:bg-slate-900 transition-all flex flex-col sm:flex-row items-center justify-between gap-4"
+                      >
+                        <span className="px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-oswald text-xs font-bold uppercase flex-shrink-0">
+                          VÒNG {match.round}
+                        </span>
+
+                        <div className="flex-1 flex items-center justify-center space-x-3 sm:space-x-6 w-full max-w-xl">
+                          <div className="flex-1 text-right">
+                            <span className="font-bold text-sm text-slate-900 dark:text-white block leading-tight">
+                              {home.name}
+                            </span>
+                            {home.club && (
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
+                                ({home.club})
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center space-x-2 flex-shrink-0">
+                            <input
+                              type="number"
+                              min="0"
+                              max="99"
+                              value={match.homeScore !== null ? match.homeScore : ''}
+                              onChange={(e) => handleScoreChange(match.id, 'homeScore', e.target.value)}
+                              placeholder="-"
+                              className={`w-12 h-10 text-center font-oswald font-bold text-xl border-2 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 shadow-inner ${
+                                isDthen ? 'border-blue-500 focus:ring-blue-400' : 'border-amber-500 focus:ring-amber-400'
+                              }`}
+                            />
+                            <span className="font-bold text-slate-400 text-sm">:</span>
+                            <input
+                              type="number"
+                              min="0"
+                              max="99"
+                              value={match.awayScore !== null ? match.awayScore : ''}
+                              onChange={(e) => handleScoreChange(match.id, 'awayScore', e.target.value)}
+                              placeholder="-"
+                              className={`w-12 h-10 text-center font-oswald font-bold text-xl border-2 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 shadow-inner ${
+                                isDthen ? 'border-blue-500 focus:ring-blue-400' : 'border-amber-500 focus:ring-amber-400'
+                              }`}
+                            />
+                          </div>
+
+                          <div className="flex-1 text-left">
+                            <span className="font-bold text-sm text-slate-900 dark:text-white block leading-tight">
+                              {away.name}
+                            </span>
+                            {away.club && (
+                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block">
+                                ({away.club})
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="text-right flex-shrink-0">
+                          {match.played ? (
+                            <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-bold flex items-center space-x-1">
+                              <i className="fa-solid fa-circle-check"></i>
+                              <span>Đã ghi nhận</span>
+                            </span>
+                          ) : (
+                            <span className="text-[11px] text-slate-400 font-medium">Chưa đá</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -1481,10 +1864,69 @@ const AdminPortal: React.FC = () => {
                   BƯỚC 1: CẤU HÌNH THỂ THỨC GIẢI ĐẤU
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Thiết lập số bảng, số lượng thành viên mỗi bảng và thể thức thi đấu vòng tròn.
+                  Lựa chọn thể thức (Vòng bảng + Knockout hoặc Cúp Loại Trực Tiếp) và cấu hình quy mô giải đấu.
                 </p>
               </div>
 
+              {/* 1. Format Selection */}
+              <div>
+                <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-2">
+                  1. Chọn Thể Thức Thi Đấu:
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <label
+                    className={`p-4 rounded-xl border-2 cursor-pointer flex items-start space-x-3 transition-all ${
+                      createFormatInput === 'group_knockout'
+                        ? isDthen
+                          ? 'bg-blue-50/80 dark:bg-blue-950/40 border-blue-500 shadow-xs'
+                          : 'bg-emerald-50/80 dark:bg-emerald-950/40 border-emerald-500 shadow-xs'
+                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="adminCreateFormat"
+                      checked={createFormatInput === 'group_knockout'}
+                      onChange={() => setCreateFormatInput('group_knockout')}
+                      className="mt-1 text-amber-500 focus:ring-amber-400"
+                    />
+                    <div>
+                      <strong className="text-sm text-slate-900 dark:text-white block font-oswald uppercase">
+                        1. Vòng Bảng + Knockout (World Cup Format)
+                      </strong>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                        Chia bảng đá vòng tròn tính điểm (1 hoặc 2 lượt), chọn các đội đứng đầu vào nhánh Knockout.
+                      </span>
+                    </div>
+                  </label>
+
+                  <label
+                    className={`p-4 rounded-xl border-2 cursor-pointer flex items-start space-x-3 transition-all ${
+                      createFormatInput === 'pure_knockout'
+                        ? 'bg-amber-50/80 dark:bg-amber-950/40 border-amber-500 shadow-xs'
+                        : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 opacity-70 hover:opacity-100'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="adminCreateFormat"
+                      checked={createFormatInput === 'pure_knockout'}
+                      onChange={() => setCreateFormatInput('pure_knockout')}
+                      className="mt-1 text-amber-500 focus:ring-amber-400"
+                    />
+                    <div>
+                      <strong className="text-sm text-slate-900 dark:text-white block font-oswald uppercase text-amber-500">
+                        2. Cúp Loại Trực Tiếp (Knockout Cup)
+                      </strong>
+                      <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                        Tự chọn số đội (4, 8, 16, 32). Đá loại trực tiếp chia nhánh cây (BO3, ET & PK). Thắng đi tiếp, thua dừng bước.
+                      </span>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Tournament Name & Season Inputs */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
@@ -1509,77 +1951,170 @@ const AdminPortal: React.FC = () => {
                     className="w-full px-4 py-2.5 text-sm font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
                   />
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
-                    Số Lượng Bảng Đấu:
-                  </label>
-                  <select
-                    value={numGroupsInput}
-                    onChange={(e) => setNumGroupsInput(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 text-sm font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
-                  >
-                    <option value={2}>2 Bảng (A, B)</option>
-                    <option value={4}>4 Bảng (A, B, C, D)</option>
-                    <option value={8}>8 Bảng (32 Đội)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
-                    Số Đội / HLV Mỗi Bảng:
-                  </label>
-                  <select
-                    value={teamsPerGroupInput}
-                    onChange={(e) => setTeamsPerGroupInput(Number(e.target.value))}
-                    className="w-full px-4 py-2.5 text-sm font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
-                  >
-                    <option value={3}>3 Đội/bảng</option>
-                    <option value={4}>4 Đội/bảng</option>
-                    <option value={5}>5 Đội/bảng</option>
-                    <option value={6}>6 Đội/bảng</option>
-                  </select>
-                </div>
-
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
-                    Thể Thức Vòng Bảng:
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <label className="flex items-center p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="legType"
-                        checked={legTypeInput === 'double'}
-                        onChange={() => setLegTypeInput('double')}
-                        className="mr-3 text-amber-500 focus:ring-amber-400"
-                      />
-                      <div>
-                        <strong className="block text-sm font-oswald uppercase text-slate-900 dark:text-white">
-                          Vòng tròn 2 lượt (Lượt đi & Lượt về)
-                        </strong>
-                        <span className="text-xs text-slate-500">Mỗi cặp đấu gặp nhau 2 lần</span>
-                      </div>
+              {/* GROUP KNOCKOUT SETTINGS */}
+              {createFormatInput === 'group_knockout' && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                  <div>
+                    <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
+                      Số Lượng Bảng Đấu:
                     </label>
+                    <select
+                      value={numGroupsInput}
+                      onChange={(e) => setNumGroupsInput(Number(e.target.value))}
+                      className="w-full px-4 py-2.5 text-sm font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value={2}>2 Bảng (A, B)</option>
+                      <option value={4}>4 Bảng (A, B, C, D)</option>
+                      <option value={8}>8 Bảng (32 Đội)</option>
+                    </select>
+                  </div>
 
-                    <label className="flex items-center p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="legType"
-                        checked={legTypeInput === 'single'}
-                        onChange={() => setLegTypeInput('single')}
-                        className="mr-3 text-amber-500 focus:ring-amber-400"
-                      />
-                      <div>
-                        <strong className="block text-sm font-oswald uppercase text-slate-900 dark:text-white">
-                          Vòng tròn 1 lượt
-                        </strong>
-                        <span className="text-xs text-slate-500">Mỗi cặp đấu chỉ gặp nhau 1 trận</span>
-                      </div>
+                  <div>
+                    <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
+                      Số Đội / HLV Mỗi Bảng:
                     </label>
+                    <select
+                      value={teamsPerGroupInput}
+                      onChange={(e) => setTeamsPerGroupInput(Number(e.target.value))}
+                      className="w-full px-4 py-2.5 text-sm font-bold border border-slate-300 dark:border-slate-700 rounded-xl bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
+                    >
+                      <option value={3}>3 Đội/bảng</option>
+                      <option value={4}>4 Đội/bảng</option>
+                      <option value={5}>5 Đội/bảng</option>
+                      <option value={6}>6 Đội/bảng</option>
+                    </select>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-oswald font-bold uppercase text-slate-700 dark:text-slate-300 mb-1.5">
+                      Thể Thức Vòng Bảng:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <label className="flex items-center p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="legType"
+                          checked={legTypeInput === 'double'}
+                          onChange={() => setLegTypeInput('double')}
+                          className="mr-3 text-amber-500 focus:ring-amber-400"
+                        />
+                        <div>
+                          <strong className="block text-sm font-oswald uppercase text-slate-900 dark:text-white">
+                            Vòng tròn 2 lượt (Lượt đi & Lượt về)
+                          </strong>
+                          <span className="text-xs text-slate-500">Mỗi cặp đấu gặp nhau 2 lần</span>
+                        </div>
+                      </label>
+
+                      <label className="flex items-center p-3.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="legType"
+                          checked={legTypeInput === 'single'}
+                          onChange={() => setLegTypeInput('single')}
+                          className="mr-3 text-amber-500 focus:ring-amber-400"
+                        />
+                        <div>
+                          <strong className="block text-sm font-oswald uppercase text-slate-900 dark:text-white">
+                            Vòng tròn 1 lượt
+                          </strong>
+                          <span className="text-xs text-slate-500">Mỗi cặp đấu chỉ gặp nhau 1 trận</span>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
+
+              {/* PURE KNOCKOUT SETTINGS */}
+              {createFormatInput === 'pure_knockout' && (
+                <div className="p-5 rounded-xl bg-amber-50/50 dark:bg-slate-950 border border-amber-300/60 dark:border-amber-900/40 space-y-5">
+                  <div>
+                    <label className="block text-xs font-oswald font-bold uppercase text-slate-800 dark:text-white mb-2">
+                      2. Số Lượng Đội Tham Gia (Tự Chọn):
+                    </label>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      {[
+                        { count: 4, label: 'Bán Kết ➔ CK' },
+                        { count: 8, label: 'Tứ Kết ➔ CK' },
+                        { count: 16, label: 'Vòng 1/8 ➔ CK' },
+                        { count: 32, label: 'Vòng 1/16 ➔ CK' },
+                      ].map((item) => (
+                        <button
+                          key={item.count}
+                          type="button"
+                          onClick={() => setKnockoutSizeInput(item.count)}
+                          className={`p-3 rounded-xl border text-center transition-all cursor-pointer ${
+                            knockoutSizeInput === item.count
+                              ? 'bg-amber-500 text-slate-950 font-bold border-amber-600 shadow-sm'
+                              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-amber-400'
+                          }`}
+                        >
+                          <span className="font-oswald text-lg font-black block">{item.count} ĐỘI</span>
+                          <span className="text-[10px] opacity-80 block">{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-oswald font-bold uppercase text-slate-800 dark:text-white mb-2">
+                      3. Cơ Chế Xếp Cặp Đấu:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <label
+                        className={`p-4 rounded-xl border-2 cursor-pointer flex items-start space-x-3 transition-all ${
+                          pairingModeInput === 'random'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-500 shadow-xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="adminPairingMode"
+                          checked={pairingModeInput === 'random'}
+                          onChange={() => setPairingModeInput('random')}
+                          className="mt-1 text-emerald-600 focus:ring-emerald-500"
+                        />
+                        <div>
+                          <strong className="text-sm text-slate-900 dark:text-white block font-oswald uppercase">
+                            🎲 Xếp Cặp Ngẫu Nhiên (Auto Random)
+                          </strong>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                            Hệ thống tự động xáo trộn ngẫu nhiên danh sách đã nhập và ghép cặp vào cây sơ đồ knockout ngay lập tức.
+                          </span>
+                        </div>
+                      </label>
+
+                      <label
+                        className={`p-4 rounded-xl border-2 cursor-pointer flex items-start space-x-3 transition-all ${
+                          pairingModeInput === 'draw'
+                            ? 'bg-amber-100/60 dark:bg-amber-950/40 border-amber-500 shadow-xs'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="adminPairingMode"
+                          checked={pairingModeInput === 'draw'}
+                          onChange={() => setPairingModeInput('draw')}
+                          className="mt-1 text-amber-600 focus:ring-amber-500"
+                        />
+                        <div>
+                          <strong className="text-sm text-slate-900 dark:text-white block font-oswald uppercase text-amber-500">
+                            🏆 Bốc Thăm Trực Tiếp (Live 3D Draw)
+                          </strong>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 block mt-0.5">
+                            Chuyển toàn bộ danh sách HLV sang sân khấu Bốc thăm 3D để live stream / bốc từng quả bóng vào Trận 1, 2...
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end">
                 <button
@@ -1602,10 +2137,16 @@ const AdminPortal: React.FC = () => {
               <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex items-center justify-between">
                 <div>
                   <h2 className="font-oswald text-xl sm:text-2xl font-black uppercase text-slate-900 dark:text-white">
-                    BƯỚC 2: NHẬP TÊN THÀNH VIÊN TỪNG BẢNG
+                    {createFormatInput === 'pure_knockout'
+                      ? `BƯỚC 2: DANH SÁCH ${knockoutTeamsInput.length} HLV THAM GIA CÚP KNOCKOUT`
+                      : 'BƯỚC 2: NHẬP TÊN THÀNH VIÊN TỪNG BẢNG'}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Điền tên HLV và câu lạc bộ cho từng bảng đấu.
+                    {createFormatInput === 'pure_knockout'
+                      ? pairingModeInput === 'random'
+                        ? 'Điền danh sách tên HLV. Bấm hoàn tất để hệ thống tự động bốc nhánh ngẫu nhiên.'
+                        : 'Điền danh sách tên HLV để sẵn sàng đưa lên sân khấu Bốc Thăm 3D.'
+                      : 'Điền tên HLV cho từng bảng đấu.'}
                   </p>
                 </div>
                 <button
@@ -1617,46 +2158,83 @@ const AdminPortal: React.FC = () => {
                 </button>
               </div>
 
-              <div className="space-y-6">
-                {groupTeamsInput.map((teamsInGroup, gIdx) => {
-                  const groupLetter = String.fromCharCode(65 + gIdx);
-                  return (
-                    <div
-                      key={gIdx}
-                      className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3"
-                    >
-                      <span className={`font-oswald font-bold text-base uppercase block border-b border-slate-200 dark:border-slate-800 pb-1 ${
-                        isDthen ? 'text-blue-500' : 'text-amber-500'
-                      }`}>
-                        BẢNG {groupLetter} ({teamsInGroup.length} Đội)
-                      </span>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        {teamsInGroup.map((team, tIdx) => (
-                          <div
-                            key={tIdx}
-                            className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2"
-                          >
-                            <input
-                              type="text"
-                              value={team.name}
-                              onChange={(e) => handleTeamNameChange(gIdx, tIdx, 'name', e.target.value)}
-                              placeholder={`Tên HLV ${tIdx + 1}`}
-                              className="w-full px-3 py-1.5 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
-                            />
-                            <input
-                              type="text"
-                              value={team.club}
-                              onChange={(e) => handleTeamNameChange(gIdx, tIdx, 'club', e.target.value)}
-                              placeholder="Câu lạc bộ"
-                              className="w-full px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 focus:border-amber-500 focus:outline-none"
-                            />
-                          </div>
-                        ))}
+              {/* Group Format Form */}
+              {createFormatInput === 'group_knockout' && (
+                <div className="space-y-6">
+                  {groupTeamsInput.map((teamsInGroup, gIdx) => {
+                    const groupLetter = String.fromCharCode(65 + gIdx);
+                    return (
+                      <div
+                        key={gIdx}
+                        className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3"
+                      >
+                        <span className={`font-oswald font-bold text-base uppercase block border-b border-slate-200 dark:border-slate-800 pb-1 ${
+                          isDthen ? 'text-blue-500' : 'text-amber-500'
+                        }`}>
+                          BẢNG {groupLetter} ({teamsInGroup.length} Đội)
+                        </span>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {teamsInGroup.map((team, tIdx) => (
+                            <div
+                              key={tIdx}
+                              className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2"
+                            >
+                              <input
+                                type="text"
+                                value={team.name}
+                                onChange={(e) => handleTeamNameChange(gIdx, tIdx, 'name', e.target.value)}
+                                placeholder={`Tên HLV ${tIdx + 1}`}
+                                className="w-full px-3 py-1.5 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-950 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
+                              />
+                              <input
+                                type="text"
+                                value={team.club}
+                                onChange={(e) => handleTeamNameChange(gIdx, tIdx, 'club', e.target.value)}
+                                placeholder="Câu lạc bộ (tùy chọn)"
+                                className="w-full px-3 py-1.5 text-xs border border-slate-200 dark:border-slate-800 rounded-lg bg-white dark:bg-slate-950 text-slate-600 dark:text-slate-400 focus:border-amber-500 focus:outline-none"
+                              />
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Pure Knockout Format Form */}
+              {createFormatInput === 'pure_knockout' && (
+                <div className="space-y-4">
+                  <div className="p-3.5 bg-amber-50 dark:bg-amber-950/30 rounded-xl border border-amber-300/60 dark:border-amber-800/60 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span className="font-bold text-amber-900 dark:text-amber-300">
+                      🏆 Quy mô: {knockoutTeamsInput.length} Huấn Luyện Viên • Cơ chế: {pairingModeInput === 'random' ? 'Xếp Cặp Ngẫu Nhiên 🎲' : 'Bốc Thăm 3D Trực Tiếp 🏆'}
+                    </span>
+                    <span className="text-slate-500 dark:text-slate-400 font-medium">
+                      {knockoutTeamsInput.length === 4 ? '2 Trận Bán Kết' : knockoutTeamsInput.length === 8 ? '4 Trận Tứ Kết' : knockoutTeamsInput.length === 16 ? '8 Trận Vòng 1/8' : '16 Trận Vòng 1/16'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {knockoutTeamsInput.map((team, tIdx) => (
+                      <div
+                        key={tIdx}
+                        className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center space-x-2.5 hover:border-amber-400 transition-all shadow-2xs"
+                      >
+                        <span className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 font-oswald text-xs font-black flex items-center justify-center flex-shrink-0 border border-amber-500/30">
+                          #{tIdx + 1}
+                        </span>
+                        <input
+                          type="text"
+                          value={team.name}
+                          onChange={(e) => handleKnockoutTeamNameChange(tIdx, 'name', e.target.value)}
+                          placeholder={`Tên Huấn Luyện Viên ${tIdx + 1}`}
+                          className="w-full px-2.5 py-1.5 text-xs font-bold border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:border-amber-500 focus:outline-none"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
                 <button
@@ -1669,13 +2247,30 @@ const AdminPortal: React.FC = () => {
                 <button
                   type="button"
                   onClick={handleFinishCreateTournament}
-                  className={`px-6 py-2.5 rounded-xl font-oswald text-sm font-bold uppercase tracking-wider cursor-pointer shadow-md ${
+                  className={`px-6 py-2.5 rounded-xl font-oswald text-sm font-bold uppercase tracking-wider cursor-pointer shadow-md flex items-center space-x-2 ${
                     isDthen
                       ? 'bg-blue-600 hover:bg-blue-500 text-white shadow-blue-500/25'
                       : 'bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-amber-500/25'
                   }`}
                 >
-                  HOÀN TẤT & TẠO GIẢI NGAY
+                  {createFormatInput === 'pure_knockout' ? (
+                    pairingModeInput === 'draw' ? (
+                      <>
+                        <i className="fa-solid fa-trophy"></i>
+                        <span>CHUYỂN SANG SÂN KHẤU BỐC THĂM 3D →</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-dice"></i>
+                        <span>HOÀN TẤT & XẾP CẶP NGẪU NHIÊN</span>
+                      </>
+                    )
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-check"></i>
+                      <span>HOÀN TẤT & TẠO GIẢI NGAY</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

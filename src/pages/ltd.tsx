@@ -10,8 +10,8 @@ import {
   calculateGroupStandings,
   loadTournamentData,
   loadArchiveTournaments,
-  createDefaultTournament,
   fetchAndSyncSaoVangTournament,
+  isValidTournament,
 } from '../utils/tournamentEngine';
 import {
   subscribeTournamentFromFirestore,
@@ -19,26 +19,30 @@ import {
 } from '../services/tournamentService';
 
 const Ltd: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [archiveList, setArchiveList] = useState<TournamentData[]>(() => loadArchiveTournaments());
+
   const [tournament, setTournament] = useState<TournamentData | null>(() => {
+    const tourIdParam = new URLSearchParams(window.location.search).get('tourId');
+    const archive = loadArchiveTournaments();
+    if (tourIdParam) {
+      const match = archive.find((t) => t.id === tourIdParam);
+      if (match) return match;
+    }
     // 1. Check direct active data
     const active = loadTournamentData();
-    if (active && active.isVisible) {
+    if (active && isValidTournament(active) && active.isVisible !== false) {
       return active;
     }
     // 2. Check archive for visible tournament
-    const archive = loadArchiveTournaments();
-    const visibleInArchive = archive.find((t) => t.isVisible);
+    const visibleInArchive = archive.find((t) => isValidTournament(t) && t.isVisible !== false);
     if (visibleInArchive) {
       return visibleInArchive;
     }
-    // If first time visit and archive is empty, load default Mùa 2
-    if (archive.length === 0 && !active) {
-      return createDefaultTournament();
-    }
+    // If archive is empty and active is null, return null
     return null;
   });
 
-  const [searchParams, setSearchParams] = useSearchParams();
   const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT' | 'STATS'>(() => {
     const tabParam = searchParams.get('tab') || searchParams.get('stage');
     if (tabParam) {
@@ -47,12 +51,15 @@ const Ltd: React.FC = () => {
       if (upper === 'KNOCKOUT') return 'KNOCKOUT';
       if (upper === 'GROUP') return 'GROUP';
     }
+    if (tournament?.format === 'pure_knockout') return 'KNOCKOUT';
     return tournament?.knockoutStage?.isCompletedGroupStage ? 'KNOCKOUT' : 'GROUP';
   });
 
   const handleStageChange = (stage: 'GROUP' | 'KNOCKOUT' | 'STATS') => {
     setViewStage(stage);
-    setSearchParams({ tab: stage.toLowerCase() });
+    const params: { [k: string]: string } = { tab: stage.toLowerCase() };
+    if (tournament?.id) params.tourId = tournament.id;
+    setSearchParams(params);
   };
 
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
@@ -61,9 +68,20 @@ const Ltd: React.FC = () => {
   useEffect(() => {
     // Initial fetch from cloud
     fetchAndSyncSaoVangTournament().then((cloud) => {
-      if (cloud && cloud.isVisible) {
+      const currentArchive = loadArchiveTournaments();
+      setArchiveList(currentArchive);
+      const tourIdParam = searchParams.get('tourId');
+      if (tourIdParam) {
+        const match = currentArchive.find((t) => t.id === tourIdParam);
+        if (match) {
+          setTournament(match);
+          if (match.format === 'pure_knockout') setViewStage('KNOCKOUT');
+          return;
+        }
+      }
+      if (cloud && isValidTournament(cloud) && cloud.isVisible !== false) {
         setTournament(cloud);
-        if (cloud.knockoutStage?.isCompletedGroupStage) {
+        if (cloud.format === 'pure_knockout' || cloud.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
       }
@@ -73,9 +91,16 @@ const Ltd: React.FC = () => {
     const unsubscribe = subscribeTournamentFromFirestore<TournamentData>(
       CLOUD_KEYS.SAO_VANG,
       (cloudData) => {
-        if (cloudData && cloudData.isVisible) {
+        const currentArchive = loadArchiveTournaments();
+        setArchiveList(currentArchive);
+        const tourIdParam = searchParams.get('tourId');
+        if (tourIdParam) {
+          const match = currentArchive.find((t) => t.id === tourIdParam);
+          if (match) return;
+        }
+        if (cloudData && isValidTournament(cloudData) && cloudData.isVisible !== false) {
           setTournament(cloudData);
-          if (cloudData.knockoutStage?.isCompletedGroupStage) {
+          if (cloudData.format === 'pure_knockout' || cloudData.knockoutStage?.isCompletedGroupStage) {
             setViewStage('KNOCKOUT');
           }
         }
@@ -83,17 +108,26 @@ const Ltd: React.FC = () => {
     );
 
     const handleStorage = () => {
+      const currentArchive = loadArchiveTournaments();
+      setArchiveList(currentArchive);
+      const tourIdParam = searchParams.get('tourId');
+      if (tourIdParam) {
+        const match = currentArchive.find((t) => t.id === tourIdParam);
+        if (match) {
+          setTournament(match);
+          return;
+        }
+      }
       const active = loadTournamentData();
-      if (active && active.isVisible) {
+      if (active && isValidTournament(active) && active.isVisible !== false) {
         setTournament(active);
-        if (active.knockoutStage?.isCompletedGroupStage) {
+        if (active.format === 'pure_knockout' || active.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
       } else {
-        const archive = loadArchiveTournaments();
-        const vis = archive.find((t) => t.isVisible);
+        const vis = currentArchive.find((t) => isValidTournament(t) && t.isVisible !== false);
         setTournament(vis || null);
-        if (vis?.knockoutStage?.isCompletedGroupStage) {
+        if (vis?.format === 'pure_knockout' || vis?.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
       }
@@ -103,7 +137,7 @@ const Ltd: React.FC = () => {
       unsubscribe();
       window.removeEventListener('storage', handleStorage);
     };
-  }, []);
+  }, [searchParams]);
 
   // If no tournament is currently published / active
   if (!tournament || !tournament.isVisible) {
@@ -160,7 +194,9 @@ const Ltd: React.FC = () => {
     );
   }
 
-  const activeGroup = tournament.groups[activeGroupIndex] || tournament.groups[0];
+  const activeGroup = (tournament.groups && tournament.groups.length > 0)
+    ? (tournament.groups[activeGroupIndex] || tournament.groups[0])
+    : null;
   const standings = activeGroup ? calculateGroupStandings(activeGroup) : [];
 
   const teamMap = activeGroup
@@ -180,6 +216,10 @@ const Ltd: React.FC = () => {
       : activeGroup.matches.filter((m) => m.round === activeRoundFilter)
     : [];
 
+  const publishedTournaments = archiveList.filter((t) => t.isVisible !== false);
+
+  const koStage = tournament.knockoutStage;
+
   return (
     <>
       <Banner
@@ -190,6 +230,43 @@ const Ltd: React.FC = () => {
 
       <Body>
         <div className="max-w-5xl mx-auto space-y-8">
+          {/* Season / Tournament Switcher Bar */}
+          {publishedTournaments.length > 1 && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center space-x-2">
+                <i className="fa-solid fa-trophy text-amber-500 text-sm"></i>
+                <span className="font-oswald text-xs font-bold uppercase tracking-wider text-slate-700">
+                  CÁC GIẢI ĐẤU ĐANG DIỄN RA:
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {publishedTournaments.map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTournament(t);
+                      setSearchParams({
+                        tourId: t.id,
+                        tab: t.format === 'pure_knockout' ? 'knockout' : 'group',
+                      });
+                      if (t.format === 'pure_knockout') {
+                        setViewStage('KNOCKOUT');
+                      }
+                    }}
+                    className={`px-3.5 py-1.5 rounded-xl font-oswald text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      tournament.id === t.id
+                        ? 'bg-emerald-700 text-white shadow-sm font-black'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                    }`}
+                  >
+                    {t.season || t.tournamentName}
+                    {t.format === 'pure_knockout' ? ' (Cúp Knockout 🏆)' : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Header Info */}
           <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
             <div>
@@ -199,6 +276,8 @@ const Ltd: React.FC = () => {
               <h2 className="font-oswald text-xl sm:text-2xl font-bold uppercase text-slate-900">
                 {viewStage === 'STATS'
                   ? 'SỐ LIỆU THỐNG KÊ TOÀN DIỆN GIẢI ĐẤU'
+                  : tournament.format === 'pure_knockout'
+                  ? `CÚP LOẠI TRỰC TIẾP (${tournament.totalTeams || (tournament.knockoutStage ? tournament.knockoutStage.rounds[0]?.matches.length * 2 : 16)} HLV) - KNOCKOUT CUP`
                   : tournament.knockoutStage?.isCompletedGroupStage && viewStage === 'KNOCKOUT'
                   ? 'VÒNG LOẠI TRỰC TIẾP (KNOCKOUT STAGE)'
                   : `${tournament.numGroups} BẢNG ĐẤU (${tournament.teamsPerGroup} ĐỘI/BẢNG) - ${tournament.legType === 'double' ? 'VÒNG TRÒN 2 LƯỢT' : 'VÒNG TRÒN 1 LƯỢT'}`}
@@ -207,18 +286,20 @@ const Ltd: React.FC = () => {
             
             {/* Stage Switcher: Vòng Bảng / Vòng Knockout / Thống Kê */}
             <div className="flex items-center space-x-1.5 p-1 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-              <button
-                type="button"
-                onClick={() => handleStageChange('GROUP')}
-                className={`px-3.5 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center cursor-pointer ${
-                  viewStage === 'GROUP'
-                    ? 'bg-emerald-700 text-white shadow-sm'
-                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
-                }`}
-              >
-                <i className="fa-solid fa-list-ol mr-1.5"></i>
-                Vòng Bảng
-              </button>
+              {tournament.format !== 'pure_knockout' && (
+                <button
+                  type="button"
+                  onClick={() => handleStageChange('GROUP')}
+                  className={`px-3.5 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center cursor-pointer ${
+                    viewStage === 'GROUP'
+                      ? 'bg-emerald-700 text-white shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  }`}
+                >
+                  <i className="fa-solid fa-list-ol mr-1.5"></i>
+                  Vòng Bảng
+                </button>
+              )}
 
               <button
                 type="button"
@@ -230,7 +311,7 @@ const Ltd: React.FC = () => {
                 }`}
               >
                 <i className="fa-solid fa-trophy mr-1.5 text-amber-500"></i>
-                Vòng Knockout
+                {tournament.format === 'pure_knockout' ? 'Cây Nhánh Knockout' : 'Vòng Knockout'}
               </button>
 
               <button
@@ -250,7 +331,7 @@ const Ltd: React.FC = () => {
 
           {/* ================= STAGE 1: KNOCKOUT BRACKET VIEW ================= */}
           {viewStage === 'KNOCKOUT' && (
-            tournament.knockoutStage?.isCompletedGroupStage ? (
+            (koStage && (tournament.format === 'pure_knockout' ? ((koStage.rounds?.length || 0) > 0) : koStage.isCompletedGroupStage)) ? (
             <div className="space-y-8">
               {/* Bracket Tree */}
               <div className="p-6 sm:p-8 rounded-2xl portal-card space-y-6">
@@ -307,7 +388,7 @@ const Ltd: React.FC = () => {
                         </span>
                       </div>
                       
-                      {tournament.knockoutStage.rounds[0]?.matches.slice(0, 2).map((m) => (
+                      {koStage.rounds[0]?.matches.slice(0, 2).map((m) => (
                         <div key={m.id} className="p-3 rounded-xl bg-white border border-sky-200 shadow-sm space-y-1.5 hover:border-sky-400 transition-all">
                           <div className="flex items-center justify-between text-[10px] font-oswald text-sky-700 border-b border-sky-100 pb-1">
                             <span className="font-bold">TRẬN #{m.matchOrder}</span>
@@ -334,7 +415,7 @@ const Ltd: React.FC = () => {
                           BÁN KẾT 1
                         </span>
                       </div>
-                      {tournament.knockoutStage.rounds[1]?.matches.slice(0, 1).map((m) => (
+                      {koStage.rounds[1]?.matches.slice(0, 1).map((m) => (
                         <div key={m.id} className="p-3.5 rounded-xl bg-white border-2 border-teal-200 shadow-md space-y-1.5 hover:border-teal-400 transition-all">
                           <div className="flex items-center justify-between text-[10px] font-oswald text-teal-800 border-b border-teal-100 pb-1">
                             <span className="font-bold">BÁN KẾT 1</span>
@@ -367,7 +448,7 @@ const Ltd: React.FC = () => {
                       </div>
 
                       {/* Final Match Card with Golden Aura */}
-                      {tournament.knockoutStage.rounds[2]?.matches.map((m) => (
+                      {koStage.rounds[2]?.matches.map((m) => (
                         <div key={m.id} className="w-full p-4 rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50/70 border-2 border-amber-400 shadow-xl neon-ring-pulse card-hover-fx space-y-2.5">
                           <div className="flex items-center justify-between text-[11px] font-oswald text-amber-900 border-b border-amber-200 pb-1">
                             <span className="font-black flex items-center space-x-1">
@@ -403,7 +484,7 @@ const Ltd: React.FC = () => {
                           BÁN KẾT 2
                         </span>
                       </div>
-                      {tournament.knockoutStage.rounds[1]?.matches.slice(1, 2).map((m) => (
+                      {koStage.rounds[1]?.matches.slice(1, 2).map((m) => (
                         <div key={m.id} className="p-3.5 rounded-xl bg-white border-2 border-emerald-200 shadow-md space-y-1.5 hover:border-emerald-400 transition-all">
                           <div className="flex items-center justify-between text-[10px] font-oswald text-emerald-800 border-b border-emerald-100 pb-1">
                             <span className="font-bold">BÁN KẾT 2</span>
@@ -428,7 +509,7 @@ const Ltd: React.FC = () => {
                           TỨ KẾT 3 & 4
                         </span>
                       </div>
-                      {tournament.knockoutStage.rounds[0]?.matches.slice(2, 4).map((m) => (
+                      {koStage.rounds[0]?.matches.slice(2, 4).map((m) => (
                         <div key={m.id} className="p-3 rounded-xl bg-white border border-rose-200 shadow-sm space-y-1.5 hover:border-rose-400 transition-all">
                           <div className="flex items-center justify-between text-[10px] font-oswald text-rose-700 border-b border-rose-100 pb-1">
                             <span className="font-bold">TRẬN #{m.matchOrder}</span>
@@ -490,6 +571,20 @@ const Ltd: React.FC = () => {
 
           {/* ================= STAGE 3: GROUP STAGE VIEW ================= */}
           {viewStage === 'GROUP' && (
+            !activeGroup ? (
+              <div className="p-8 sm:p-12 text-center portal-card bg-white rounded-2xl border border-slate-200 space-y-3">
+                <p className="font-oswald text-slate-600 uppercase font-bold text-sm">
+                  Giải đấu này theo thể thức Cúp Loại Trực Tiếp (Không có Vòng bảng)
+                </p>
+                <button
+                  type="button"
+                  onClick={() => handleStageChange('KNOCKOUT')}
+                  className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-oswald text-xs font-bold uppercase cursor-pointer"
+                >
+                  Xem Sơ Đồ Cúp Knockout →
+                </button>
+              </div>
+            ) : (
             <>
               {/* Group Navigation Tabs */}
               <div className="flex flex-wrap items-center gap-2 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200/80 dark:border-slate-700/60 w-fit">
@@ -556,7 +651,7 @@ const Ltd: React.FC = () => {
                     onClick={() => setActiveRoundFilter(rnd)}
                     className={`px-2.5 py-1 text-xs font-oswald font-bold rounded ${
                       activeRoundFilter === rnd
-                        ? 'bg-emerald-700 text-white'
+                        ? 'bg-emerald-700 text-white font-black'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
@@ -581,7 +676,7 @@ const Ltd: React.FC = () => {
                       <span
                         className={
                           match.played
-                            ? "text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded"
+                            ? "text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded"
                             : "text-slate-400 bg-slate-100 px-2 py-0.5 rounded"
                         }
                       >
@@ -620,6 +715,7 @@ const Ltd: React.FC = () => {
             </div>
           </div>
         </>
+        )
       )}
 
       </div>

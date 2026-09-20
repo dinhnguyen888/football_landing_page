@@ -80,10 +80,10 @@ const HomeHub: React.FC = () => {
       organizer: "Ban Tổ Chức Sao Vàng",
       theme: "emerald",
       squadCap: "Quỹ Lương 305/305",
-      mode: "1v1 Loại Trực Tiếp (Knockout)",
+      mode: "Vòng Bảng & Cúp Loại Trực Tiếp (Knockout)",
       prize: "Cúp Vàng Danh Giá + Tiền Thưởng BTC",
       playersCount: "32 Huấn Luyện Viên",
-      highlights: ["⚽ Thể thức 1v1 đỉnh cao", "🏆 Cúp vàng khắc tên HLV", "⚡ Cập nhật kết quả tức thì"],
+      highlights: ["⚽ Thể thức Vòng Bảng & Cúp Knockout", "🏆 Cúp vàng khắc tên HLV", "⚡ Cập nhật kết quả tức thì"],
     },
     {
       id: "dthen",
@@ -102,10 +102,10 @@ const HomeHub: React.FC = () => {
       organizer: "Admin ĐThén & Tổ Trọng Tài Phan Long",
       theme: "blue",
       squadCap: "Quỹ Lương 305 Chuẩn",
-      mode: "32 Đội • 8 Bảng Đấu",
+      mode: "Vòng Bảng & Cúp Loại Trực Tiếp (Knockout)",
       prize: "Cúp Lưu Niệm + Tiền Thưởng Nóng",
       playersCount: "32 Huấn Luyện Viên",
-      highlights: ["⚡ Quy mô 32 đội bóng tranh tài", "🔥 8 bảng đấu tranh vé Vòng 1/8", "🛡️ Giám sát đội hình nghiêm ngặt"],
+      highlights: ["⚡ Quy mô linh hoạt từ 8 đến 32 đội", "🔥 Bốc thăm 3D hoặc ghép cặp ngẫu nhiên", "🛡️ Giám sát đội hình nghiêm ngặt"],
     },
   ];
 

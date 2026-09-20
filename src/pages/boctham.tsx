@@ -15,12 +15,12 @@ import {
   Team,
   generateRoundRobinMatches,
   buildFIFABracketFromGroups,
-  saveTournamentData,
-  saveDthenTournamentData,
+  generatePureKnockoutBracket,
+  saveTournamentBoth,
   loadArchiveTournaments,
-  saveArchiveTournaments,
   loadArchiveDthenTournaments,
-  saveArchiveDthenTournaments,
+  loadTournamentData,
+  loadDthenTournamentData,
 } from '../utils/tournamentEngine';
 import {
   OnlineRoomModal,
@@ -121,6 +121,26 @@ export default function BocthamPage() {
   const [searchParams] = useSearchParams();
   const isDebugMode = searchParams.get('debugDraw') === '1';
 
+  // Admin Authorization Gate (Chỉ dành cho Ban Tổ Chức & Quản Trị Viên)
+  const [isAdminAuthenticated, setIsAdminAuthenticated] = useState<boolean>(() => {
+    return sessionStorage.getItem('admin_portal_authenticated_session') === 'true';
+  });
+  const [adminPinInput, setAdminPinInput] = useState<string>('');
+  const [showAdminPin, setShowAdminPin] = useState<boolean>(false);
+  const [pinError, setPinError] = useState<string>('');
+
+  const handleVerifyAdminPin = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (adminPinInput.trim() === '020604') {
+      sessionStorage.setItem('admin_portal_authenticated_session', 'true');
+      setIsAdminAuthenticated(true);
+      setPinError('');
+      drawAudio.startAuditoriumTone();
+    } else {
+      setPinError('Mã PIN bảo mật Quản trị viên không chính xác. Vui lòng thử lại!');
+    }
+  };
+
   // Tournament Info & Configuration
   const [tournamentTitle, setTournamentTitle] = useState('SAO VÀNG CUP ™ - MÙA 3');
   const [subTitle, setSubTitle] = useState('OFFICIAL LIVE DRAW CEREMONY');
@@ -205,6 +225,7 @@ export default function BocthamPage() {
     total: number;
     timeStr: string;
   } | null>(null);
+  const [pendingDraftPrompt, setPendingDraftPrompt] = useState<DrawDraftState | null>(null);
 
   // Gửi trực tiếp tiến trình bốc thăm lên Cloud Firestore (không lưu local nữa)
   const saveDraftToCloud = (
@@ -293,7 +314,9 @@ export default function BocthamPage() {
     setMc1Name(cfg.mcName);
     setActiveMcName(cfg.mcName);
     setShowRoomModal(false);
-    setShowSelectModal(true);
+    if (!selectedConfigRef.current) {
+      setShowSelectModal(true);
+    }
     sceneHandleRef.current?.setDualMode(false, cfg.mcName);
   };
 
@@ -305,7 +328,9 @@ export default function BocthamPage() {
     setActiveMcName(cfg.mcName);
     setPendingCreateRoom(cfg);
     setShowRoomModal(false);
-    setShowSelectModal(true);
+    if (!selectedConfigRef.current) {
+      setShowSelectModal(true);
+    }
   };
 
   // Handle Join Room Selected (Guest)
@@ -478,43 +503,66 @@ export default function BocthamPage() {
     });
 
     const nowIso = new Date().toISOString();
+    const isPureKnockout = config.format === 'pure_knockout' || config.teamsPerGroup === 2;
 
-    const updatedTour: TournamentData = config.selectedTournamentData
-      ? {
-          ...config.selectedTournamentData,
-          groups: engineGroups,
-          knockoutStage: buildFIFABracketFromGroups(engineGroups),
-        }
-      : {
-          id: `tour_${config.system.toLowerCase()}_${Date.now()}`,
-          tournamentName: config.system === 'SAO_VANG' ? 'SAO VÀNG CUP ™' : 'ĐTHÉN FCO ™',
-          season: config.season,
-          numGroups: config.numGroups,
-          teamsPerGroup: config.teamsPerGroup,
-          legType: config.system === 'DTHEN' ? 'single' : 'double',
-          groups: engineGroups,
-          knockoutStage: buildFIFABracketFromGroups(engineGroups),
-          createdAt: nowIso,
-          isVisible: true,
-        };
+    let updatedTour: TournamentData;
+    if (isPureKnockout) {
+      const allDrawnTeams: Team[] = [];
+      groups.forEach((g) => {
+        g.slots.forEach((s) => {
+          if (s.team) {
+            allDrawnTeams.push({
+              id: s.team.id,
+              name: s.team.name,
+              club: s.team.club || '',
+            });
+          }
+        });
+      });
 
-    if (config.system === 'SAO_VANG') {
-      saveTournamentData(updatedTour);
-      const archives = loadArchiveTournaments();
-      const existingIdx = archives.findIndex((t) => t.id === updatedTour.id);
-      if (existingIdx >= 0) {
-        archives[existingIdx] = updatedTour;
-        saveArchiveTournaments(archives);
-      }
+      const knockoutStage = generatePureKnockoutBracket(allDrawnTeams, false);
+
+      const resolvedTitle = config.selectedTournamentData?.tournamentName || tournamentTitle || (config.system === 'SAO_VANG' ? 'SAO VÀNG CUP ™' : 'ĐTHÉN FCO ™');
+
+      updatedTour = {
+        id: config.selectedTournamentData?.id || `tour_ko_${config.system.toLowerCase()}_${Date.now()}`,
+        tournamentName: resolvedTitle,
+        season: config.season,
+        numGroups: 0,
+        teamsPerGroup: 2,
+        legType: 'single',
+        groups: [],
+        format: 'pure_knockout',
+        pairingMode: 'draw',
+        totalTeams: allDrawnTeams.length,
+        knockoutStage,
+        createdAt: nowIso,
+        isVisible: true,
+      };
     } else {
-      saveDthenTournamentData(updatedTour);
-      const archives = loadArchiveDthenTournaments();
-      const existingIdx = archives.findIndex((t) => t.id === updatedTour.id);
-      if (existingIdx >= 0) {
-        archives[existingIdx] = updatedTour;
-        saveArchiveDthenTournaments(archives);
-      }
+      const resolvedTitle = config.selectedTournamentData?.tournamentName || tournamentTitle || (config.system === 'SAO_VANG' ? 'SAO VÀNG CUP ™' : 'ĐTHÉN FCO ™');
+      updatedTour = config.selectedTournamentData
+        ? {
+            ...config.selectedTournamentData,
+            groups: engineGroups,
+            knockoutStage: buildFIFABracketFromGroups(engineGroups),
+          }
+        : {
+            id: `tour_${config.system.toLowerCase()}_${Date.now()}`,
+            tournamentName: resolvedTitle,
+            season: config.season,
+            numGroups: config.numGroups,
+            teamsPerGroup: config.teamsPerGroup,
+            legType: config.system === 'DTHEN' ? 'single' : 'double',
+            groups: engineGroups,
+            knockoutStage: buildFIFABracketFromGroups(engineGroups),
+            createdAt: nowIso,
+            isVisible: true,
+          };
     }
+
+    // Lưu đồng bộ cả Active, Archive và Cloud Firestore
+    saveTournamentBoth(updatedTour, config.system);
 
     setIsSavedToCloud(true);
     if (isFinalCompleted) {
@@ -522,12 +570,228 @@ export default function BocthamPage() {
     }
   };
 
+  // Áp dụng bản nháp bốc thăm dở dang khi người dùng chủ động chọn
+  const applyDraft = (draft: DrawDraftState) => {
+    const cleanGroups = draft.groups.map((g) => ({
+      ...g,
+      slots: g.slots.map((s) => ({ ...s, isJustSlotted: false })),
+    }));
+
+    setTournamentTitle(draft.tournamentTitle);
+    setSubTitle(draft.subTitle);
+    setNumGroups(draft.numGroups);
+    setTeamsPerGroup(draft.teamsPerGroup);
+    setIsSeeded(draft.isSeeded);
+    setTeams(draft.teams);
+    setRemainingTeams(draft.remainingTeams);
+    setGroups(cleanGroups);
+    setCurrentPot(draft.currentPot || 1);
+    setSelectedConfig(draft.selectedConfig);
+    setMc1Name(draft.mc1Name || 'MC Phan Long');
+    setMc2Name(draft.mc2Name || 'MC Minh Quân');
+    setActiveMcName(draft.mc1Name || 'MC Phan Long');
+    setRoomMode(draft.roomMode || 'SOLO');
+    setShowRoomModal(false);
+    setShowSelectModal(false);
+
+    const drawn = draft.teams.length - draft.remainingTeams.length;
+    setRestoredDraftBanner({
+      drawn,
+      total: draft.teams.length,
+      timeStr: new Date(draft.savedAt).toLocaleTimeString('vi-VN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
+    });
+  };
+
+  // Áp dụng trực tiếp giải đấu vào sân khấu 3D mà không hỏi lại
+  const applyTournamentToDraw = (
+    tTitle: string,
+    sTitle: string,
+    season: string,
+    sys: 'SAO_VANG' | 'DTHEN',
+    drawTeams: DrawTeam[],
+    format: 'group_knockout' | 'pure_knockout',
+    nGroups: number,
+    tPerGroup: number,
+    tourData: TournamentData | null
+  ) => {
+    const isPureKnockout = format === 'pure_knockout';
+    const gCount = isPureKnockout ? Math.max(1, Math.floor(drawTeams.length / 2)) : (nGroups || 4);
+    const tCount = isPureKnockout ? 2 : (tPerGroup || 4);
+
+    setTournamentTitle(tTitle);
+    setSubTitle(sTitle);
+    setNumGroups(gCount);
+    setTeamsPerGroup(tCount);
+    setIsSeeded(false);
+    setTeams(drawTeams);
+    setRemainingTeams([...drawTeams]);
+    setCurrentPot(1);
+    setDrawState('IDLE');
+    setPendingResult(null);
+    setTargetSlot(null);
+    setIsSavedToCloud(false);
+    setShowCompletionModal(false);
+
+    const newGroups: DrawGroup[] = [];
+    for (let i = 0; i < gCount; i++) {
+      newGroups.push({
+        id: `g-${i}`,
+        name: isPureKnockout ? `TRẬN #${i + 1}` : `BẢNG ${String.fromCharCode(65 + i)}`,
+        slots: [
+          { positionName: isPureKnockout ? `T${i + 1}-1` : `${String.fromCharCode(65 + i)}1`, team: null, isJustSlotted: false },
+          { positionName: isPureKnockout ? `T${i + 1}-2` : `${String.fromCharCode(65 + i)}2`, team: null, isJustSlotted: false },
+        ],
+        color: isPureKnockout ? 'border-amber-500/40' : 'border-cyan-500/40',
+      });
+    }
+    setGroups(newGroups);
+
+    const newConfig: SelectedTournamentConfig = {
+      system: sys,
+      tournamentTitle: tTitle,
+      subTitle: sTitle,
+      season,
+      numGroups: gCount,
+      teamsPerGroup: tCount,
+      teams: drawTeams,
+      isSeeded: false,
+      selectedTournamentData: tourData,
+      format,
+    };
+
+    setSelectedConfig(newConfig);
+    selectedConfigRef.current = newConfig;
+
+    // VÀO THẲNG SÂN KHẤU - TUYỆT ĐỐI KHÔNG BẬT MODAL HỎI LẠI
+    setShowRoomModal(false);
+    setShowSelectModal(false);
+    setPendingDraftPrompt(null);
+    setRestoredDraftBanner(null);
+    sceneHandleRef.current?.resetScene();
+  };
+
   // Khôi phục tiến trình bốc thăm trực tiếp từ Cloud Firestore khi mở trang / F5
   useEffect(() => {
     let isMounted = true;
 
+    const tourIdParam = searchParams.get('tourId');
+    const systemParam = (searchParams.get('system') as 'SAO_VANG' | 'DTHEN') || 'SAO_VANG';
+
+    // 1. Kiểm tra cấu hình bốc thăm trực tiếp (direct setup từ Admin hoặc Tạo Giải)
+    const directSetupRaw = localStorage.getItem('SAOVANG_DRAW_DIRECT_SETUP');
+    let directHandled = false;
+
+    if (directSetupRaw) {
+      try {
+        const directSetup = JSON.parse(directSetupRaw);
+        if (directSetup && Array.isArray(directSetup.teams) && directSetup.teams.length > 0) {
+          if (!tourIdParam || !directSetup.tourId || directSetup.tourId === tourIdParam) {
+            clearDraftFromCloud();
+            applyTournamentToDraw(
+              directSetup.tournamentTitle || 'SAO VÀNG CUP ™',
+              directSetup.subTitle || (directSetup.format === 'pure_knockout' ? 'LỄ BỐC THĂM CÚP LOẠI TRỰC TIẾP (KNOCKOUT)' : 'OFFICIAL LIVE DRAW CEREMONY'),
+              directSetup.season || 'MÙA 1',
+              directSetup.system || systemParam,
+              directSetup.teams,
+              directSetup.format === 'pure_knockout' ? 'pure_knockout' : 'group_knockout',
+              directSetup.numGroups,
+              directSetup.teamsPerGroup,
+              directSetup.selectedTournamentData || null
+            );
+            directHandled = true;
+          }
+        }
+      } catch (err) {
+        console.error('Error parsing SAOVANG_DRAW_DIRECT_SETUP:', err);
+      }
+    }
+
+    // 2. Nếu có tourIdParam trong URL mà chưa xử lý từ directSetup
+    if (!directHandled && tourIdParam) {
+      const archives = systemParam === 'DTHEN' ? loadArchiveDthenTournaments() : loadArchiveTournaments();
+      let foundTour: TournamentData | null = archives.find((t) => t.id === tourIdParam) || null;
+      if (!foundTour) {
+        const active = systemParam === 'DTHEN' ? loadDthenTournamentData() : loadTournamentData();
+        if (active && active.id === tourIdParam) foundTour = active;
+      }
+
+      if (foundTour) {
+        let teamsForDraw: DrawTeam[] = [];
+        const isPureKnockout = foundTour.format === 'pure_knockout';
+        if (isPureKnockout) {
+          if (foundTour.knockoutStage?.rounds?.[0]?.matches?.length) {
+            foundTour.knockoutStage.rounds[0].matches.forEach((m) => {
+              if (m.homeTeamName && !m.homeTeamName.includes('Thắng')) {
+                teamsForDraw.push({
+                  id: `team_${teamsForDraw.length + 1}`,
+                  name: m.homeTeamName,
+                  club: m.homeTeamClub || '',
+                  pot: 1,
+                });
+              }
+              if (m.awayTeamName && !m.awayTeamName.includes('Thắng')) {
+                teamsForDraw.push({
+                  id: `team_${teamsForDraw.length + 1}`,
+                  name: m.awayTeamName,
+                  club: m.awayTeamClub || '',
+                  pot: 1,
+                });
+              }
+            });
+          }
+          if (teamsForDraw.length === 0) {
+            const count = foundTour.totalTeams || 16;
+            for (let i = 1; i <= count; i++) {
+              teamsForDraw.push({
+                id: `team_${i}`,
+                name: `HLV ${i}`,
+                club: '',
+                pot: 1,
+              });
+            }
+          }
+        } else if (Array.isArray(foundTour.groups) && foundTour.groups.length > 0) {
+          foundTour.groups.forEach((g, gIdx) => {
+            g.teams.forEach((t) => {
+              teamsForDraw.push({
+                id: t.id,
+                name: t.name,
+                club: t.club || '',
+                pot: gIdx + 1,
+              });
+            });
+          });
+        }
+
+        clearDraftFromCloud();
+        applyTournamentToDraw(
+          foundTour.tournamentName,
+          isPureKnockout ? 'LỄ BỐC THĂM CÚP LOẠI TRỰC TIẾP (KNOCKOUT)' : 'OFFICIAL LIVE DRAW CEREMONY',
+          foundTour.season,
+          systemParam,
+          teamsForDraw,
+          isPureKnockout ? 'pure_knockout' : 'group_knockout',
+          isPureKnockout ? Math.max(1, Math.floor(teamsForDraw.length / 2)) : (foundTour.numGroups || 4),
+          isPureKnockout ? 2 : (foundTour.teamsPerGroup || 4),
+          foundTour
+        );
+        directHandled = true;
+      }
+    }
+
+    if (directHandled) {
+      if (sessionStorage.getItem('admin_portal_authenticated_session') === 'true') {
+        drawAudio.startAuditoriumTone();
+      }
+      return;
+    }
+
+    // 3. Nếu không có giải được chọn trước: Kiểm tra xem có bản nháp dở dang cũ không
     const restoreFromCloud = async () => {
-      let hasRestored = false;
+      let foundDraft: DrawDraftState | null = null;
       try {
         const draft = await getLiveDrawStateFromFirestore<DrawDraftState>();
         if (!isMounted) return;
@@ -541,53 +805,44 @@ export default function BocthamPage() {
           draft.remainingTeams.length < draft.teams.length &&
           draft.remainingTeams.length > 0
         ) {
-          // Chuẩn hóa slots
-          const cleanGroups = draft.groups.map((g) => ({
-            ...g,
-            slots: g.slots.map((s) => ({ ...s, isJustSlotted: false })),
-          }));
-
-          setTournamentTitle(draft.tournamentTitle);
-          setSubTitle(draft.subTitle);
-          setNumGroups(draft.numGroups);
-          setTeamsPerGroup(draft.teamsPerGroup);
-          setIsSeeded(draft.isSeeded);
-          setTeams(draft.teams);
-          setRemainingTeams(draft.remainingTeams);
-          setGroups(cleanGroups);
-          setCurrentPot(draft.currentPot || 1);
-          setSelectedConfig(draft.selectedConfig);
-          setMc1Name(draft.mc1Name || 'MC Phan Long');
-          setMc2Name(draft.mc2Name || 'MC Minh Quân');
-          setActiveMcName(draft.mc1Name || 'MC Phan Long');
-          setRoomMode(draft.roomMode || 'SOLO');
-          setShowRoomModal(false);
-          setShowSelectModal(false);
-
-          const drawn = draft.teams.length - draft.remainingTeams.length;
-          setRestoredDraftBanner({
-            drawn,
-            total: draft.teams.length,
-            timeStr: new Date(draft.savedAt).toLocaleTimeString('vi-VN', {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
-          });
-
-          hasRestored = true;
+          foundDraft = draft;
         }
       } catch (e) {
         console.warn('Failed to restore live draw from Firestore cloud:', e);
       }
 
-      if (!hasRestored && isMounted) {
-        initializeGroups(numGroups, teamsPerGroup, teams);
-        setShowRoomModal(true);
+      if (!foundDraft) {
+        try {
+          const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+          if (raw) {
+            const draft: DrawDraftState = JSON.parse(raw);
+            if (
+              draft &&
+              Array.isArray(draft.groups) &&
+              draft.groups.length > 0 &&
+              Array.isArray(draft.teams) &&
+              Array.isArray(draft.remainingTeams) &&
+              draft.remainingTeams.length < draft.teams.length &&
+              draft.remainingTeams.length > 0
+            ) {
+              foundDraft = draft;
+            }
+          }
+        } catch {}
+      }
+
+      if (foundDraft && isMounted) {
+        // Hỏi ý kiến Admin thay vì tự động ghi đè bất ngờ
+        setPendingDraftPrompt(foundDraft);
+      } else if (isMounted) {
+        setShowRoomModal(false);
       }
     };
 
     restoreFromCloud();
-    drawAudio.startAuditoriumTone();
+    if (sessionStorage.getItem('admin_portal_authenticated_session') === 'true') {
+      drawAudio.startAuditoriumTone();
+    }
 
     return () => {
       isMounted = false;
@@ -597,6 +852,7 @@ export default function BocthamPage() {
   }, []);
 
   const toggleMute = () => {
+    drawAudio.initCtx();
     const next = !isMuted;
     setIsMuted(next);
     drawAudio.setMuted(next);
@@ -763,6 +1019,7 @@ export default function BocthamPage() {
 
   // ================= TRIGGER DRAW SEQUENCE =================
   const handleStartDraw = () => {
+    drawAudio.initCtx();
     if (isRunning || remainingTeams.length === 0 || !sceneHandleRef.current) return;
 
     // In room mode, verify if it is my turn
@@ -815,6 +1072,117 @@ export default function BocthamPage() {
 
     runDrawAnimation(chosenTeam, destinationSlot, presenterIdx, presenterName);
   };
+
+  if (!isAdminAuthenticated) {
+    return (
+      <div className="min-h-screen bg-[#030712] text-white flex flex-col justify-center items-center px-4 py-12 font-sans relative overflow-hidden select-none">
+        {/* Background ambient glows */}
+        <div className="absolute top-1/4 -left-20 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-20 pointer-events-none" />
+
+        <div className="w-full max-w-lg bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10 space-y-6">
+          {/* Header */}
+          <div className="text-center space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500 text-3xl mx-auto shadow-lg shadow-amber-500/10">
+              <i className="fa-solid fa-shield-halved"></i>
+            </div>
+
+            <div className="space-y-1.5">
+              <span className="inline-flex items-center space-x-1.5 px-3 py-0.5 rounded-full text-[10px] font-oswald font-black uppercase tracking-wider bg-red-500/20 text-red-400 border border-red-500/30">
+                <i className="fa-solid fa-lock text-[9px]"></i>
+                <span>TRUY CẬP BỊ GIỚI HẠN • DÀNH RIÊNG CHO ADMIN</span>
+              </span>
+              <h1 className="font-oswald text-2xl sm:text-3xl font-black uppercase tracking-wide text-white">
+                SÂN KHẤU BỐC THĂM 3D
+              </h1>
+              <p className="text-xs text-slate-400 leading-relaxed max-w-md mx-auto">
+                Khu vực này được bảo mật và chỉ dành riêng cho <strong>Ban Tổ Chức (Admin)</strong> để trực tiếp vận hành và mở bóng các cặp đấu. Thành viên thông thường không được phép truy cập.
+              </p>
+            </div>
+          </div>
+
+          {/* Admin Unlock Form */}
+          <form onSubmit={handleVerifyAdminPin} className="space-y-4 pt-2 border-t border-slate-800/80">
+            <div>
+              <label className="block text-xs font-oswald font-bold uppercase text-slate-300 mb-1.5 tracking-wider">
+                XÁC THỰC MÃ PIN QUẢN TRỊ VIÊN (BTC):
+              </label>
+              <div className="relative">
+                <input
+                  type={showAdminPin ? 'text' : 'password'}
+                  maxLength={6}
+                  value={adminPinInput}
+                  onChange={(e) => {
+                    setAdminPinInput(e.target.value);
+                    if (pinError) setPinError('');
+                  }}
+                  placeholder="Nhập mã PIN 6 số..."
+                  autoFocus
+                  className="w-full px-4 py-3 bg-slate-950/80 border border-slate-700 rounded-xl text-center text-xl tracking-[0.4em] font-mono text-white placeholder:text-slate-600 placeholder:text-xs placeholder:tracking-normal focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAdminPin(!showAdminPin)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white text-sm cursor-pointer"
+                  tabIndex={-1}
+                >
+                  <i className={`fa-solid ${showAdminPin ? 'fa-eye-slash' : 'fa-eye'}`}></i>
+                </button>
+              </div>
+              {pinError && (
+                <p className="text-xs font-bold text-red-400 mt-1.5 text-center flex items-center justify-center space-x-1">
+                  <i className="fa-solid fa-triangle-exclamation"></i>
+                  <span>{pinError}</span>
+                </p>
+              )}
+            </div>
+
+            <button
+              type="submit"
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-oswald text-sm font-black uppercase tracking-wider shadow-lg shadow-amber-500/20 transition-all cursor-pointer flex items-center justify-center space-x-2"
+            >
+              <i className="fa-solid fa-key"></i>
+              <span>XÁC NHẬN QUYỀN ADMIN & MỞ KHÓA</span>
+            </button>
+          </form>
+
+          {/* Quick Exit Links for Regular Users */}
+          <div className="pt-4 border-t border-slate-800/80 space-y-2 text-center">
+            <p className="text-[11px] text-slate-500 uppercase font-oswald font-bold tracking-wider">
+              NẾU BẠN LÀ THÀNH VIÊN / HLV:
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2">
+              <Link
+                to="/"
+                className="px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-oswald font-bold uppercase transition-all"
+              >
+                ← Về Trang Chủ
+              </Link>
+              <Link
+                to="/thethuc"
+                className="px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-oswald font-bold uppercase transition-all"
+              >
+                Thể Thức Thi Đấu
+              </Link>
+              <Link
+                to="/ltd"
+                className="px-3.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-oswald font-bold uppercase transition-all"
+              >
+                Lịch Thi Đấu & Kết Quả
+              </Link>
+              <Link
+                to="/admin-portal"
+                className="px-3.5 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-oswald font-bold uppercase transition-all border border-amber-500/30"
+              >
+                Cổng Admin Portal →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-screen h-screen bg-[#020617] text-white flex flex-col font-sans select-none overflow-hidden relative">
@@ -981,10 +1349,10 @@ export default function BocthamPage() {
               <span className="hidden sm:inline">
                 {bgmTrack === 'champions'
                   ? 'NHẠC: CHAMPIONS LEAGUE'
+                  : bgmTrack === 'hype'
+                  ? 'NHẠC: SÂN VẬN ĐỘNG'
                   : bgmTrack === 'gala'
-                  ? 'NHẠC: GALA SYMPHONY'
-                  : bgmTrack === 'ambient'
-                  ? 'NHẠC: KHÁN PHÒNG'
+                  ? 'NHẠC: GALA ĐIỆN ẢNH'
                   : 'TẮT NHẠC NỀN'}
               </span>
               <span className="sm:hidden">NHẠC</span>
@@ -997,14 +1365,14 @@ export default function BocthamPage() {
                   className="fixed inset-0 z-40"
                   onClick={() => setShowAudioMenu(false)}
                 />
-                <div className="absolute right-0 mt-2 w-56 bg-slate-950/95 border border-slate-800 rounded-xl p-2 shadow-2xl backdrop-blur-xl z-50 text-xs space-y-1 animate-in fade-in zoom-in-95">
+                <div className="absolute right-0 mt-2 w-60 bg-slate-950/95 border border-slate-800 rounded-xl p-2 shadow-2xl backdrop-blur-xl z-50 text-xs space-y-1 animate-in fade-in zoom-in-95">
                   <div className="text-[10px] uppercase font-mono text-slate-400 px-2 py-1 font-bold border-b border-slate-800">
-                    NHẠC NỀN BUỔI LỄ BỐC THĂM
+                    CHỌN NHẠC NỀN BUỔI LỄ BỐC THĂM
                   </div>
                   {[
-                    { key: 'champions', label: '🏆 UEFA Champions League', desc: 'Hành khúc kinh điển, hào hùng' },
-                    { key: 'gala', label: '🎻 Gala Symphony', desc: 'Giao hưởng sang trọng, đẳng cấp' },
-                    { key: 'ambient', label: '🎙️ Khán Phòng Gala', desc: 'Không khí trang trọng, nhẹ nhàng' },
+                    { key: 'champions', label: '🏆 UEFA Champions League', desc: 'Hành khúc Cúp C1 kinh điển, hào hùng' },
+                    { key: 'hype', label: '🔥 Sân Vận Động Sôi Động', desc: 'Nhạc beat EDM bốc lửa, náo nhiệt' },
+                    { key: 'gala', label: '🎻 Gala Điện Ảnh Quý Tộc', desc: 'Giao hưởng điện ảnh sâu lắng, sang trọng' },
                     { key: 'none', label: '🔇 Tắt Nhạc Nền', desc: 'Chỉ nghe hiệu ứng bốc thăm' },
                   ].map((item) => (
                     <button
@@ -1061,10 +1429,90 @@ export default function BocthamPage() {
           >
             <i className="fa-solid fa-sliders"></i>
           </button>
+
+          <Link
+            to="/admin"
+            className="p-1.5 px-2.5 rounded-lg bg-slate-900/80 border border-slate-700 text-slate-300 hover:text-white text-xs transition-all flex items-center space-x-1.5"
+            title="Quay về Admin Portal"
+          >
+            <i className="fa-solid fa-arrow-left text-[10px]"></i>
+            <span className="hidden sm:inline font-oswald text-[11px] font-bold uppercase">Admin Portal</span>
+          </Link>
         </div>
       </header>
 
-      {/* ================= 2b. RESTORED DRAFT NOTIFICATION TOAST ================= */}
+      {/* ================= 2b. PENDING DRAFT CONFIRMATION MODAL ================= */}
+      {pendingDraftPrompt && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-amber-500/50 rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-4 animate-in zoom-in-95">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-xl shrink-0 border border-amber-500/30">
+                <i className="fa-solid fa-clock-rotate-left"></i>
+              </div>
+              <div>
+                <h3 className="font-oswald text-lg font-black uppercase text-amber-300">
+                  PHÁT HIỆN TIẾN TRÌNH BỐC THĂM DỞ DANG
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Hệ thống tìm thấy một buổi bốc thăm chưa hoàn thành từ trước.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Giải đấu:</span>
+                <span className="font-bold text-white font-oswald tracking-wide">{pendingDraftPrompt.tournamentTitle}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Tiến độ đã bốc:</span>
+                <span className="font-bold text-amber-400 font-mono">
+                  {pendingDraftPrompt.teams.length - pendingDraftPrompt.remainingTeams.length}/{pendingDraftPrompt.teams.length} đội
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-400">Thời gian lưu:</span>
+                <span className="text-slate-300 font-mono">
+                  {new Date(pendingDraftPrompt.savedAt).toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    day: '2-digit',
+                    month: '2-digit',
+                  })}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  applyDraft(pendingDraftPrompt);
+                  setPendingDraftPrompt(null);
+                }}
+                className="w-full py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-oswald text-xs font-black uppercase tracking-wider transition-all shadow-md cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <i className="fa-solid fa-play"></i>
+                <span>TIẾP TỤC BỐC DỞ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  clearDraftFromCloud();
+                  setPendingDraftPrompt(null);
+                  initializeGroups(numGroups, teamsPerGroup, teams);
+                }}
+                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 font-oswald text-xs font-bold uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <i className="fa-solid fa-trash-can text-red-400"></i>
+                <span>XÓA NHÁP & BỐC MỚI</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 2c. RESTORED DRAFT NOTIFICATION TOAST ================= */}
       {restoredDraftBanner && (
         <div className="absolute top-14 inset-x-4 sm:inset-x-auto sm:left-6 z-40 bg-slate-900/95 border border-amber-500/50 rounded-2xl p-3 sm:px-4 shadow-2xl backdrop-blur-xl flex items-center gap-3 animate-in slide-in-from-top-4">
           <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm font-bold shrink-0">

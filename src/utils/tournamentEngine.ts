@@ -1,6 +1,7 @@
 import {
   saveTournamentToFirestore,
   getTournamentFromFirestore,
+  clearLiveDrawStateFromFirestore,
   CLOUD_KEYS,
 } from '../services/tournamentService';
 
@@ -81,12 +82,121 @@ export interface TournamentData {
   knockoutStage?: KnockoutStage;
   createdAt: string;
   isVisible?: boolean; // Toggle display on public page
+  format?: 'group_knockout' | 'pure_knockout';
+  pairingMode?: 'random' | 'draw';
+  totalTeams?: number;
 }
 
 const STORAGE_KEY = 'great_mates_tournament_data';
 const STORAGE_KEY_DTHEN = 'dthen_fco_tournament_data';
 const ARCHIVE_KEY = 'great_mates_tournaments_archive';
 const ARCHIVE_KEY_DTHEN = 'dthen_tournaments_archive';
+
+/**
+ * Tạo cây sơ đồ Vòng Loại Trực Tiếp (Pure Knockout Bracket) linh hoạt theo số đội tự chọn (4, 8, 16, 32 đội...)
+ */
+export function generatePureKnockoutBracket(teamsInput: Team[], shuffle: boolean = false): KnockoutStage {
+  let teams = [...teamsInput];
+  if (shuffle) {
+    teams.sort(() => Math.random() - 0.5);
+  }
+
+  // Xác định kích thước cây nhị phân (4, 8, 16, 32...)
+  let bracketSize = 4;
+  while (bracketSize < teams.length && bracketSize < 64) {
+    bracketSize *= 2;
+  }
+  // Bổ sung BYE nếu số đội không đủ lũy thừa của 2
+  while (teams.length < bracketSize) {
+    teams.push({
+      id: `bye_${teams.length + 1}`,
+      name: 'BYE (Đặc cách)',
+      club: 'BYE',
+    });
+  }
+
+  const roundNamesMap: { [count: number]: string } = {
+    16: 'VÒNG 1/16',
+    8: 'VÒNG 1/8',
+    4: 'TỨ KẾT',
+    2: 'BÁN KẾT',
+    1: 'CHUNG KẾT',
+  };
+
+  const rounds: { name: string; matches: KnockoutMatch[] }[] = [];
+  let currentMatchCount = bracketSize / 2;
+  let roundIndex = 0;
+
+  while (currentMatchCount >= 1) {
+    const roundName = roundNamesMap[currentMatchCount] || `VÒNG ${currentMatchCount * 2} ĐỘI`;
+    const matches: KnockoutMatch[] = [];
+
+    for (let m = 0; m < currentMatchCount; m++) {
+      const matchOrder = m + 1;
+      const matchId = `ko_r${roundIndex}_m${matchOrder}`;
+      const nextMatchOrder = Math.floor(m / 2) + 1;
+      const nextMatchId = currentMatchCount > 1 ? `ko_r${roundIndex + 1}_m${nextMatchOrder}` : undefined;
+      const nextMatchSlot: 'home' | 'away' = m % 2 === 0 ? 'home' : 'away';
+
+      let homeName = '';
+      let homeClub: string | undefined = undefined;
+      let awayName = '';
+      let awayClub: string | undefined = undefined;
+
+      if (roundIndex === 0) {
+        const homeTeam = teams[m * 2];
+        const awayTeam = teams[m * 2 + 1];
+        homeName = homeTeam?.name || `Đội ${m * 2 + 1}`;
+        homeClub = homeTeam?.club;
+        awayName = awayTeam?.name || `Đội ${m * 2 + 2}`;
+        awayClub = awayTeam?.club;
+      } else {
+        homeName = `Thắng Trận #${m * 2 + 1} (${rounds[roundIndex - 1]?.name || ''})`;
+        awayName = `Thắng Trận #${m * 2 + 2} (${rounds[roundIndex - 1]?.name || ''})`;
+      }
+
+      matches.push({
+        id: matchId,
+        roundName,
+        matchOrder,
+        homeTeamName: homeName,
+        homeTeamClub: homeClub,
+        awayTeamName: awayName,
+        awayTeamClub: awayClub,
+        homeScore: null,
+        awayScore: null,
+        played: false,
+        nextMatchId,
+        nextMatchSlot,
+      });
+    }
+
+    rounds.push({
+      name: roundName,
+      matches,
+    });
+
+    currentMatchCount = Math.floor(currentMatchCount / 2);
+    roundIndex++;
+  }
+
+  const thirdPlaceMatch: KnockoutMatch = {
+    id: 'ko_third_place',
+    roundName: 'TRANH HẠNG BA',
+    matchOrder: 1,
+    homeTeamName: 'Thua Bán Kết 1',
+    awayTeamName: 'Thua Bán Kết 2',
+    homeScore: null,
+    awayScore: null,
+    played: false,
+  };
+
+  return {
+    isCompletedGroupStage: true,
+    rounds,
+    thirdPlaceMatch,
+  };
+}
 
 // Berger Tables / Round Robin Scheduling Algorithm
 export function generateRoundRobinMatches(teams: Team[], legType: 'single' | 'double' = 'double'): Match[] {
@@ -342,6 +452,122 @@ export function loadArchiveDthenTournaments(): TournamentData[] {
     console.error('Error loading Dthen archive tournaments', err);
   }
   return [];
+}
+
+export const CLEAN_VERSION_KEY = 'saovang_tournaments_cleaned_stamp_v1';
+
+/**
+ * Khởi tạo cấu trúc giải đấu rỗng an toàn khi hệ thống chưa có giải
+ */
+export function createEmptyTournament(system: 'SAO_VANG' | 'DTHEN'): TournamentData {
+  return {
+    id: `tour_empty_${system.toLowerCase()}_${Date.now()}`,
+    tournamentName: system === 'SAO_VANG' ? 'SAO VÀNG CUP ™' : 'ĐTHÉN FCO ™',
+    season: 'CHƯA CÓ GIẢI ĐẤU',
+    numGroups: 0,
+    teamsPerGroup: 0,
+    legType: 'single',
+    groups: [],
+    createdAt: new Date().toISOString(),
+    isVisible: false,
+  };
+}
+
+/**
+ * Dọn sạch TOÀN BỘ giải đấu trên LocalStorage và Cloud Firestore mà KHÔNG xóa các dữ liệu khác (tài khoản, bài viết, theme...)
+ */
+export async function cleanAllTournaments(): Promise<void> {
+  // 1. Xóa các khóa lưu trữ giải đấu trên LocalStorage
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY_DTHEN);
+    localStorage.removeItem(ARCHIVE_KEY);
+    localStorage.removeItem(ARCHIVE_KEY_DTHEN);
+    localStorage.removeItem('SAOVANG_DRAW_DIRECT_SETUP');
+    localStorage.removeItem('saovang_draw_draft');
+    localStorage.removeItem('SAOVANG_DRAW_DRAFT_V1');
+    localStorage.setItem(CLEAN_VERSION_KEY, 'CLEANED_SUCCESS');
+  } catch (err) {
+    console.warn('LocalStorage clean error:', err);
+  }
+
+  // 2. Xóa các tài liệu giải đấu trên Cloud Firestore
+  try {
+    await Promise.all([
+      saveTournamentToFirestore(CLOUD_KEYS.SAO_VANG, null),
+      saveTournamentToFirestore(CLOUD_KEYS.DTHEN, null),
+      saveTournamentToFirestore(CLOUD_KEYS.ARCHIVE, []),
+      saveTournamentToFirestore(CLOUD_KEYS.ARCHIVE_DTHEN, []),
+      clearLiveDrawStateFromFirestore(),
+    ]);
+  } catch (err) {
+    console.warn('Firestore clean error:', err);
+  }
+}
+
+/**
+ * Tự động kích hoạt dọn sạch giải đấu trên trình duyệt khi người dùng tải trang
+ */
+export function checkAndPerformOneTimeClean(): void {
+  try {
+    if (typeof window !== 'undefined' && localStorage.getItem(CLEAN_VERSION_KEY) !== 'CLEANED_SUCCESS') {
+      localStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEY_DTHEN);
+      localStorage.removeItem(ARCHIVE_KEY);
+      localStorage.removeItem(ARCHIVE_KEY_DTHEN);
+      localStorage.removeItem('SAOVANG_DRAW_DIRECT_SETUP');
+      localStorage.removeItem('saovang_draw_draft');
+      localStorage.removeItem('SAOVANG_DRAW_DRAFT_V1');
+      localStorage.setItem(CLEAN_VERSION_KEY, 'CLEANED_SUCCESS');
+    }
+  } catch (err) {
+    // Ignore in non-browser or storage-restricted contexts
+  }
+}
+
+// Chạy một lần tự động dọn sạch giải đấu cũ
+checkAndPerformOneTimeClean();
+
+/**
+ * Kiểm tra giải đấu hợp lệ (có vòng bảng hoặc là cúp Knockout)
+ */
+export function isValidTournament(tour: TournamentData | null | undefined): boolean {
+  if (!tour) return false;
+  const hasGroups = Array.isArray(tour.groups) && tour.groups.length > 0;
+  const isKnockout = tour.format === 'pure_knockout';
+  const hasKnockoutStage = Boolean(tour.knockoutStage && Array.isArray(tour.knockoutStage.rounds) && tour.knockoutStage.rounds.length > 0);
+  return hasGroups || isKnockout || hasKnockoutStage;
+}
+
+/**
+ * Lưu đồng bộ một giải đấu vào cả giải hiện hành và danh sách lưu trữ (Archive)
+ */
+export function saveTournamentBoth(tour: TournamentData, system: 'SAO_VANG' | 'DTHEN'): void {
+  if (system === 'SAO_VANG') {
+    saveTournamentData(tour);
+    const archives = loadArchiveTournaments();
+    const existingIdx = archives.findIndex((t) => t.id === tour.id);
+    let updated: TournamentData[];
+    if (existingIdx >= 0) {
+      updated = [...archives];
+      updated[existingIdx] = tour;
+    } else {
+      updated = [tour, ...archives.filter((t) => t.id !== tour.id).map((t) => ({ ...t, isVisible: false }))];
+    }
+    saveArchiveTournaments(updated);
+  } else {
+    saveDthenTournamentData(tour);
+    const archives = loadArchiveDthenTournaments();
+    const existingIdx = archives.findIndex((t) => t.id === tour.id);
+    let updated: TournamentData[];
+    if (existingIdx >= 0) {
+      updated = [...archives];
+      updated[existingIdx] = tour;
+    } else {
+      updated = [tour, ...archives.filter((t) => t.id !== tour.id).map((t) => ({ ...t, isVisible: false }))];
+    }
+    saveArchiveDthenTournaments(updated);
+  }
 }
 
 export async function fetchAndSyncArchiveDthenTournaments(): Promise<TournamentData[]> {

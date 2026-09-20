@@ -23,6 +23,7 @@ export interface SelectedTournamentConfig {
   teams: DrawTeam[];
   isSeeded: boolean;
   selectedTournamentData: TournamentData | null;
+  format?: 'group_knockout' | 'pure_knockout';
 }
 
 interface TournamentSelectModalProps {
@@ -138,6 +139,16 @@ export const TournamentSelectModal: React.FC<TournamentSelectModalProps> = ({
 
   // Check if a season is unstarted (no matches played yet)
   const isSeasonUnstarted = (tour: TournamentData): boolean => {
+    if (tour.format === 'pure_knockout') {
+      if (!tour.knockoutStage || !tour.knockoutStage.rounds || tour.knockoutStage.rounds.length === 0) return true;
+      let playedCount = 0;
+      tour.knockoutStage.rounds.forEach((r) => {
+        if (r.matches) {
+          playedCount += r.matches.filter((m) => m.played).length;
+        }
+      });
+      return playedCount === 0;
+    }
     if (!tour.groups || tour.groups.length === 0) return true;
     let playedCount = 0;
     tour.groups.forEach((g) => {
@@ -155,6 +166,49 @@ export const TournamentSelectModal: React.FC<TournamentSelectModalProps> = ({
     // Extract members from this season
     const teamsList: DrawTeam[] = [];
     let count = 1;
+
+    if (tour.format === 'pure_knockout') {
+      if (tour.knockoutStage?.rounds?.[0]?.matches) {
+        tour.knockoutStage.rounds[0].matches.forEach((m) => {
+          if (m.homeTeamName && m.homeTeamName !== 'Đang chờ xác định') {
+            teamsList.push({
+              id: `team-${count}`,
+              name: m.homeTeamName,
+              club: m.homeTeamClub || '',
+              pot: Math.min(4, Math.floor((count - 1) / 4) + 1),
+            });
+            count++;
+          }
+          if (m.awayTeamName && m.awayTeamName !== 'Đang chờ xác định') {
+            teamsList.push({
+              id: `team-${count}`,
+              name: m.awayTeamName,
+              club: m.awayTeamClub || '',
+              pot: Math.min(4, Math.floor((count - 1) / 4) + 1),
+            });
+            count++;
+          }
+        });
+      }
+      const total = tour.totalTeams || (teamsList.length > 0 ? teamsList.length : 16);
+      // If no teams yet, generate placeholders or use extracted
+      if (teamsList.length === 0) {
+        for (let i = 0; i < total; i++) {
+          teamsList.push({
+            id: `ko-team-${i + 1}`,
+            name: `HLV ${i + 1}`,
+            club: '',
+            pot: Math.min(4, Math.floor(i / (total / 4)) + 1),
+          });
+        }
+      }
+      setMembersPool(teamsList);
+      setNumGroupsInput(Math.max(2, total / 2));
+      setTeamsPerGroupInput(2);
+      setStep('REVIEW_MEMBERS');
+      return;
+    }
+
     tour.groups?.forEach((g) => {
       g.teams?.forEach((t) => {
         teamsList.push({
@@ -468,8 +522,16 @@ export const TournamentSelectModal: React.FC<TournamentSelectModalProps> = ({
                             )}
                           </div>
                           <div className="text-[11px] text-slate-400 font-mono">
-                            {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/Bảng ({totalTeams} HLV) • Lượt đấu:{' '}
-                            {tour.legType === 'double' ? 'Lượt đi & về' : '1 lượt'}
+                            {tour.format === 'pure_knockout' ? (
+                              <span className="text-amber-400">
+                                🏆 Cúp Loại Trực Tiếp • {tour.totalTeams || (tour.knockoutStage?.rounds?.[0]?.matches?.length ? tour.knockoutStage.rounds[0].matches.length * 2 : 16)} HLV • {tour.pairingMode === 'draw' ? 'Bốc Thăm 3D 🏆' : 'Xếp Cặp Ngẫu Nhiên 🎲'}
+                              </span>
+                            ) : (
+                              <span>
+                                {tour.numGroups} Bảng • {tour.teamsPerGroup} Đội/Bảng ({totalTeams} HLV) • Lượt đấu:{' '}
+                                {tour.legType === 'double' ? 'Lượt đi & về' : '1 lượt'}
+                              </span>
+                            )}
                           </div>
                         </div>
 

@@ -7,11 +7,13 @@ import { StandingsTable } from '../../components/StandingsTable';
 import { TournamentStatsView } from '../../components/TournamentStatsView';
 import {
   TournamentData,
+  Group,
   calculateGroupStandings,
   loadDthenTournamentData,
-  createDefaultDthenTournament,
   buildFIFABracketFromGroups,
   fetchAndSyncDthenTournament,
+  loadArchiveDthenTournaments,
+  isValidTournament,
 } from '../../utils/tournamentEngine';
 import {
   subscribeTournamentFromFirestore,
@@ -20,15 +22,27 @@ import {
 import { isFirebaseConfigured } from '../../services/firebase';
 
 const DthenLtd: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [archiveList, setArchiveList] = useState<TournamentData[]>(() => loadArchiveDthenTournaments());
+
   const [tournament, setTournament] = useState<TournamentData | null>(() => {
+    const tourIdParam = new URLSearchParams(window.location.search).get('tourId');
+    const archive = loadArchiveDthenTournaments();
+    if (tourIdParam) {
+      const match = archive.find((t) => t.id === tourIdParam);
+      if (match) return match;
+    }
     const active = loadDthenTournamentData();
-    if (active && active.isVisible) {
+    if (active && isValidTournament(active) && active.isVisible !== false) {
       return active;
     }
-    return createDefaultDthenTournament();
+    const visibleInArchive = archive.find((t) => isValidTournament(t) && t.isVisible !== false);
+    if (visibleInArchive) {
+      return visibleInArchive;
+    }
+    return null;
   });
 
-  const [searchParams, setSearchParams] = useSearchParams();
   const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT' | 'STATS'>(() => {
     const tabParam = searchParams.get('tab') || searchParams.get('stage');
     if (tabParam) {
@@ -37,12 +51,15 @@ const DthenLtd: React.FC = () => {
       if (upper === 'KNOCKOUT') return 'KNOCKOUT';
       if (upper === 'GROUP') return 'GROUP';
     }
-    return 'GROUP';
+    if (tournament?.format === 'pure_knockout') return 'KNOCKOUT';
+    return tournament?.knockoutStage?.isCompletedGroupStage ? 'KNOCKOUT' : 'GROUP';
   });
 
   const handleStageChange = (stage: 'GROUP' | 'KNOCKOUT' | 'STATS') => {
     setViewStage(stage);
-    setSearchParams({ tab: stage.toLowerCase() });
+    const params: { [k: string]: string } = { tab: stage.toLowerCase() };
+    if (tournament?.id) params.tourId = tournament.id;
+    setSearchParams(params);
   };
 
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
@@ -52,9 +69,20 @@ const DthenLtd: React.FC = () => {
   useEffect(() => {
     // 1. Initial fetch from Cloud
     fetchAndSyncDthenTournament().then((data) => {
-      if (data && data.isVisible) {
+      const currentArchive = loadArchiveDthenTournaments();
+      setArchiveList(currentArchive);
+      const tourIdParam = searchParams.get('tourId');
+      if (tourIdParam) {
+        const match = currentArchive.find((t) => t.id === tourIdParam);
+        if (match) {
+          setTournament(match);
+          if (match.format === 'pure_knockout') setViewStage('KNOCKOUT');
+          return;
+        }
+      }
+      if (data && isValidTournament(data) && data.isVisible !== false) {
         setTournament(data);
-        if (data.knockoutStage?.isCompletedGroupStage) {
+        if (data.format === 'pure_knockout' || data.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
         if (isFirebaseConfigured) setSyncStatus('cloud');
@@ -65,9 +93,16 @@ const DthenLtd: React.FC = () => {
     const unsubscribe = subscribeTournamentFromFirestore<TournamentData>(
       CLOUD_KEYS.DTHEN,
       (cloudData) => {
-        if (cloudData && cloudData.isVisible) {
+        const currentArchive = loadArchiveDthenTournaments();
+        setArchiveList(currentArchive);
+        const tourIdParam = searchParams.get('tourId');
+        if (tourIdParam) {
+          const match = currentArchive.find((t) => t.id === tourIdParam);
+          if (match) return;
+        }
+        if (cloudData && isValidTournament(cloudData) && cloudData.isVisible !== false) {
           setTournament(cloudData);
-          if (cloudData.knockoutStage?.isCompletedGroupStage) {
+          if (cloudData.format === 'pure_knockout' || cloudData.knockoutStage?.isCompletedGroupStage) {
             setViewStage('KNOCKOUT');
           }
           setSyncStatus('cloud');
@@ -77,10 +112,26 @@ const DthenLtd: React.FC = () => {
 
     // 3. Fallback Local storage listener
     const handleStorage = () => {
+      const currentArchive = loadArchiveDthenTournaments();
+      setArchiveList(currentArchive);
+      const tourIdParam = searchParams.get('tourId');
+      if (tourIdParam) {
+        const match = currentArchive.find((t) => t.id === tourIdParam);
+        if (match) {
+          setTournament(match);
+          return;
+        }
+      }
       const active = loadDthenTournamentData();
-      if (active && active.isVisible) {
+      if (active && isValidTournament(active) && active.isVisible !== false) {
         setTournament(active);
-        if (active.knockoutStage?.isCompletedGroupStage) {
+        if (active.format === 'pure_knockout' || active.knockoutStage?.isCompletedGroupStage) {
+          setViewStage('KNOCKOUT');
+        }
+      } else {
+        const vis = currentArchive.find((t) => isValidTournament(t) && t.isVisible !== false);
+        setTournament(vis || null);
+        if (vis?.format === 'pure_knockout' || vis?.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
       }
@@ -91,9 +142,9 @@ const DthenLtd: React.FC = () => {
       unsubscribe();
       window.removeEventListener('storage', handleStorage);
     };
-  }, []);
+  }, [searchParams]);
 
-  if (!tournament || !tournament.groups || tournament.groups.length === 0) {
+  if (!tournament || !isValidTournament(tournament) || tournament.isVisible === false) {
     return (
       <>
         <Banner
@@ -104,7 +155,7 @@ const DthenLtd: React.FC = () => {
         <Body>
           <div className="max-w-2xl mx-auto my-12 p-8 rounded-2xl portal-card text-center bg-white shadow-sm space-y-4">
             <h2 className="font-oswald text-2xl font-bold uppercase text-slate-900">
-              ĐANG THIẾT LẬP LỊCH THI ĐẤU MÙA 1
+              ĐANG THIẾT LẬP LỊCH THI ĐẤU
             </h2>
             <p className="text-sm text-slate-600">
               Ban Tổ Chức đang bốc thăm chia bảng và cập nhật danh sách Huấn luyện viên tham dự.
@@ -116,12 +167,17 @@ const DthenLtd: React.FC = () => {
     );
   }
 
-  const currentGroup = tournament.groups[activeGroupIndex] || tournament.groups[0];
-  const standings = calculateGroupStandings(currentGroup);
+  const hasGroups = Array.isArray(tournament.groups) && tournament.groups.length > 0;
+  const fallbackGroup: Group = {
+    id: 'empty_group',
+    name: 'BẢNG ĐẤU',
+    teams: [],
+    matches: [],
+  };
+  const currentGroup: Group = (hasGroups && tournament.groups[activeGroupIndex]) || tournament.groups[0] || fallbackGroup;
+  const standings = hasGroups ? calculateGroupStandings(currentGroup) : [];
 
-  const roundsInGroup = Array.from(
-    new Set(currentGroup.matches.map((m) => m.round))
-  ).sort((a, b) => a - b);
+  const roundsInGroup = Array.from(new Set(currentGroup.matches.map((m) => m.round))).sort((a, b) => a - b);
 
   const filteredMatches =
     activeRoundFilter === 'ALL'
@@ -133,23 +189,62 @@ const DthenLtd: React.FC = () => {
   };
 
   const knockoutStage =
-    tournament.knockoutStage || buildFIFABracketFromGroups(tournament.groups);
+    tournament.knockoutStage || (hasGroups ? buildFIFABracketFromGroups(tournament.groups) : { isCompletedGroupStage: true, rounds: [] });
 
-  const r16Matches = knockoutStage.rounds?.[0]?.matches || [];
-  const qfMatches = knockoutStage.rounds?.[1]?.matches || [];
-  const sfMatches = knockoutStage.rounds?.[2]?.matches || [];
-  const finalMatches = knockoutStage.rounds?.[3]?.matches || [];
+  const koRounds = knockoutStage.rounds || [];
+  const hasR16 = koRounds.length >= 4;
+  const r16Matches = hasR16 ? (koRounds[0]?.matches || []) : [];
+  const qfMatches = hasR16 ? (koRounds[1]?.matches || []) : (koRounds[0]?.matches || []);
+  const sfMatches = hasR16 ? (koRounds[2]?.matches || []) : (koRounds[1]?.matches || []);
+  const finalMatches = hasR16 ? (koRounds[3]?.matches || []) : (koRounds[2]?.matches || []);
 
   return (
     <>
       <Banner
         title={`LỊCH ĐẤU & BXH - ${tournament.tournamentName}`}
-        subtitle={`Theo dõi bảng xếp hạng trực tiếp và lịch thi đấu các bảng đấu ${tournament.season}`}
-        badge="LIVE STANDINGS"
+        subtitle={`Theo dõi bảng xếp hạng trực tiếp và lịch thi đấu ${tournament.format === 'pure_knockout' ? 'Cúp Loại Trực Tiếp' : 'các bảng đấu'} ${tournament.season}`}
+        badge={tournament.format === 'pure_knockout' ? 'KNOCKOUT CUP' : 'LIVE STANDINGS'}
       />
 
       <Body>
         <div className="max-w-6xl mx-auto space-y-6 sm:space-y-8">
+          {/* Season / Tournament Switcher Bar */}
+          {archiveList.filter((t) => t.isVisible !== false).length > 1 && (
+            <div className="p-3.5 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center space-x-2">
+                <i className="fa-solid fa-trophy text-blue-500 text-sm"></i>
+                <span className="font-oswald text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  CÁC MÙA GIẢI ĐTHÉN FCO:
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {archiveList.filter((t) => t.isVisible !== false).map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => {
+                      setTournament(t);
+                      setSearchParams({
+                        tourId: t.id,
+                        tab: t.format === 'pure_knockout' ? 'knockout' : 'group',
+                      });
+                      if (t.format === 'pure_knockout') {
+                        setViewStage('KNOCKOUT');
+                      }
+                    }}
+                    className={`px-3.5 py-1.5 rounded-xl font-oswald text-xs font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                      tournament.id === t.id
+                        ? 'bg-blue-600 text-white shadow-sm font-black'
+                        : 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300'
+                    }`}
+                  >
+                    {t.season || t.tournamentName}
+                    {t.format === 'pure_knockout' ? ' (Cúp Knockout 🏆)' : ''}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Header Controls: Stage Selector & Status */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs">
             <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
@@ -166,36 +261,38 @@ const DthenLtd: React.FC = () => {
                 <span>{syncStatus === 'cloud' ? 'Cloud Synced' : 'Local'}</span>
               </span>
               <span className="text-[11px] text-slate-500 font-semibold sm:hidden">
-                32 Đội • 8 Bảng
+                {tournament.format === 'pure_knockout' ? `${tournament.totalTeams || 16} Đội Knockout` : '32 Đội • 8 Bảng'}
               </span>
             </div>
 
             {/* Stage Switcher */}
-            <div className="grid grid-cols-3 sm:flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl w-full sm:w-auto">
-              <button
-                type="button"
-                onClick={() => handleStageChange('GROUP')}
-                className={`px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer ${
-                  viewStage === 'GROUP'
-                    ? 'bg-blue-700 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <i className="fa-solid fa-table-cells mr-1.5"></i>
-                VÒNG BẢNG
-              </button>
+            <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl w-full sm:w-auto">
+              {hasGroups && tournament.format !== 'pure_knockout' && (
+                <button
+                  type="button"
+                  onClick={() => handleStageChange('GROUP')}
+                  className={`px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer ${
+                    viewStage === 'GROUP'
+                      ? 'bg-blue-700 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                  }`}
+                >
+                  <i className="fa-solid fa-list-ol mr-1.5"></i>
+                  <span>Vòng Bảng</span>
+                </button>
+              )}
 
               <button
                 type="button"
                 onClick={() => handleStageChange('KNOCKOUT')}
                 className={`px-3 sm:px-4 py-2 sm:py-1.5 rounded-lg font-oswald text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center cursor-pointer ${
                   viewStage === 'KNOCKOUT'
-                    ? 'bg-blue-700 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    ? 'bg-blue-700 text-white shadow-xs font-black'
+                    : 'text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
                 <i className="fa-solid fa-trophy mr-1.5 text-amber-400"></i>
-                KNOCKOUT
+                <span>{tournament.format === 'pure_knockout' ? 'Cây Knockout' : 'Vòng Knockout'}</span>
               </button>
 
               <button
@@ -208,7 +305,7 @@ const DthenLtd: React.FC = () => {
                 }`}
               >
                 <i className="fa-solid fa-chart-column mr-1.5 text-cyan-300"></i>
-                THỐNG KÊ
+                <span>THỐNG KÊ</span>
               </button>
             </div>
           </div>
