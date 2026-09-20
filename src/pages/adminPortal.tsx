@@ -274,6 +274,16 @@ const AdminPortal: React.FC = () => {
   // Manual Pull from Cloud Firestore
   const handlePullFromCloud = async () => {
     if (!selectedSystem) return;
+    if (
+      !window.confirm(
+        '⚠ CẢNH BÁO ĐỒNG BỘ:\n\n' +
+        'Thao tác này sẽ tải dữ liệu từ Cloud Firestore và GHI ĐÈ lên dữ liệu trên máy.\n' +
+        'Các tỉ số vừa nhập trên máy nếu chưa kịp đẩy lên cloud sẽ bị mất.\n\n' +
+        'Bạn có chắc chắn muốn tải về và ghi đè không?'
+      )
+    ) {
+      return;
+    }
     setIsSyncing(true);
     setSyncFeedback('Đang tải dữ liệu mới nhất từ Cloud...');
     try {
@@ -476,6 +486,24 @@ const AdminPortal: React.FC = () => {
     navigate(`/boctham?tourId=${tour.id}&system=${sys}`);
   };
 
+  // Hàm cập nhật giải đấu đồng bộ và tự động lưu vĩnh viễn (Local + Archive + Cloud)
+  const handleUpdateAndSaveTournament = (updatedTour: TournamentData) => {
+    setTournament(updatedTour);
+    const updatedList = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
+    setSavedTournaments(updatedList);
+    saveTournamentBoth(updatedTour, selectedSystem || (updatedTour.id.includes('dthen') ? 'DTHEN' : 'SAO_VANG'));
+  };
+
+  // Nút chủ động lưu tỉ số từ giao diện
+  const handleExplicitSaveScores = () => {
+    const sys = selectedSystem || (tournament.id.includes('dthen') ? 'DTHEN' : 'SAO_VANG');
+    saveTournamentBoth(tournament, sys);
+    const updatedList = savedTournaments.map((t) => (t.id === tournament.id ? tournament : t));
+    setSavedTournaments(updatedList);
+    setSyncFeedback(`✓ ĐÃ LƯU THÀNH CÔNG: Toàn bộ tỉ số và Bảng Xếp Hạng giải "${tournament.tournamentName}" đã được lưu an toàn!`);
+    setTimeout(() => setSyncFeedback(''), 4000);
+  };
+
   // Score change in group matches
   const handleScoreChange = (matchId: string, field: 'homeScore' | 'awayScore', value: string) => {
     const numericValue = value === '' ? null : Math.max(0, parseInt(value, 10));
@@ -509,10 +537,7 @@ const AdminPortal: React.FC = () => {
       groups: updatedGroups,
     };
 
-    setTournament(updatedTour);
-
-    const updatedList = savedTournaments.map((t) => (t.id === tournament.id ? updatedTour : t));
-    setSavedTournaments(updatedList);
+    handleUpdateAndSaveTournament(updatedTour);
   };
 
   // Wizard: Step 1 -> Step 2
@@ -1282,7 +1307,7 @@ const AdminPortal: React.FC = () => {
           </div>
 
           {/* Current Tournament Info Header */}
-          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 flex items-center justify-between">
+          <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-500/10 to-amber-600/5 border border-amber-500/30 flex flex-col sm:flex-row items-center justify-between gap-3">
             <div>
               <span className="text-[11px] font-oswald font-bold uppercase text-amber-700 dark:text-amber-400 block">
                 ĐANG CHỈNH SỬA KẾT QUẢ CHO GIẢI:
@@ -1292,6 +1317,15 @@ const AdminPortal: React.FC = () => {
               </h2>
             </div>
             <div className="flex items-center space-x-2">
+              <button
+                type="button"
+                onClick={handleExplicitSaveScores}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-oswald text-xs font-black uppercase tracking-wider shadow-md flex items-center space-x-1.5 cursor-pointer transition-all hover:scale-105"
+                title="Bấm để lưu toàn bộ tỉ số và cập nhật Bảng Xếp Hạng"
+              >
+                <i className="fa-solid fa-floppy-disk"></i>
+                <span>LƯU TẤT CẢ TỈ SỐ & BXH</span>
+              </button>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-bold font-oswald uppercase ${
                   tournament.isVisible
@@ -1364,37 +1398,49 @@ const AdminPortal: React.FC = () => {
                       ĐIỀN TỈ SỐ TRẬN ĐẤU ({activeGroup.name})
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400">
-                      Nhập số bàn thắng vào các ô tỉ số bên dưới. Dữ liệu sẽ tự động lưu và đồng bộ tức thì.
+                      Nhập số bàn thắng vào các ô tỉ số bên dưới. Hệ thống tự động lưu và cập nhật Bảng Xếp Hạng tức thì.
                     </p>
                   </div>
 
-                  {/* Round Filter */}
-                  <div className="flex flex-wrap items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
                     <button
                       type="button"
-                      onClick={() => setActiveRoundFilter('ALL')}
-                      className={`px-3 py-1 text-xs font-oswald font-bold uppercase rounded-lg cursor-pointer ${
-                        activeRoundFilter === 'ALL'
-                          ? 'bg-slate-800 text-white'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
-                      }`}
+                      onClick={handleExplicitSaveScores}
+                      className="px-4 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-oswald text-xs font-black uppercase tracking-wider shadow-md flex items-center space-x-1.5 cursor-pointer transition-all hover:scale-105"
+                      title="Bấm để lưu toàn bộ tỉ số bảng đấu và cập nhật BXH"
                     >
-                      Tất cả vòng
+                      <i className="fa-solid fa-floppy-disk"></i>
+                      <span>LƯU TỈ SỐ & BXH</span>
                     </button>
-                    {distinctRounds.map((rnd) => (
+
+                    {/* Round Filter */}
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <button
-                        key={rnd}
                         type="button"
-                        onClick={() => setActiveRoundFilter(rnd)}
-                        className={`px-2.5 py-1 text-xs font-oswald font-bold rounded-lg cursor-pointer ${
-                          activeRoundFilter === rnd
-                            ? isDthen ? 'bg-blue-600 text-white' : 'bg-amber-500 text-slate-950'
+                        onClick={() => setActiveRoundFilter('ALL')}
+                        className={`px-3 py-1 text-xs font-oswald font-bold uppercase rounded-lg cursor-pointer ${
+                          activeRoundFilter === 'ALL'
+                            ? 'bg-slate-800 text-white'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
                         }`}
                       >
-                        Vòng {rnd}
+                        Tất cả vòng
                       </button>
-                    ))}
+                      {distinctRounds.map((rnd) => (
+                        <button
+                          key={rnd}
+                          type="button"
+                          onClick={() => setActiveRoundFilter(rnd)}
+                          className={`px-2.5 py-1 text-xs font-oswald font-bold rounded-lg cursor-pointer ${
+                            activeRoundFilter === rnd
+                              ? isDthen ? 'bg-blue-600 text-white' : 'bg-amber-500 text-slate-950'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200'
+                          }`}
+                        >
+                          Vòng {rnd}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1507,21 +1553,21 @@ const AdminPortal: React.FC = () => {
               <button
                 type="button"
                 onClick={() => {
+                  if (tournament.knockoutStage?.isCompletedGroupStage) {
+                    if (
+                      !window.confirm(
+                        '⚠ CẢNH BÁO TÁI TẠO SƠ ĐỒ KNOCK-OUT:\n\n' +
+                        'Thao tác này sẽ TÁI TẠO LẠI sơ đồ vòng trực tiếp từ BXH và XÓA HẾT các tỉ số vòng Knockout đã nhập trước đó!\n\n' +
+                        '• Nếu bạn chỉ muốn LƯU tỉ số Knockout vừa nhập, vui lòng ấn nút "LƯU KẾT QUẢ KNOCK-OUT" màu xanh bên dưới.\n' +
+                        '• Bấm OK nếu bạn chắc chắn muốn xóa tỉ số Knockout cũ và tạo lại nhánh mới từ BXH.'
+                      )
+                    ) {
+                      return;
+                    }
+                  }
                   const newBracket = buildFIFABracketFromGroups(tournament.groups);
                   const updatedTour = { ...tournament, knockoutStage: newBracket };
-                  setTournament(updatedTour);
-                  if (selectedSystem === 'SAO_VANG') {
-                    saveTournamentData(updatedTour);
-                  } else {
-                    saveDthenTournamentData(updatedTour);
-                  }
-                  const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
-                  setSavedTournaments(updatedArchive);
-                  if (selectedSystem === 'SAO_VANG') {
-                    saveArchiveTournaments(updatedArchive);
-                  } else {
-                    saveArchiveDthenTournaments(updatedArchive);
-                  }
+                  handleUpdateAndSaveTournament(updatedTour);
                   alert(`🏆 Đã tạo và kích hoạt sơ đồ Vòng Loại Trực Tiếp cho ${tournament.tournamentName}!`);
                 }}
                 className={`px-5 py-2.5 rounded-xl font-oswald text-xs font-black uppercase tracking-wider transition-all shadow-md cursor-pointer flex items-center space-x-2 ${
@@ -1531,7 +1577,7 @@ const AdminPortal: React.FC = () => {
                 }`}
               >
                 <i className={`fa-solid fa-trophy ${isDthen ? 'text-white' : 'text-slate-950'}`}></i>
-                <span>{tournament.knockoutStage?.isCompletedGroupStage ? 'Cập Nhật Lại Cây Knockout' : 'Tạo Cây Knockout Ngay'}</span>
+                <span>{tournament.knockoutStage?.isCompletedGroupStage ? 'Tái Tạo Lại Cây (Xóa Tỉ Số KO)' : 'Tạo Cây Knockout Ngay'}</span>
               </button>
 
               {tournament.knockoutStage?.isCompletedGroupStage && (
@@ -1540,19 +1586,7 @@ const AdminPortal: React.FC = () => {
                   onClick={() => {
                     if (window.confirm('Bạn có chắc chắn muốn mở lại vòng bảng và xóa dữ liệu Knockout?')) {
                       const updatedTour = { ...tournament, knockoutStage: undefined };
-                      setTournament(updatedTour);
-                      if (selectedSystem === 'SAO_VANG') {
-                        saveTournamentData(updatedTour);
-                      } else {
-                        saveDthenTournamentData(updatedTour);
-                      }
-                      const updatedArchive = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
-                      setSavedTournaments(updatedArchive);
-                      if (selectedSystem === 'SAO_VANG') {
-                        saveArchiveTournaments(updatedArchive);
-                      } else {
-                        saveArchiveDthenTournaments(updatedArchive);
-                      }
+                      handleUpdateAndSaveTournament(updatedTour);
                     }
                   }}
                   className="px-3 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-oswald uppercase transition-colors cursor-pointer"
@@ -1567,13 +1601,24 @@ const AdminPortal: React.FC = () => {
           {/* Knockout Match Editor */}
           {tournament.knockoutStage?.isCompletedGroupStage ? (
             <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
-              <div className="border-b border-slate-200 dark:border-slate-800 pb-3">
-                <h3 className="font-oswald text-lg font-black uppercase text-slate-900 dark:text-white">
-                  ĐIỀN KẾT QUẢ VÒNG LOẠI TRỰC TIẾP ({tournament.tournamentName})
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Nhập tỉ số trận đấu (nếu hòa có thể nhập thêm tỉ số Penalty). Đội thắng sẽ tự động nhảy vào trận kế tiếp!
-                </p>
+              <div className="border-b border-slate-200 dark:border-slate-800 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h3 className="font-oswald text-lg font-black uppercase text-slate-900 dark:text-white">
+                    ĐIỀN KẾT QUẢ VÒNG LOẠI TRỰC TIẾP ({tournament.tournamentName})
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    Nhập tỉ số trận đấu (nếu hòa có thể nhập thêm tỉ số Penalty). Hệ thống tự động lưu và cập nhật đội thắng vào trận kế tiếp!
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleExplicitSaveScores}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-oswald text-xs font-black uppercase tracking-wider shadow-md flex items-center space-x-2 cursor-pointer transition-all self-start sm:self-auto hover:scale-105"
+                  title="Bấm để lưu toàn bộ kết quả vòng Knockout"
+                >
+                  <i className="fa-solid fa-floppy-disk"></i>
+                  <span>LƯU KẾT QUẢ KNOCK-OUT</span>
+                </button>
               </div>
 
               <div className="space-y-6">
@@ -1672,12 +1717,7 @@ const AdminPortal: React.FC = () => {
                                         rounds: updatedRounds,
                                       },
                                     };
-                                    setTournament(updatedTour);
-                                    if (selectedSystem === 'SAO_VANG') {
-                                      saveTournamentData(updatedTour);
-                                    } else {
-                                      saveDthenTournamentData(updatedTour);
-                                    }
+                                    handleUpdateAndSaveTournament(updatedTour);
                                   }}
                                   placeholder="-"
                                   className="w-10 h-9 text-center font-oswald font-bold text-lg border-2 border-amber-500 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none"
@@ -1730,12 +1770,7 @@ const AdminPortal: React.FC = () => {
                                         rounds: updatedRounds,
                                       },
                                     };
-                                    setTournament(updatedTour);
-                                    if (selectedSystem === 'SAO_VANG') {
-                                      saveTournamentData(updatedTour);
-                                    } else {
-                                      saveDthenTournamentData(updatedTour);
-                                    }
+                                    handleUpdateAndSaveTournament(updatedTour);
                                   }}
                                   placeholder="-"
                                   className="w-10 h-9 text-center font-oswald font-bold text-lg border-2 border-amber-500 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none"
@@ -1781,12 +1816,7 @@ const AdminPortal: React.FC = () => {
                                         curMatch.winnerTeamName = val > curMatch.awayPenScore ? curMatch.homeTeamName : curMatch.awayTeamName;
                                       }
                                       const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
-                                      setTournament(updatedTour);
-                                      if (selectedSystem === 'SAO_VANG') {
-                                        saveTournamentData(updatedTour);
-                                      } else {
-                                        saveDthenTournamentData(updatedTour);
-                                      }
+                                      handleUpdateAndSaveTournament(updatedTour);
                                     }}
                                     className="w-12 h-7 text-center font-mono font-bold text-xs border border-amber-400 rounded bg-white dark:bg-slate-900"
                                   />
@@ -1806,12 +1836,7 @@ const AdminPortal: React.FC = () => {
                                         curMatch.winnerTeamName = curMatch.homePenScore > val ? curMatch.homeTeamName : curMatch.awayTeamName;
                                       }
                                       const updatedTour = { ...tournament, knockoutStage: { ...tournament.knockoutStage!, rounds: updatedRounds } };
-                                      setTournament(updatedTour);
-                                      if (selectedSystem === 'SAO_VANG') {
-                                        saveTournamentData(updatedTour);
-                                      } else {
-                                        saveDthenTournamentData(updatedTour);
-                                      }
+                                      handleUpdateAndSaveTournament(updatedTour);
                                     }}
                                     className="w-12 h-7 text-center font-mono font-bold text-xs border border-amber-400 rounded bg-white dark:bg-slate-900"
                                   />
