@@ -150,21 +150,164 @@ export const StandingsTable: React.FC<StandingsTableProps> = ({
         </div>
       </div>
 
-      {/* Mobile Swipe Hint */}
-      <div className="md:hidden px-4 py-2 bg-slate-100/70 dark:bg-slate-800/40 text-[11px] text-slate-600 dark:text-slate-400 flex items-center justify-between border-b border-slate-200/70 dark:border-slate-800">
-        <span className="flex items-center gap-1.5 font-medium">
-          <i
-            className={`fa-solid fa-arrows-left-right text-[10px] ${
-              isEmerald ? 'text-emerald-600' : 'text-blue-600'
-            }`}
-          ></i>
-          Vuốt ngang xem đầy đủ Trận, Hiệu số, Điểm &amp; Phong độ
-        </span>
-        <i className="fa-solid fa-chevron-right text-[9px] opacity-60"></i>
+      {/* ================= MOBILE VIEW: TAILORED CARD UI ================= */}
+      <div className="block md:hidden p-3 space-y-2.5 bg-slate-50/70 dark:bg-slate-950/40">
+        {standings.map((teamStat, rankIdx) => {
+          const isTop2 = rankIdx < 2;
+          const form = getTeamForm(teamStat.teamId, matches);
+
+          return (
+            <div
+              key={teamStat.teamId}
+              className={`reveal-on-scroll p-3.5 rounded-2xl border transition-all duration-300 ${
+                isTop2
+                  ? isEmerald
+                    ? "bg-white dark:bg-slate-900 border-emerald-400 dark:border-emerald-600/70 shadow-sm ring-1 ring-emerald-400/20"
+                    : "bg-white dark:bg-slate-900 border-blue-400 dark:border-blue-600/70 shadow-sm ring-1 ring-blue-400/20"
+                  : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-2xs"
+              }`}
+              style={{ transitionDelay: `${Math.min(rankIdx * 60, 240)}ms` }}
+            >
+              {/* Top: Rank, Avatar, Team Name, Points */}
+              <div className="flex items-center justify-between gap-2.5">
+                <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                  {/* Rank badge */}
+                  <div className="shrink-0">
+                    {rankIdx === 0 ? (
+                      <div className="relative inline-flex items-center justify-center">
+                        <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-300 via-amber-400 to-yellow-500 text-slate-950 font-black text-xs font-oswald shadow-xs inline-flex items-center justify-center">
+                          1
+                        </span>
+                        <i className="fa-solid fa-crown text-[8px] text-amber-500 absolute -top-2 -right-1"></i>
+                      </div>
+                    ) : rankIdx === 1 ? (
+                      <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-slate-200 via-slate-300 to-slate-400 text-slate-900 font-black text-xs font-oswald shadow-xs inline-flex items-center justify-center">
+                        2
+                      </span>
+                    ) : rankIdx === 2 ? (
+                      <span className="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-800/20 to-amber-900/30 text-amber-900 dark:text-amber-200 font-bold text-xs font-oswald inline-flex items-center justify-center">
+                        3
+                      </span>
+                    ) : (
+                      <span className="w-7 h-7 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 font-bold text-xs font-oswald inline-flex items-center justify-center">
+                        {rankIdx + 1}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Avatar */}
+                  <div
+                    className={`w-9 h-9 rounded-xl bg-gradient-to-br ${getAvatarGradient(
+                      teamStat.teamName
+                    )} flex items-center justify-center font-oswald font-bold text-xs shadow-2xs shrink-0`}
+                  >
+                    {getTeamInitials(teamStat.teamName)}
+                  </div>
+
+                  {/* Name & Ticket Tag */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="font-bold text-slate-900 dark:text-white text-sm truncate block">
+                        {teamStat.teamName}
+                      </span>
+                      {isTop2 && (
+                        <span
+                          className={`text-[9px] px-1.5 py-0.2 rounded font-oswald font-bold uppercase tracking-wider shrink-0 ${
+                            isEmerald
+                              ? "bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700"
+                              : "bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-300 border border-blue-300 dark:border-blue-700"
+                          }`}
+                        >
+                          Vé 1/8
+                        </span>
+                      )}
+                    </div>
+                    {teamStat.club && (
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+                        {teamStat.club}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Points Pill */}
+                <div className="shrink-0 text-right">
+                  <div
+                    className={`px-3 py-1 rounded-xl font-oswald font-black text-base shadow-xs ${
+                      isEmerald
+                        ? "bg-emerald-700 text-white"
+                        : "bg-blue-700 text-white"
+                    }`}
+                  >
+                    {teamStat.points} <span className="text-[11px] font-bold">Đ</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Middle Stats Grid */}
+              <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 grid grid-cols-4 gap-2 text-center text-xs">
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg py-1 px-1">
+                  <span className="text-[9px] text-slate-400 block font-oswald uppercase">Trận</span>
+                  <span className="font-oswald font-bold text-slate-800 dark:text-slate-200">{teamStat.played}</span>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg py-1 px-1">
+                  <span className="text-[9px] text-slate-400 block font-oswald uppercase">T-H-B</span>
+                  <span className="font-oswald font-bold text-slate-800 dark:text-slate-200">
+                    {teamStat.won}-{teamStat.drawn}-{teamStat.lost}
+                  </span>
+                </div>
+
+                <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg py-1 px-1">
+                  <span className="text-[9px] text-slate-400 block font-oswald uppercase">BT/BB</span>
+                  <span className="font-oswald font-bold text-slate-800 dark:text-slate-200">
+                    {teamStat.goalsFor}/{teamStat.goalsAgainst}
+                  </span>
+                </div>
+
+                <div className={`rounded-lg py-1 px-1 ${
+                  teamStat.goalDifference > 0
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold'
+                    : teamStat.goalDifference < 0
+                    ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold'
+                    : 'bg-slate-50 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300'
+                }`}>
+                  <span className="text-[9px] text-slate-400 block font-oswald uppercase">Hiệu Số</span>
+                  <span className="font-oswald font-black">
+                    {teamStat.goalDifference > 0 ? `+${teamStat.goalDifference}` : teamStat.goalDifference}
+                  </span>
+                </div>
+              </div>
+
+              {/* Bottom Form Badges (if showForm) */}
+              {showForm && form.length > 0 && (
+                <div className="mt-2.5 flex items-center justify-between text-[11px] pt-1">
+                  <span className="text-slate-400 text-[10px] font-oswald uppercase font-semibold">Phong độ gần đây:</span>
+                  <div className="flex items-center space-x-1">
+                    {form.map((res, fIdx) => (
+                      <span
+                        key={fIdx}
+                        className={`w-5 h-5 rounded-full flex items-center justify-center font-bold text-[9px] text-white shadow-2xs ${
+                          res === 'W'
+                            ? 'bg-emerald-600'
+                            : res === 'D'
+                            ? 'bg-amber-500'
+                            : 'bg-rose-500'
+                        }`}
+                      >
+                        {res}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
 
-      {/* Standings Table Container */}
-      <div className="overflow-x-auto">
+      {/* Standings Table Container (Desktop Only) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs sm:text-sm min-w-[620px] sm:min-w-[680px]">
           <thead className="bg-[#0b172a] text-white font-oswald uppercase text-[11px] sm:text-xs tracking-wider border-b border-slate-800">
             <tr>

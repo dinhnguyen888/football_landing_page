@@ -213,7 +213,7 @@ const HomeHub: React.FC = () => {
       </section>
 
       {/* ================= MAIN CONTENT ================= */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8 sm:space-y-12">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-10 pb-24 lg:pb-12 space-y-8 sm:space-y-12">
         
         {/* ================= TOURNAMENT SELECTION SECTION ================= */}
         <section id="tournaments-section" className="space-y-6">
@@ -234,12 +234,13 @@ const HomeHub: React.FC = () => {
 
           {/* Tournament Cards Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
-            {tournaments.map((tour) => {
+            {tournaments.map((tour, idx) => {
               const isBlue = tour.theme === "blue";
+              const revealAnimationClass = idx === 0 ? "reveal-left" : "reveal-right delay-150";
               return (
                 <div
                   key={tour.id}
-                  className={`rounded-3xl border-2 ${
+                  className={`portal-card ${revealAnimationClass} rounded-3xl border-2 ${
                     isBlue
                       ? "border-blue-400/40 dark:border-blue-600/50 hover:border-cyan-400 dark:hover:border-cyan-400 bg-gradient-to-b from-blue-50/60 via-white to-slate-50 dark:from-[#0c223e] dark:via-[#07172c] dark:to-[#040e1b]"
                       : "border-emerald-400/40 dark:border-emerald-600/50 hover:border-amber-400 dark:hover:border-amber-400 bg-gradient-to-b from-emerald-50/60 via-white to-slate-50 dark:from-[#0b291d] dark:via-[#071d14] dark:to-[#04110c]"
@@ -373,11 +374,11 @@ const HomeHub: React.FC = () => {
                     </div>
 
                     {/* Action Nav Links */}
-                    <div className="pt-3 sm:pt-4 border-t border-slate-200/80 dark:border-slate-800/80 mt-3 sm:mt-4">
+                    <div className="pt-3 sm:pt-4 border-t border-slate-200/80 dark:border-slate-800/80 mt-3 sm:mt-4 space-y-2">
                       {/* Primary Button */}
                       <Link
                         to={tour.link}
-                        className={`w-full py-3 sm:py-4 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-gradient-to-r ${
+                        className={`w-full min-h-[46px] py-3 sm:py-3.5 px-4 sm:px-6 rounded-xl sm:rounded-2xl bg-gradient-to-r ${
                           isBlue
                             ? "from-blue-600 via-indigo-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-[0_4px_20px_rgba(14,165,233,0.35)]"
                             : "from-emerald-700 via-emerald-600 to-teal-600 hover:from-emerald-600 hover:to-teal-500 shadow-[0_4px_20px_rgba(0,229,117,0.35)]"
@@ -387,6 +388,24 @@ const HomeHub: React.FC = () => {
                         <span>VÀO SÂN THI ĐẤU</span>
                         <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform"></i>
                       </Link>
+
+                      {/* Quick Secondary Links for Mobile / Fast Navigation */}
+                      <div className="grid grid-cols-2 gap-2 pt-0.5">
+                        <Link
+                          to={tour.ltdLink}
+                          className="min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-oswald text-xs font-bold uppercase tracking-wider text-center flex items-center justify-center space-x-1.5 transition-colors border border-slate-200 dark:border-slate-700"
+                        >
+                          <i className="fa-solid fa-calendar-days text-[11px] text-amber-500"></i>
+                          <span>Lịch Đấu &amp; BXH</span>
+                        </Link>
+                        <Link
+                          to={tour.rulesLink}
+                          className="min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-oswald text-xs font-bold uppercase tracking-wider text-center flex items-center justify-center space-x-1.5 transition-colors border border-slate-200 dark:border-slate-700"
+                        >
+                          <i className="fa-solid fa-clipboard-list text-[11px] text-blue-500"></i>
+                          <span>Quy Định Giải</span>
+                        </Link>
+                      </div>
                     </div>
 
                   </div>
@@ -397,7 +416,7 @@ const HomeHub: React.FC = () => {
         </section>
 
         {/* ================= ULTRA-CUSTOMIZED REALISTIC PENALTY SHOOTOUT ================= */}
-        <section className="rounded-2xl sm:rounded-3xl border-2 border-emerald-600/80 dark:border-emerald-700 bg-gradient-to-b from-[#0e442c] via-[#093522] to-[#052115] text-white p-4 sm:p-8 shadow-2xl relative overflow-hidden">
+        <section className="reveal-zoom rounded-2xl sm:rounded-3xl border-2 border-emerald-600/80 dark:border-emerald-700 bg-gradient-to-b from-[#0e442c] via-[#093522] to-[#052115] text-white p-4 sm:p-8 shadow-2xl relative overflow-hidden">
           
           {/* Ambient Floodlight Beam */}
           <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-96 h-40 bg-radial from-amber-200/25 via-emerald-300/10 to-transparent blur-2xl pointer-events-none" />
@@ -636,7 +655,7 @@ const HomeHub: React.FC = () => {
 
         {/* ================= 4 PILLARS OF FOOTBALL SPIRIT ================= */}
         <section className="space-y-6">
-          <div className="border-b-2 border-emerald-600 pb-3">
+          <div className="reveal-on-scroll border-b-2 border-emerald-600 pb-3">
             <span className="text-xs font-oswald font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">
               COMMUNITY & FAIR PLAY
             </span>
@@ -649,7 +668,7 @@ const HomeHub: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-emerald-500 transition-all space-y-3 group">
+            <div className="reveal-on-scroll delay-75 p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-emerald-500 transition-all space-y-3 group">
               <div className="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-xl shadow-xs group-hover:bg-emerald-600 group-hover:text-white transition-colors">
                 <i className="fa-solid fa-trophy"></i>
               </div>
@@ -661,7 +680,7 @@ const HomeHub: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-sky-500 transition-all space-y-3 group">
+            <div className="reveal-on-scroll delay-150 p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-sky-500 transition-all space-y-3 group">
               <div className="w-12 h-12 rounded-xl bg-sky-100 dark:bg-sky-950 text-sky-700 dark:text-sky-300 flex items-center justify-center text-xl shadow-xs group-hover:bg-sky-600 group-hover:text-white transition-colors">
                 <i className="fa-solid fa-scale-balanced"></i>
               </div>
@@ -673,7 +692,7 @@ const HomeHub: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-amber-500 transition-all space-y-3 group">
+            <div className="reveal-on-scroll delay-225 p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-amber-500 transition-all space-y-3 group">
               <div className="w-12 h-12 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 flex items-center justify-center text-xl shadow-xs group-hover:bg-amber-600 group-hover:text-white transition-colors">
                 <i className="fa-solid fa-ranking-star"></i>
               </div>
@@ -685,7 +704,7 @@ const HomeHub: React.FC = () => {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-teal-500 transition-all space-y-3 group">
+            <div className="reveal-on-scroll delay-300 p-6 rounded-2xl bg-white dark:bg-[#0c2419] border border-slate-200 dark:border-emerald-800/70 shadow-sm hover:border-teal-500 transition-all space-y-3 group">
               <div className="w-12 h-12 rounded-xl bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 flex items-center justify-center text-xl shadow-xs group-hover:bg-teal-600 group-hover:text-white transition-colors">
                 <i className="fa-solid fa-users"></i>
               </div>

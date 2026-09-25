@@ -64,6 +64,7 @@ const Ltd: React.FC = () => {
 
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
   const [activeRoundFilter, setActiveRoundFilter] = useState<number | 'ALL'>('ALL');
+  const [koRoundFilter, setKoRoundFilter] = useState<number | 'ALL'>('ALL');
 
   useEffect(() => {
     // Initial fetch from cloud
@@ -347,7 +348,143 @@ const Ltd: React.FC = () => {
                   <span className="text-xs text-slate-500 font-medium">Chuẩn phân nhánh FIFA</span>
                 </div>
 
-                <div className="relative w-full max-w-full p-4 sm:p-10 rounded-2xl bg-gradient-to-b from-slate-50 via-emerald-50/20 to-teal-50/30 border border-slate-200 shadow-sm overflow-x-auto overscroll-x-contain">
+                {/* Mobile Knockout View: Round Selector & Vertical Cards */}
+                <div className="block md:hidden space-y-4">
+                  {/* Round Selector Tabs */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl">
+                    <button
+                      type="button"
+                      onClick={() => setKoRoundFilter('ALL')}
+                      className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
+                        koRoundFilter === 'ALL'
+                          ? 'bg-amber-500 text-slate-950 shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                      }`}
+                    >
+                      Tất cả
+                    </button>
+                    {koStage.rounds?.map((rnd, rIdx) => {
+                      const totalRounds = koStage.rounds.length;
+                      const label = rnd.name || (
+                        rIdx === totalRounds - 1
+                          ? 'Chung Kết 🏆'
+                          : rIdx === totalRounds - 2
+                          ? 'Bán Kết'
+                          : rIdx === totalRounds - 3
+                          ? 'Tứ Kết'
+                          : `Vòng ${rIdx + 1}`
+                      );
+                      return (
+                        <button
+                          key={rIdx}
+                          type="button"
+                          onClick={() => setKoRoundFilter(rIdx)}
+                          className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
+                            koRoundFilter === rIdx
+                              ? 'bg-emerald-700 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Filtered Rounds & Matches */}
+                  <div className="space-y-4">
+                    {koStage.rounds
+                      ?.map((rnd, rIdx) => ({ rnd, rIdx }))
+                      .filter(({ rIdx }) => koRoundFilter === 'ALL' || koRoundFilter === rIdx)
+                      .map(({ rnd, rIdx }) => {
+                        const totalRounds = koStage.rounds.length;
+                        const roundTitle = rnd.name || (
+                          rIdx === totalRounds - 1
+                            ? 'CHUNG KẾT TRANH NGÔI VƯƠNG'
+                            : rIdx === totalRounds - 2
+                            ? 'VÒNG BÁN KẾT'
+                            : rIdx === totalRounds - 3
+                            ? 'VÒNG TỨ KẾT'
+                            : `VÒNG ĐẤU #${rIdx + 1}`
+                        );
+
+                        return (
+                          <div key={rIdx} className="space-y-2">
+                            <div className="flex items-center justify-between px-1">
+                              <span className="font-oswald text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                                <i className={`fa-solid ${rIdx === totalRounds - 1 ? 'fa-crown text-amber-500' : 'fa-sitemap text-emerald-600'}`}></i>
+                                <span>{roundTitle}</span>
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-semibold">{rnd.matches?.length || 0} Trận</span>
+                            </div>
+
+                            <div className="space-y-2.5">
+                              {rnd.matches?.map((m) => {
+                                const isHomeWinner = m.winnerTeamName && m.winnerTeamName === m.homeTeamName;
+                                const isAwayWinner = m.winnerTeamName && m.winnerTeamName === m.awayTeamName;
+                                return (
+                                  <div
+                                    key={m.id}
+                                    className="reveal-on-scroll p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2"
+                                  >
+                                    <div className="flex items-center justify-between text-[10px] font-oswald border-b border-slate-100 dark:border-slate-800 pb-1.5">
+                                      <span className="font-bold text-slate-500 uppercase">Trận #{m.matchOrder}</span>
+                                      <span
+                                        className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] ${
+                                          m.played
+                                            ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
+                                            : "bg-slate-100 dark:bg-slate-800 text-slate-500"
+                                        }`}
+                                      >
+                                        {m.played ? "Đã đấu" : "Chờ đấu"}
+                                      </span>
+                                    </div>
+
+                                    {/* Home Team */}
+                                    <div
+                                      className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl transition-colors ${
+                                        isHomeWinner
+                                          ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-bold border border-emerald-300 dark:border-emerald-700"
+                                          : "text-slate-800 dark:text-slate-200"
+                                      }`}
+                                    >
+                                      <div className="flex items-center space-x-2 truncate pr-2">
+                                        {isHomeWinner && <i className="fa-solid fa-check text-emerald-600 text-xs"></i>}
+                                        <span className="truncate">{m.homeTeamName}</span>
+                                      </div>
+                                      <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
+                                        {m.homeScore !== null ? m.homeScore : "-"}
+                                      </span>
+                                    </div>
+
+                                    {/* Away Team */}
+                                    <div
+                                      className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl transition-colors ${
+                                        isAwayWinner
+                                          ? "bg-emerald-50 dark:bg-emerald-950/60 text-emerald-950 dark:text-emerald-200 font-bold border border-emerald-300 dark:border-emerald-700"
+                                          : "text-slate-800 dark:text-slate-200"
+                                      }`}
+                                    >
+                                      <div className="flex items-center space-x-2 truncate pr-2">
+                                        {isAwayWinner && <i className="fa-solid fa-check text-emerald-600 text-xs"></i>}
+                                        <span className="truncate">{m.awayTeamName}</span>
+                                      </div>
+                                      <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
+                                        {m.awayScore !== null ? m.awayScore : "-"}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+
+                {/* Desktop View: Full 5-Column FIFA Convergence Architecture */}
+                <div className="hidden md:block relative w-full max-w-full p-4 sm:p-10 rounded-2xl bg-gradient-to-b from-slate-50 via-emerald-50/20 to-teal-50/30 border border-slate-200 shadow-sm overflow-x-auto overscroll-x-contain">
                   
                   <div className="text-center mb-8">
                     <span className="text-[11px] font-oswald font-bold uppercase tracking-[0.25em] text-emerald-800 bg-emerald-100/80 px-3 py-1 rounded-full border border-emerald-200">
@@ -669,7 +806,7 @@ const Ltd: React.FC = () => {
                 return (
                   <div
                     key={match.id}
-                    className="p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-400 hover:shadow-md card-hover-fx transition-all flex flex-col justify-between space-y-3"
+                    className="reveal-on-scroll p-4 rounded-xl border border-slate-200 bg-white hover:border-emerald-400 hover:shadow-md card-hover-fx transition-all flex flex-col justify-between space-y-3"
                   >
                     <div className="flex items-center justify-between text-[11px] font-fco font-bold uppercase text-slate-400 border-b border-slate-100 pb-1">
                       <span>VÒNG {match.round}</span>

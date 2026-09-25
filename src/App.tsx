@@ -6,6 +6,7 @@ import Trangchu from "./pages/trangchu";
 import BocthamPage from "./pages/boctham";
 
 import Navbar from "./components/navbar";
+import ScrollEnhancer from "./components/ScrollEnhancer";
 import Dieukien from "./pages/dieukien";
 import NoiQuy from "./pages/noiquy";
 import Quydinh from "./pages/quydinh";
@@ -40,6 +41,7 @@ export default function App() {
 
   return (
     <ThemeProvider>
+      <ScrollEnhancer />
       {!isStandalonePage && <Navbar />}
       <Routes>
         {/* Dedicated Standalone Tournament Draw Stages */}

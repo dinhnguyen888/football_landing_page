@@ -17,7 +17,7 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
     <div
       className={`w-full ${
         isDthen ? "bg-[#050f1f] border-b-2 border-blue-500/80" : "bg-[#051410] border-b-2 border-emerald-500/80"
-      } text-white py-6 sm:py-10 md:py-14 px-3 sm:px-4 relative overflow-hidden`}
+      } text-white py-8 sm:py-11 md:py-14 px-4 sm:px-6 relative overflow-hidden`}
     >
       {/* 1. Dynamic Stadium Pitch Night Gradient */}
       <div
@@ -53,7 +53,7 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
       />
 
       {/* 3. HIGH-END 3D ESPORTS HOLOGRAPHIC TACTICAL MATCH ENGINE */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-5 opacity-25 sm:opacity-55 transition-opacity">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden z-5 opacity-15 sm:opacity-55 transition-opacity">
         
         {/* Left Goal Post Frame */}
         <div className="absolute bottom-2 left-1 w-3 sm:w-4 h-12 border-r-2 border-y-2 border-emerald-400/40 rounded-r-lg bg-emerald-500/10 flex items-center justify-center opacity-70">
@@ -203,37 +203,41 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
           </div>
         )}
 
-        <h1 className="font-fco font-black text-xl sm:text-3xl md:text-4xl lg:text-5xl uppercase tracking-wider text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] leading-tight px-1">
+        <h1 className="font-fco font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl uppercase tracking-wider text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] leading-tight px-1">
           {displayTitle}
         </h1>
 
         {subtitle && (
           <p
             className={`${
-              isDthen ? "text-blue-100/80" : "text-emerald-100/80"
-            } text-[11px] sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm px-2`}
+              isDthen ? "text-blue-100/90" : "text-emerald-100/90"
+            } text-xs sm:text-sm font-normal max-w-2xl mx-auto leading-relaxed drop-shadow-sm px-2`}
           >
             {subtitle}
           </p>
         )}
 
         <div
-          className={`pt-0.5 flex flex-wrap items-center justify-center gap-1 sm:gap-2 text-[10px] sm:text-xs ${
+          className={`pt-1 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs ${
             isDthen ? "text-blue-400/90" : "text-emerald-400/90"
           } font-medium tracking-wide`}
         >
-          <Link to="/" className="text-slate-400 hover:text-white transition-colors">
-            Hub Giải Đấu
+          <Link
+            to="/"
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors flex items-center space-x-1"
+          >
+            <i className="fa-solid fa-layer-group text-[9px] text-amber-400"></i>
+            <span>Hub</span>
           </Link>
-          <span className="text-slate-600">/</span>
+          <span className="text-slate-500">/</span>
           <Link
             to={isDthen ? "/dthen" : "/saovang"}
-            className="text-slate-400 hover:text-white transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
           >
             {isDthen ? "ĐThén FCO" : "Sao Vàng Cup"}
           </Link>
-          <span className="text-slate-600">/</span>
-          <span className={isDthen ? "text-blue-300 font-semibold" : "text-emerald-300 font-semibold"}>
+          <span className="text-slate-500">/</span>
+          <span className={`px-2.5 py-1 rounded-lg ${isDthen ? "bg-blue-500/20 text-blue-300" : "bg-emerald-500/20 text-emerald-300"} font-semibold truncate max-w-[200px] sm:max-w-none`}>
             {displayTitle}
           </span>
         </div>

@@ -54,7 +54,7 @@ const Footer: React.FC = () => {
         } animate-gradient-flow shadow-[0_0_15px_rgba(0,229,117,0.5)]`}
       />
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-8 relative z-10">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-24 lg:pb-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           {/* Col 1: Brand Info */}
           <div className="md:col-span-1 space-y-4">
