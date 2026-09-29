@@ -382,18 +382,31 @@ export function loadDthenTournamentData(): TournamentData | null {
     if (!raw) {
       const fresh = createDefaultDthenTournament();
       saveDthenTournamentData(fresh);
+      saveTournamentBothAsync(fresh, 'DTHEN');
       return fresh;
     }
     const data: TournamentData = JSON.parse(raw);
-    if (isValidTournament(data)) {
+    const isOfficial34 = Boolean(
+      data &&
+      isValidTournament(data) &&
+      data.totalTeams === 34 &&
+      data.id === 'tour_dthen_mua_1' &&
+      data.knockoutStage?.rounds &&
+      data.knockoutStage.rounds.length === 6 &&
+      data.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) &&
+      data.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
+    );
+    if (isOfficial34) {
       return data;
     }
+    // Nếu giải bị xóa, trống hoặc sai cấu trúc: Tự động khôi phục bản 34 VĐV chuẩn
     const fresh = createDefaultDthenTournament();
     saveDthenTournamentData(fresh);
+    saveTournamentBothAsync(fresh, 'DTHEN');
     return fresh;
   } catch (err) {
     console.error('Error loading Dthen tournament data', err);
-    return null;
+    return createDefaultDthenTournament();
   }
 }
 
@@ -431,12 +444,24 @@ export function loadArchiveDthenTournaments(): TournamentData[] {
   try {
     const raw = localStorage.getItem(ARCHIVE_KEY_DTHEN);
     if (raw) {
-      return JSON.parse(raw);
+      const list: TournamentData[] = JSON.parse(raw);
+      if (Array.isArray(list) && list.length > 0) {
+        const has34 = list.some(t => t.id === 'tour_dthen_mua_1' && t.totalTeams === 34);
+        if (!has34) {
+          const fresh = createDefaultDthenTournament();
+          const updated = [fresh, ...list];
+          saveArchiveDthenTournaments(updated);
+          return updated;
+        }
+        return list;
+      }
     }
   } catch (err) {
     console.error('Error loading Dthen archive tournaments', err);
   }
-  return [];
+  const fresh = createDefaultDthenTournament();
+  saveArchiveDthenTournaments([fresh]);
+  return [fresh];
 }
 
 export const CLEAN_VERSION_KEY = 'saovang_tournaments_cleaned_stamp_v1';
@@ -491,27 +516,11 @@ export async function cleanAllTournaments(): Promise<void> {
 }
 
 /**
- * Tự động kích hoạt dọn sạch giải đấu trên trình duyệt khi người dùng tải trang
+ * Vô hiệu hóa tính năng tự động dọn sạch để bảo toàn dữ liệu giải đấu cũ khi deploy hoặc mở trên trình duyệt mới
  */
 export function checkAndPerformOneTimeClean(): void {
-  try {
-    if (typeof window !== 'undefined' && localStorage.getItem(CLEAN_VERSION_KEY) !== 'CLEANED_SUCCESS') {
-      localStorage.removeItem(STORAGE_KEY);
-      localStorage.removeItem(STORAGE_KEY_DTHEN);
-      localStorage.removeItem(ARCHIVE_KEY);
-      localStorage.removeItem(ARCHIVE_KEY_DTHEN);
-      localStorage.removeItem('SAOVANG_DRAW_DIRECT_SETUP');
-      localStorage.removeItem('saovang_draw_draft');
-      localStorage.removeItem('SAOVANG_DRAW_DRAFT_V1');
-      localStorage.setItem(CLEAN_VERSION_KEY, 'CLEANED_SUCCESS');
-    }
-  } catch (err) {
-    // Ignore in non-browser or storage-restricted contexts
-  }
+  // Đã vô hiệu hóa để bảo toàn 100% dữ liệu giải đấu của người dùng
 }
-
-// Chạy một lần tự động dọn sạch giải đấu cũ
-checkAndPerformOneTimeClean();
 
 /**
  * Kiểm tra giải đấu hợp lệ (có vòng bảng hoặc là cúp Knockout)
@@ -587,9 +596,16 @@ export function saveTournamentBoth(tour: TournamentData, system: 'SAO_VANG' | 'D
 export async function fetchAndSyncArchiveDthenTournaments(): Promise<TournamentData[]> {
   try {
     const cloudData = await getTournamentFromFirestore<TournamentData[]>(CLOUD_KEYS.ARCHIVE_DTHEN);
-    if (cloudData && Array.isArray(cloudData)) {
-      localStorage.setItem(ARCHIVE_KEY_DTHEN, JSON.stringify(cloudData));
-      return cloudData;
+    if (cloudData && Array.isArray(cloudData) && cloudData.length > 0) {
+      const has34 = cloudData.some(t => t.id === 'tour_dthen_mua_1' && t.totalTeams === 34);
+      let effective = cloudData;
+      if (!has34) {
+        effective = [createDefaultDthenTournament(), ...cloudData];
+        saveArchiveDthenTournaments(effective);
+      } else {
+        localStorage.setItem(ARCHIVE_KEY_DTHEN, JSON.stringify(effective));
+      }
+      return effective;
     }
   } catch (err) {
     console.warn('[Firebase] Fallback to local Dthen archive tournament data', err);
@@ -601,10 +617,25 @@ export async function fetchAndSyncArchiveDthenTournaments(): Promise<TournamentD
 export async function fetchAndSyncDthenTournament(): Promise<TournamentData | null> {
   try {
     const cloudData = await getTournamentFromFirestore<TournamentData>(CLOUD_KEYS.DTHEN);
-    if (cloudData && isValidTournament(cloudData)) {
+    const isCloudValid34 = Boolean(
+      cloudData &&
+      isValidTournament(cloudData) &&
+      cloudData.totalTeams === 34 &&
+      cloudData.id === 'tour_dthen_mua_1' &&
+      cloudData.knockoutStage?.rounds &&
+      cloudData.knockoutStage.rounds.length === 6 &&
+      cloudData.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) &&
+      cloudData.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
+    );
+    if (isCloudValid34) {
       localStorage.setItem(STORAGE_KEY_DTHEN, JSON.stringify(cloudData));
       return cloudData;
     }
+    // Nếu Cloud chưa có hoặc bị clear: Tự động khôi phục bản 34 VĐV và ghi lên Cloud
+    const fresh = createDefaultDthenTournament();
+    saveDthenTournamentData(fresh);
+    saveTournamentBothAsync(fresh, 'DTHEN');
+    return fresh;
   } catch (err) {
     console.warn('[Firebase] Fallback to local Dthen tournament data', err);
   }

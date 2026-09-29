@@ -15,6 +15,9 @@ import {
   fetchAndSyncArchiveDthenTournaments,
   loadArchiveDthenTournaments,
   isValidTournament,
+  createDefaultDthenTournament,
+  saveDthenTournamentData,
+  saveTournamentBothAsync,
 } from '../../utils/tournamentEngine';
 import {
   subscribeTournamentFromFirestore,
@@ -43,7 +46,7 @@ const DthenLtd: React.FC = () => {
     if (visibleInArchive) {
       return visibleInArchive;
     }
-    return null;
+    return createDefaultDthenTournament();
   });
 
   const [viewStage, setViewStage] = useState<'GROUP' | 'KNOCKOUT' | 'STATS'>(() => {
@@ -106,6 +109,12 @@ const DthenLtd: React.FC = () => {
           if (visibleInArchive.format === 'pure_knockout' || visibleInArchive.knockoutStage?.isCompletedGroupStage) {
             setViewStage('KNOCKOUT');
           }
+        } else {
+          const fresh = createDefaultDthenTournament();
+          setTournament(fresh);
+          setViewStage('KNOCKOUT');
+          saveDthenTournamentData(fresh);
+          saveTournamentBothAsync(fresh, 'DTHEN');
         }
       }
     } catch (err) {
@@ -240,6 +249,22 @@ const DthenLtd: React.FC = () => {
             <p className="text-sm text-slate-600">
               Ban Tổ Chức đang bốc thăm chia bảng và cập nhật danh sách Huấn luyện viên tham dự.
             </p>
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const fresh = createDefaultDthenTournament();
+                  setTournament(fresh);
+                  setViewStage('KNOCKOUT');
+                  saveDthenTournamentData(fresh);
+                  saveTournamentBothAsync(fresh, 'DTHEN');
+                }}
+                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-oswald text-xs font-bold uppercase tracking-wider shadow-md transition-all cursor-pointer"
+              >
+                <i className="fa-solid fa-wand-magic-sparkles"></i>
+                <span>Khôi Phục Giải ĐTHÉN 34 VĐV (Chuẩn Bốc Thăm)</span>
+              </button>
+            </div>
           </div>
         </Body>
         <Footer />

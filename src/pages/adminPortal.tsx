@@ -21,6 +21,7 @@ import {
   saveTournamentBothAsync,
   cleanAllTournaments,
   createEmptyTournament,
+  createDefaultDthenTournament,
   Team,
   Group,
   fetchAndSyncSaoVangTournament,
@@ -139,29 +140,32 @@ const AdminPortal: React.FC = () => {
       const existing = loadDthenTournamentData();
       const archive = loadArchiveDthenTournaments();
       const validExisting = isValidTournament(existing) ? existing! : null;
+      const defaultDthen = createDefaultDthenTournament();
 
-      setSavedTournaments(archive);
-      setTournament(validExisting || (archive.length > 0 ? archive[0] : createEmptyTournament('DTHEN')));
+      setSavedTournaments(archive && archive.length > 0 ? archive : [defaultDthen]);
+      setTournament(validExisting || (archive.length > 0 ? archive[0] : defaultDthen));
 
       // Fetch from Cloud Firestore
       try {
         const cloud = await fetchAndSyncDthenTournament();
         const cloudArchive = await fetchAndSyncArchiveDthenTournaments();
 
-        if (cloudArchive && Array.isArray(cloudArchive)) {
+        if (cloudArchive && Array.isArray(cloudArchive) && cloudArchive.length > 0) {
           setSavedTournaments(cloudArchive);
           if (isValidTournament(cloud)) {
             setTournament(cloud!);
-          } else if (cloudArchive.length > 0) {
-            setTournament(cloudArchive[0]);
           } else {
-            setTournament(createEmptyTournament('DTHEN'));
+            setTournament(cloudArchive[0]);
           }
         } else if (isValidTournament(cloud)) {
           setTournament(cloud!);
-        } else if (!archive || archive.length === 0) {
-          setSavedTournaments([]);
-          setTournament(createEmptyTournament('DTHEN'));
+          setSavedTournaments([cloud!]);
+        } else {
+          setSavedTournaments([defaultDthen]);
+          setTournament(defaultDthen);
+          saveDthenTournamentData(defaultDthen);
+          saveArchiveDthenTournaments([defaultDthen]);
+          saveTournamentBothAsync(defaultDthen, 'DTHEN');
         }
       } catch (err) {
         console.warn('Error fetching Dthen cloud data:', err);
@@ -414,6 +418,24 @@ const AdminPortal: React.FC = () => {
     } catch (err) {
       console.error(err);
       alert('Đã xảy ra lỗi khi dọn sạch giải đấu.');
+    }
+  };
+
+  // Khôi phục giải đấu ĐTHÉN 34 VĐV (Chuẩn Bốc Thăm & Nhánh Đấu)
+  const handleRestoreDthen34 = async () => {
+    try {
+      const fresh = createDefaultDthenTournament();
+      setTournament(fresh);
+      const filtered = savedTournaments.filter((t) => t.id !== fresh.id);
+      const updatedList = [fresh, ...filtered];
+      setSavedTournaments(updatedList);
+      saveDthenTournamentData(fresh);
+      saveArchiveDthenTournaments(updatedList);
+      await saveTournamentBothAsync(fresh, 'DTHEN');
+      alert('✓ Đã khôi phục thành công Giải ĐTHÉN 34 VĐV (Chuẩn Bốc Thăm & Nhánh Đấu)!');
+    } catch (err) {
+      console.error(err);
+      alert('Đã xảy ra lỗi khi khôi phục giải.');
     }
   };
 
@@ -1123,6 +1145,18 @@ const AdminPortal: React.FC = () => {
                   <span>Dọn Sạch Giải</span>
                 </button>
 
+                {isDthen && (
+                  <button
+                    type="button"
+                    onClick={handleRestoreDthen34}
+                    className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-oswald text-xs font-bold uppercase tracking-wider shadow-sm flex items-center space-x-1.5 cursor-pointer"
+                    title="Khôi phục giải ĐTHÉN 34 VĐV chuẩn cặp đấu bốc thăm"
+                  >
+                    <i className="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>Khôi Phục Giải 34 VĐV</span>
+                  </button>
+                )}
+
                 <button
                   type="button"
                   onClick={() => setActiveTab('CREATE')}
@@ -1145,9 +1179,19 @@ const AdminPortal: React.FC = () => {
                   Chưa có giải đấu nào trong hệ thống
                 </h3>
                 <p className="text-xs text-slate-500 max-w-md mx-auto">
-                  Toàn bộ giải đấu cũ đã được dọn sạch thành công. Bạn hãy bấm nút <strong>Tạo Giải Mới</strong> để khởi tạo giải đấu mới.
+                  Toàn bộ giải đấu cũ đã được dọn sạch thành công. Bạn hãy bấm nút <strong>Tạo Giải Mới</strong> để khởi tạo giải đấu mới hoặc khôi phục giải ĐTHÉN 34 VĐV chuẩn.
                 </p>
-                <div className="pt-2">
+                <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                  {isDthen && (
+                    <button
+                      type="button"
+                      onClick={handleRestoreDthen34}
+                      className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-oswald text-xs font-bold uppercase tracking-wider shadow-md inline-flex items-center space-x-2 cursor-pointer"
+                    >
+                      <i className="fa-solid fa-wand-magic-sparkles"></i>
+                      <span>⚡ Khôi phục ngay Giải ĐTHÉN 34 VĐV (Chuẩn Bốc Thăm)</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setActiveTab('CREATE')}
