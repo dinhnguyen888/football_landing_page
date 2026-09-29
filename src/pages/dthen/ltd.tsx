@@ -12,6 +12,7 @@ import {
   loadDthenTournamentData,
   buildFIFABracketFromGroups,
   fetchAndSyncDthenTournament,
+  fetchAndSyncArchiveDthenTournaments,
   loadArchiveDthenTournaments,
   isValidTournament,
 } from '../../utils/tournamentEngine';
@@ -23,6 +24,8 @@ import { isFirebaseConfigured } from '../../services/firebase';
 
 const DthenLtd: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [archiveList, setArchiveList] = useState<TournamentData[]>(() => loadArchiveDthenTournaments());
 
   const [tournament, setTournament] = useState<TournamentData | null>(() => {
@@ -67,46 +70,94 @@ const DthenLtd: React.FC = () => {
   const [koRoundFilter, setKoRoundFilter] = useState<string>('ALL');
   const [syncStatus, setSyncStatus] = useState<'cloud' | 'local'>('local');
 
-  useEffect(() => {
-    // 1. Initial fetch from Cloud
-    fetchAndSyncDthenTournament().then((data) => {
-      const currentArchive = loadArchiveDthenTournaments();
-      setArchiveList(currentArchive);
+  // Hàm tải và đồng bộ toàn diện từ Cloud Firestore
+  const syncFromCloud = async () => {
+    try {
+      const [data, cloudArchives] = await Promise.all([
+        fetchAndSyncDthenTournament(),
+        fetchAndSyncArchiveDthenTournaments(),
+      ]);
+
+      const effectiveArchives = Array.isArray(cloudArchives) && cloudArchives.length > 0
+        ? cloudArchives
+        : loadArchiveDthenTournaments();
+      setArchiveList(effectiveArchives);
+
       const tourIdParam = searchParams.get('tourId');
       if (tourIdParam) {
-        const match = currentArchive.find((t) => t.id === tourIdParam);
+        const match = effectiveArchives.find((t) => t.id === tourIdParam);
         if (match) {
           setTournament(match);
           if (match.format === 'pure_knockout') setViewStage('KNOCKOUT');
           return;
         }
       }
+
       if (data && isValidTournament(data) && data.isVisible !== false) {
         setTournament(data);
         if (data.format === 'pure_knockout' || data.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
         if (isFirebaseConfigured) setSyncStatus('cloud');
+      } else {
+        const visibleInArchive = effectiveArchives.find((t) => isValidTournament(t) && t.isVisible !== false);
+        if (visibleInArchive) {
+          setTournament(visibleInArchive);
+          if (visibleInArchive.format === 'pure_knockout' || visibleInArchive.knockoutStage?.isCompletedGroupStage) {
+            setViewStage('KNOCKOUT');
+          }
+        }
       }
-    });
+    } catch (err) {
+      console.warn('Sync from cloud error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // 2. Real-time Cloud listener
-    const unsubscribe = subscribeTournamentFromFirestore<TournamentData>(
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await syncFromCloud();
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
+
+  useEffect(() => {
+    syncFromCloud();
+
+    // 1. Real-time Cloud listener cho giải Active
+    const unsubActive = subscribeTournamentFromFirestore<TournamentData>(
       CLOUD_KEYS.DTHEN,
       (cloudData) => {
-        const currentArchive = loadArchiveDthenTournaments();
-        setArchiveList(currentArchive);
+        if (!cloudData || !isValidTournament(cloudData) || cloudData.isVisible === false) return;
         const tourIdParam = searchParams.get('tourId');
-        if (tourIdParam) {
-          const match = currentArchive.find((t) => t.id === tourIdParam);
-          if (match) return;
-        }
-        if (cloudData && isValidTournament(cloudData) && cloudData.isVisible !== false) {
+        if (!tourIdParam || tourIdParam === cloudData.id) {
           setTournament(cloudData);
           if (cloudData.format === 'pure_knockout' || cloudData.knockoutStage?.isCompletedGroupStage) {
             setViewStage('KNOCKOUT');
           }
           setSyncStatus('cloud');
+        }
+      }
+    );
+
+    // 2. Real-time Cloud listener cho Archive
+    const unsubArchive = subscribeTournamentFromFirestore<TournamentData[]>(
+      CLOUD_KEYS.ARCHIVE_DTHEN,
+      (archiveData) => {
+        if (Array.isArray(archiveData)) {
+          setArchiveList(archiveData);
+          const tourIdParam = searchParams.get('tourId');
+          if (tourIdParam) {
+            const match = archiveData.find((t) => t.id === tourIdParam);
+            if (match) {
+              setTournament(match);
+            }
+          } else {
+            const vis = archiveData.find((t) => isValidTournament(t) && t.isVisible !== false);
+            if (vis) {
+              setTournament(vis);
+            }
+          }
         }
       }
     );
@@ -140,10 +191,38 @@ const DthenLtd: React.FC = () => {
     window.addEventListener('storage', handleStorage);
 
     return () => {
-      unsubscribe();
+      unsubActive();
+      unsubArchive();
       window.removeEventListener('storage', handleStorage);
     };
   }, [searchParams]);
+
+  // Loading state when initial cloud fetch is ongoing
+  if (isLoading && !tournament) {
+    return (
+      <>
+        <Banner
+          title="LỊCH THI ĐẤU & BẢNG XẾP HẠNG"
+          subtitle="Cổng thông tin bảng điểm và lịch trình giải đấu FC Online ĐThén FCO ™"
+          badge="ĐANG TẢI DỮ LIỆU"
+        />
+        <Body>
+          <div className="max-w-2xl mx-auto my-16 p-10 rounded-2xl portal-card text-center bg-white shadow-sm space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto text-2xl border border-blue-200">
+              <i className="fa-solid fa-spinner animate-spin text-2xl"></i>
+            </div>
+            <h2 className="font-oswald text-2xl font-bold uppercase text-slate-900 tracking-wide">
+              ĐANG ĐỒNG BỘ BẢNG XẾP HẠNG MỚI NHẤT...
+            </h2>
+            <p className="text-xs text-slate-500">
+              Hệ thống đang kết nối trực tiếp với Cloud Firestore để cập nhật tỉ số và BXH trực tiếp.
+            </p>
+          </div>
+        </Body>
+        <Footer />
+      </>
+    );
+  }
 
   if (!tournament || !isValidTournament(tournament) || tournament.isVisible === false) {
     return (
@@ -277,8 +356,18 @@ const DthenLtd: React.FC = () => {
                   : 'bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-400'
               }`}>
                 <i className={`fa-solid ${syncStatus === 'cloud' ? 'fa-cloud text-emerald-600 dark:text-emerald-400' : 'fa-database text-slate-500'}`}></i>
-                <span>{syncStatus === 'cloud' ? 'Cloud Synced' : 'Local'}</span>
+                <span>{syncStatus === 'cloud' ? 'Cloud Trực Tiếp' : 'Local'}</span>
               </span>
+              <button
+                type="button"
+                onClick={handleManualRefresh}
+                disabled={isRefreshing}
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-oswald font-bold uppercase text-slate-600 dark:text-slate-300 hover:text-blue-600 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border border-slate-200 dark:border-slate-700"
+                title="Bấm để tải lại dữ liệu mới nhất từ Cloud Firestore"
+              >
+                <i className={`fa-solid fa-arrows-rotate ${isRefreshing ? 'animate-spin text-blue-600' : ''}`}></i>
+                <span>{isRefreshing ? 'Đang tải...' : 'Làm mới'}</span>
+              </button>
               <span className="text-[11px] text-slate-500 font-semibold sm:hidden">
                 {tournament.format === 'pure_knockout' ? `${tournament.totalTeams || 16} Đội Knockout` : '32 Đội • 8 Bảng'}
               </span>

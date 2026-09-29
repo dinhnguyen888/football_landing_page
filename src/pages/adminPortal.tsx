@@ -18,6 +18,7 @@ import {
   generatePureKnockoutBracket,
   isValidTournament,
   saveTournamentBoth,
+  saveTournamentBothAsync,
   cleanAllTournaments,
   createEmptyTournament,
   Team,
@@ -491,17 +492,36 @@ const AdminPortal: React.FC = () => {
     setTournament(updatedTour);
     const updatedList = savedTournaments.map((t) => (t.id === updatedTour.id ? updatedTour : t));
     setSavedTournaments(updatedList);
-    saveTournamentBoth(updatedTour, selectedSystem || (updatedTour.id.includes('dthen') ? 'DTHEN' : 'SAO_VANG'));
+    const sys = selectedSystem || (updatedTour.id.includes('dthen') ? 'DTHEN' : 'SAO_VANG');
+    saveTournamentBothAsync(updatedTour, sys, updatedList).catch((err) => {
+      console.warn('Auto-save error:', err);
+    });
   };
 
-  // Nút chủ động lưu tỉ số từ giao diện
-  const handleExplicitSaveScores = () => {
+  // Nút chủ động lưu tỉ số từ giao diện và đồng bộ trực tiếp lên Cloud Firestore
+  const handleExplicitSaveScores = async () => {
     const sys = selectedSystem || (tournament.id.includes('dthen') ? 'DTHEN' : 'SAO_VANG');
-    saveTournamentBoth(tournament, sys);
     const updatedList = savedTournaments.map((t) => (t.id === tournament.id ? tournament : t));
     setSavedTournaments(updatedList);
-    setSyncFeedback(`✓ ĐÃ LƯU THÀNH CÔNG: Toàn bộ tỉ số và Bảng Xếp Hạng giải "${tournament.tournamentName}" đã được lưu an toàn!`);
-    setTimeout(() => setSyncFeedback(''), 4000);
+    setIsSyncing(true);
+    setSyncFeedback('⏳ Đang lưu tỉ số và cập nhật Bảng Xếp Hạng lên Cloud Firestore...');
+
+    try {
+      const isSuccess = await saveTournamentBothAsync(tournament, sys, updatedList);
+      if (isSuccess) {
+        setSyncFeedback(`✓ ĐÃ LƯU & XUẤT BẢN THÀNH CÔNG: Tỉ số và Bảng Xếp Hạng giải "${tournament.tournamentName}" đã hiển thị cho tất cả khán giả!`);
+      } else if (!isFirebaseConfigured) {
+        setSyncFeedback('⚠ Đã lưu an toàn tại LocalStorage (Chưa cấu hình Firebase Cloud).');
+      } else {
+        setSyncFeedback(`✓ ĐÃ LƯU AN TOÀN: Dữ liệu đã lưu trên hệ thống và đang đồng bộ lên Cloud.`);
+      }
+    } catch (err) {
+      console.error('Error explicit saving scores:', err);
+      setSyncFeedback('❌ Lỗi kết nối khi lưu lên Cloud. Vui lòng kiểm tra mạng và ấn Lưu lại.');
+    } finally {
+      setIsSyncing(false);
+      setTimeout(() => setSyncFeedback(''), 5000);
+    }
   };
 
   // Score change in group matches

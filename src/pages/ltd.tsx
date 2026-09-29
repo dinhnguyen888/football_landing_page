@@ -11,6 +11,7 @@ import {
   loadTournamentData,
   loadArchiveTournaments,
   fetchAndSyncSaoVangTournament,
+  fetchAndSyncArchiveTournaments,
   isValidTournament,
 } from '../utils/tournamentEngine';
 import {
@@ -20,6 +21,8 @@ import {
 
 const Ltd: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [archiveList, setArchiveList] = useState<TournamentData[]>(() => loadArchiveTournaments());
 
   const [tournament, setTournament] = useState<TournamentData | null>(() => {
@@ -39,7 +42,6 @@ const Ltd: React.FC = () => {
     if (visibleInArchive) {
       return visibleInArchive;
     }
-    // If archive is empty and active is null, return null
     return null;
   });
 
@@ -66,43 +68,91 @@ const Ltd: React.FC = () => {
   const [activeRoundFilter, setActiveRoundFilter] = useState<number | 'ALL'>('ALL');
   const [koRoundFilter, setKoRoundFilter] = useState<number | 'ALL'>('ALL');
 
-  useEffect(() => {
-    // Initial fetch from cloud
-    fetchAndSyncSaoVangTournament().then((cloud) => {
-      const currentArchive = loadArchiveTournaments();
-      setArchiveList(currentArchive);
+  // Hàm tải và đồng bộ toàn diện từ Cloud Firestore
+  const syncFromCloud = async () => {
+    try {
+      const [cloud, cloudArchives] = await Promise.all([
+        fetchAndSyncSaoVangTournament(),
+        fetchAndSyncArchiveTournaments(),
+      ]);
+
+      const effectiveArchives = Array.isArray(cloudArchives) && cloudArchives.length > 0
+        ? cloudArchives
+        : loadArchiveTournaments();
+      setArchiveList(effectiveArchives);
+
       const tourIdParam = searchParams.get('tourId');
       if (tourIdParam) {
-        const match = currentArchive.find((t) => t.id === tourIdParam);
+        const match = effectiveArchives.find((t) => t.id === tourIdParam);
         if (match) {
           setTournament(match);
           if (match.format === 'pure_knockout') setViewStage('KNOCKOUT');
           return;
         }
       }
+
       if (cloud && isValidTournament(cloud) && cloud.isVisible !== false) {
         setTournament(cloud);
         if (cloud.format === 'pure_knockout' || cloud.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
+      } else {
+        const visibleInArchive = effectiveArchives.find((t) => isValidTournament(t) && t.isVisible !== false);
+        if (visibleInArchive) {
+          setTournament(visibleInArchive);
+          if (visibleInArchive.format === 'pure_knockout' || visibleInArchive.knockoutStage?.isCompletedGroupStage) {
+            setViewStage('KNOCKOUT');
+          }
+        }
       }
-    });
+    } catch (err) {
+      console.warn('Sync from cloud error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-    // Realtime subscription from Cloud
-    const unsubscribe = subscribeTournamentFromFirestore<TournamentData>(
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    await syncFromCloud();
+    setTimeout(() => setIsRefreshing(false), 600);
+  };
+
+  useEffect(() => {
+    syncFromCloud();
+
+    // 1. Realtime subscription cho giải đấu Active
+    const unsubActive = subscribeTournamentFromFirestore<TournamentData>(
       CLOUD_KEYS.SAO_VANG,
       (cloudData) => {
-        const currentArchive = loadArchiveTournaments();
-        setArchiveList(currentArchive);
+        if (!cloudData || !isValidTournament(cloudData) || cloudData.isVisible === false) return;
         const tourIdParam = searchParams.get('tourId');
-        if (tourIdParam) {
-          const match = currentArchive.find((t) => t.id === tourIdParam);
-          if (match) return;
-        }
-        if (cloudData && isValidTournament(cloudData) && cloudData.isVisible !== false) {
+        if (!tourIdParam || tourIdParam === cloudData.id) {
           setTournament(cloudData);
           if (cloudData.format === 'pure_knockout' || cloudData.knockoutStage?.isCompletedGroupStage) {
             setViewStage('KNOCKOUT');
+          }
+        }
+      }
+    );
+
+    // 2. Realtime subscription cho Archive
+    const unsubArchive = subscribeTournamentFromFirestore<TournamentData[]>(
+      CLOUD_KEYS.ARCHIVE,
+      (archiveData) => {
+        if (Array.isArray(archiveData)) {
+          setArchiveList(archiveData);
+          const tourIdParam = searchParams.get('tourId');
+          if (tourIdParam) {
+            const match = archiveData.find((t) => t.id === tourIdParam);
+            if (match) {
+              setTournament(match);
+            }
+          } else {
+            const vis = archiveData.find((t) => isValidTournament(t) && t.isVisible !== false);
+            if (vis) {
+              setTournament(vis);
+            }
           }
         }
       }
@@ -134,11 +184,40 @@ const Ltd: React.FC = () => {
       }
     };
     window.addEventListener('storage', handleStorage);
+
     return () => {
-      unsubscribe();
+      unsubActive();
+      unsubArchive();
       window.removeEventListener('storage', handleStorage);
     };
   }, [searchParams]);
+
+  // Loading state when initial cloud fetch is ongoing
+  if (isLoading && !tournament) {
+    return (
+      <>
+        <Banner
+          title="LỊCH THI ĐẤU & BẢNG XẾP HẠNG"
+          subtitle="Cổng thông tin bảng điểm và lịch trình giải đấu FC Online Sao Vàng Cup ™"
+          badge="ĐANG TẢI DỮ LIỆU"
+        />
+        <Body>
+          <div className="max-w-2xl mx-auto my-16 p-10 rounded-2xl portal-card text-center bg-white shadow-sm space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto text-2xl border border-emerald-200">
+              <i className="fa-solid fa-spinner animate-spin text-2xl"></i>
+            </div>
+            <h2 className="font-oswald text-2xl font-bold uppercase text-slate-900 tracking-wide">
+              ĐANG ĐỒNG BỘ BẢNG XẾP HẠNG MỚI NHẤT...
+            </h2>
+            <p className="text-xs text-slate-500">
+              Hệ thống đang kết nối trực tiếp với Cloud Firestore để cập nhật tỉ số và BXH trực tiếp.
+            </p>
+          </div>
+        </Body>
+        <Footer />
+      </>
+    );
+  }
 
   // If no tournament is currently published / active
   if (!tournament || !tournament.isVisible) {
@@ -270,10 +349,26 @@ const Ltd: React.FC = () => {
 
           {/* Header Info */}
           <div className="p-4 sm:p-5 rounded-2xl bg-white border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <span className="font-oswald text-xs font-bold uppercase text-emerald-800 tracking-wider block">
-                {tournament.tournamentName} - {tournament.season}
-              </span>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="font-oswald text-xs font-bold uppercase text-emerald-800 tracking-wider">
+                  {tournament.tournamentName} - {tournament.season}
+                </span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Cloud Trực Tiếp
+                </span>
+                <button
+                  type="button"
+                  onClick={handleManualRefresh}
+                  disabled={isRefreshing}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-oswald font-bold uppercase text-slate-600 hover:text-emerald-700 bg-slate-100 hover:bg-slate-200 transition-all cursor-pointer"
+                  title="Bấm để tải lại dữ liệu mới nhất từ Cloud Firestore"
+                >
+                  <i className={`fa-solid fa-arrows-rotate ${isRefreshing ? 'animate-spin text-emerald-600' : ''}`}></i>
+                  <span>{isRefreshing ? 'Đang tải...' : 'Làm mới'}</span>
+                </button>
+              </div>
               <h2 className="font-oswald text-xl sm:text-2xl font-bold uppercase text-slate-900">
                 {viewStage === 'STATS'
                   ? 'SỐ LIỆU THỐNG KÊ TOÀN DIỆN GIẢI ĐẤU'

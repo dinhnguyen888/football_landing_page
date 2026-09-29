@@ -385,22 +385,12 @@ export function loadDthenTournamentData(): TournamentData | null {
       return fresh;
     }
     const data: TournamentData = JSON.parse(raw);
-
-    // Tự động nâng cấp lên phiên bản 34 VĐV với VĐV Đặc cách 1 là Phạm Quốc Minh, Đặc cách 2 là Phan Long
-    const isOldMockData = !data || (
-      data.format !== 'pure_knockout' ||
-      !data.knockoutStage?.rounds ||
-      data.knockoutStage.rounds.length < 6 ||
-      !data.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) ||
-      !data.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
-    );
-
-    if (isOldMockData) {
-      const fresh = createDefaultDthenTournament();
-      saveDthenTournamentData(fresh);
-      return fresh;
+    if (isValidTournament(data)) {
+      return data;
     }
-    return data;
+    const fresh = createDefaultDthenTournament();
+    saveDthenTournamentData(fresh);
+    return fresh;
   } catch (err) {
     console.error('Error loading Dthen tournament data', err);
     return null;
@@ -536,33 +526,62 @@ export function isValidTournament(tour: TournamentData | null | undefined): bool
 
 /**
  * Lưu đồng bộ một giải đấu vào cả giải hiện hành và danh sách lưu trữ (Archive)
+ * Phiên bản Async: Lưu vào LocalStorage đồng thời await ghi thẳng lên Cloud Firestore
+ */
+export async function saveTournamentBothAsync(
+  tour: TournamentData,
+  system: 'SAO_VANG' | 'DTHEN',
+  customArchiveList?: TournamentData[]
+): Promise<boolean> {
+  const isSaoVang = system === 'SAO_VANG';
+  const docKey = isSaoVang ? CLOUD_KEYS.SAO_VANG : CLOUD_KEYS.DTHEN;
+  const archiveKey = isSaoVang ? CLOUD_KEYS.ARCHIVE : CLOUD_KEYS.ARCHIVE_DTHEN;
+  const storageKey = isSaoVang ? STORAGE_KEY : STORAGE_KEY_DTHEN;
+  const archiveStorageKey = isSaoVang ? ARCHIVE_KEY : ARCHIVE_KEY_DTHEN;
+
+  const activeTour: TournamentData = {
+    ...tour,
+    isVisible: tour.isVisible !== false,
+  };
+
+  const currentArchives = customArchiveList || (isSaoVang ? loadArchiveTournaments() : loadArchiveDthenTournaments());
+  const existingIdx = currentArchives.findIndex((t) => t.id === activeTour.id);
+  let updatedArchive: TournamentData[];
+  if (existingIdx >= 0) {
+    updatedArchive = [...currentArchives];
+    updatedArchive[existingIdx] = activeTour;
+  } else {
+    updatedArchive = [activeTour, ...currentArchives.filter((t) => t.id !== activeTour.id)];
+  }
+
+  // 1. Lưu LocalStorage tức thì
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(activeTour));
+    localStorage.setItem(archiveStorageKey, JSON.stringify(updatedArchive));
+  } catch (err) {
+    console.error('LocalStorage save error:', err);
+  }
+
+  // 2. Lưu đồng bộ lên Cloud Firestore
+  try {
+    const [resTour, resArchive] = await Promise.all([
+      saveTournamentToFirestore(docKey, activeTour),
+      saveTournamentToFirestore(archiveKey, updatedArchive),
+    ]);
+    return Boolean(resTour && resArchive);
+  } catch (err) {
+    console.error('[Firebase] Save error in saveTournamentBothAsync:', err);
+    return false;
+  }
+}
+
+/**
+ * Lưu đồng bộ một giải đấu vào cả giải hiện hành và danh sách lưu trữ (Archive)
  */
 export function saveTournamentBoth(tour: TournamentData, system: 'SAO_VANG' | 'DTHEN'): void {
-  if (system === 'SAO_VANG') {
-    saveTournamentData(tour);
-    const archives = loadArchiveTournaments();
-    const existingIdx = archives.findIndex((t) => t.id === tour.id);
-    let updated: TournamentData[];
-    if (existingIdx >= 0) {
-      updated = [...archives];
-      updated[existingIdx] = tour;
-    } else {
-      updated = [tour, ...archives.filter((t) => t.id !== tour.id).map((t) => ({ ...t, isVisible: false }))];
-    }
-    saveArchiveTournaments(updated);
-  } else {
-    saveDthenTournamentData(tour);
-    const archives = loadArchiveDthenTournaments();
-    const existingIdx = archives.findIndex((t) => t.id === tour.id);
-    let updated: TournamentData[];
-    if (existingIdx >= 0) {
-      updated = [...archives];
-      updated[existingIdx] = tour;
-    } else {
-      updated = [tour, ...archives.filter((t) => t.id !== tour.id).map((t) => ({ ...t, isVisible: false }))];
-    }
-    saveArchiveDthenTournaments(updated);
-  }
+  saveTournamentBothAsync(tour, system).catch((err) => {
+    console.warn('[Firebase] saveTournamentBoth background sync warn:', err);
+  });
 }
 
 export async function fetchAndSyncArchiveDthenTournaments(): Promise<TournamentData[]> {
@@ -582,19 +601,7 @@ export async function fetchAndSyncArchiveDthenTournaments(): Promise<TournamentD
 export async function fetchAndSyncDthenTournament(): Promise<TournamentData | null> {
   try {
     const cloudData = await getTournamentFromFirestore<TournamentData>(CLOUD_KEYS.DTHEN);
-    if (cloudData) {
-      const isOldCloud = (
-        cloudData.format !== 'pure_knockout' ||
-        !cloudData.knockoutStage?.rounds ||
-        cloudData.knockoutStage.rounds.length < 6 ||
-        !cloudData.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) ||
-        !cloudData.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
-      );
-      if (isOldCloud) {
-        const fresh = createDefaultDthenTournament();
-        saveDthenTournamentData(fresh);
-        return fresh;
-      }
+    if (cloudData && isValidTournament(cloudData)) {
       localStorage.setItem(STORAGE_KEY_DTHEN, JSON.stringify(cloudData));
       return cloudData;
     }
