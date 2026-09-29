@@ -199,6 +199,17 @@ const AdminPortal: React.FC = () => {
     } else {
       saveDthenTournamentData(tournament);
     }
+
+    // Keep the archive array in sync with the active tournament edits
+    setSavedTournaments((prev) => {
+      const idx = prev.findIndex((t) => t.id === tournament.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = tournament;
+        return next;
+      }
+      return prev;
+    });
   }, [tournament, isCloudLoaded, selectedSystem]);
 
   // Synchronize archive state
