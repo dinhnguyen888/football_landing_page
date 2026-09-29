@@ -386,17 +386,7 @@ export function loadDthenTournamentData(): TournamentData | null {
       return fresh;
     }
     const data: TournamentData = JSON.parse(raw);
-    const isOfficial34 = Boolean(
-      data &&
-      isValidTournament(data) &&
-      data.totalTeams === 34 &&
-      data.id === 'tour_dthen_mua_1' &&
-      data.knockoutStage?.rounds &&
-      data.knockoutStage.rounds.length === 6 &&
-      data.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) &&
-      data.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
-    );
-    if (isOfficial34) {
+    if (isOfficialDthen34(data)) {
       return data;
     }
     // Nếu giải bị xóa, trống hoặc sai cấu trúc: Tự động khôi phục bản 34 VĐV chuẩn
@@ -534,6 +524,22 @@ export function isValidTournament(tour: TournamentData | null | undefined): bool
 }
 
 /**
+ * Kiểm tra xem có đúng là Giải ĐTHÉN 34 VĐV chuẩn không
+ */
+export function isOfficialDthen34(tour: TournamentData | null | undefined): boolean {
+  return Boolean(
+    tour &&
+    isValidTournament(tour) &&
+    tour.totalTeams === 34 &&
+    tour.id === 'tour_dthen_mua_1' &&
+    tour.knockoutStage?.rounds &&
+    tour.knockoutStage.rounds.length === 6 &&
+    tour.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) &&
+    tour.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
+  );
+}
+
+/**
  * Lưu đồng bộ một giải đấu vào cả giải hiện hành và danh sách lưu trữ (Archive)
  * Phiên bản Async: Lưu vào LocalStorage đồng thời await ghi thẳng lên Cloud Firestore
  */
@@ -617,17 +623,7 @@ export async function fetchAndSyncArchiveDthenTournaments(): Promise<TournamentD
 export async function fetchAndSyncDthenTournament(): Promise<TournamentData | null> {
   try {
     const cloudData = await getTournamentFromFirestore<TournamentData>(CLOUD_KEYS.DTHEN);
-    const isCloudValid34 = Boolean(
-      cloudData &&
-      isValidTournament(cloudData) &&
-      cloudData.totalTeams === 34 &&
-      cloudData.id === 'tour_dthen_mua_1' &&
-      cloudData.knockoutStage?.rounds &&
-      cloudData.knockoutStage.rounds.length === 6 &&
-      cloudData.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) &&
-      cloudData.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
-    );
-    if (isCloudValid34) {
+    if (isOfficialDthen34(cloudData)) {
       localStorage.setItem(STORAGE_KEY_DTHEN, JSON.stringify(cloudData));
       return cloudData;
     }

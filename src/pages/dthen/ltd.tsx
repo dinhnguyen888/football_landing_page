@@ -15,6 +15,7 @@ import {
   fetchAndSyncArchiveDthenTournaments,
   loadArchiveDthenTournaments,
   isValidTournament,
+  isOfficialDthen34,
   createDefaultDthenTournament,
   saveDthenTournamentData,
   saveTournamentBothAsync,
@@ -39,10 +40,10 @@ const DthenLtd: React.FC = () => {
       if (match) return match;
     }
     const active = loadDthenTournamentData();
-    if (active && isValidTournament(active) && active.isVisible !== false) {
+    if (active && isOfficialDthen34(active) && active.isVisible !== false) {
       return active;
     }
-    const visibleInArchive = archive.find((t) => isValidTournament(t) && t.isVisible !== false);
+    const visibleInArchive = archive.find((t) => isOfficialDthen34(t) && t.isVisible !== false);
     if (visibleInArchive) {
       return visibleInArchive;
     }
@@ -96,14 +97,14 @@ const DthenLtd: React.FC = () => {
         }
       }
 
-      if (data && isValidTournament(data) && data.isVisible !== false) {
+      if (data && isOfficialDthen34(data) && data.isVisible !== false) {
         setTournament(data);
         if (data.format === 'pure_knockout' || data.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
         if (isFirebaseConfigured) setSyncStatus('cloud');
       } else {
-        const visibleInArchive = effectiveArchives.find((t) => isValidTournament(t) && t.isVisible !== false);
+        const visibleInArchive = effectiveArchives.find((t) => isOfficialDthen34(t) && t.isVisible !== false);
         if (visibleInArchive) {
           setTournament(visibleInArchive);
           if (visibleInArchive.format === 'pure_knockout' || visibleInArchive.knockoutStage?.isCompletedGroupStage) {
@@ -137,7 +138,7 @@ const DthenLtd: React.FC = () => {
     const unsubActive = subscribeTournamentFromFirestore<TournamentData>(
       CLOUD_KEYS.DTHEN,
       (cloudData) => {
-        if (!cloudData || !isValidTournament(cloudData) || cloudData.isVisible === false) return;
+        if (!cloudData || !isOfficialDthen34(cloudData) || cloudData.isVisible === false) return;
         const tourIdParam = searchParams.get('tourId');
         if (!tourIdParam || tourIdParam === cloudData.id) {
           setTournament(cloudData);
@@ -162,7 +163,7 @@ const DthenLtd: React.FC = () => {
               setTournament(match);
             }
           } else {
-            const vis = archiveData.find((t) => isValidTournament(t) && t.isVisible !== false);
+            const vis = archiveData.find((t) => isOfficialDthen34(t) && t.isVisible !== false);
             if (vis) {
               setTournament(vis);
             }
@@ -184,13 +185,13 @@ const DthenLtd: React.FC = () => {
         }
       }
       const active = loadDthenTournamentData();
-      if (active && isValidTournament(active) && active.isVisible !== false) {
+      if (active && isOfficialDthen34(active) && active.isVisible !== false) {
         setTournament(active);
         if (active.format === 'pure_knockout' || active.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
         }
       } else {
-        const vis = currentArchive.find((t) => isValidTournament(t) && t.isVisible !== false);
+        const vis = currentArchive.find((t) => isOfficialDthen34(t) && t.isVisible !== false);
         setTournament(vis || null);
         if (vis?.format === 'pure_knockout' || vis?.knockoutStage?.isCompletedGroupStage) {
           setViewStage('KNOCKOUT');
@@ -233,7 +234,7 @@ const DthenLtd: React.FC = () => {
     );
   }
 
-  if (!tournament || !isValidTournament(tournament) || tournament.isVisible === false) {
+  if (!tournament || !isOfficialDthen34(tournament) || tournament.isVisible === false) {
     return (
       <>
         <Banner
