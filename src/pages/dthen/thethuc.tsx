@@ -5,13 +5,13 @@ import Body from "../../components/body";
 import CardSection from "../../components/cardsection";
 
 const DthenTheThuc: React.FC = () => {
-  const [activeFormat, setActiveFormat] = useState<"GROUP_KNOCKOUT" | "PURE_KNOCKOUT">("GROUP_KNOCKOUT");
+  const [activeFormat, setActiveFormat] = useState<"DTHEN_34" | "GROUP_KNOCKOUT" | "PURE_KNOCKOUT">("DTHEN_34");
 
   return (
     <>
       <Banner
         title="THỂ THỨC THI ĐẤU ĐTHÉN FCO ™"
-        subtitle="Chi tiết thể thức thi đấu vòng bảng, vòng loại trực tiếp và nguyên tắc xếp hạng giải ĐThén FCO"
+        subtitle="Chi tiết thể thức thi đấu giải ĐThén 34 VĐV (2 Đặc Cách), Vòng bảng và Cúp loại trực tiếp"
         badge="DTHEN FCO FORMAT"
       />
 
@@ -21,15 +21,27 @@ const DthenTheThuc: React.FC = () => {
           <div className="flex flex-wrap items-center justify-center p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 gap-2">
             <button
               type="button"
+              onClick={() => setActiveFormat("DTHEN_34")}
+              className={`flex-1 min-w-[200px] py-3 px-4 rounded-xl font-oswald text-xs sm:text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                activeFormat === "DTHEN_34"
+                  ? "bg-gradient-to-r from-orange-500 via-amber-500 to-emerald-600 text-white shadow-md font-black"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              }`}
+            >
+              <i className="fa-solid fa-crown text-amber-300"></i>
+              <span>⭐ Sơ Đồ 34 VĐV (2 Đặc Cách)</span>
+            </button>
+            <button
+              type="button"
               onClick={() => setActiveFormat("GROUP_KNOCKOUT")}
               className={`flex-1 min-w-[200px] py-3 px-4 rounded-xl font-oswald text-xs sm:text-sm font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 cursor-pointer ${
                 activeFormat === "GROUP_KNOCKOUT"
-                  ? "bg-blue-600 text-white shadow-md"
+                  ? "bg-blue-600 text-white shadow-md font-bold"
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               }`}
             >
               <i className="fa-solid fa-layer-group text-sm"></i>
-              <span>1. Vòng Bảng & Knockout (32 Đội)</span>
+              <span>Vòng Bảng & Knockout (32 Đội)</span>
             </button>
             <button
               type="button"
@@ -41,9 +53,115 @@ const DthenTheThuc: React.FC = () => {
               }`}
             >
               <i className="fa-solid fa-trophy text-sm text-amber-300"></i>
-              <span>2. Cúp Loại Trực Tiếp (Knockout Cup)</span>
+              <span>Cúp Knockout Đơn Thuần</span>
             </button>
           </div>
+
+          {/* ================= TAB 0: SƠ ĐỒ 34 VĐV (2 VĐV ĐẶC CÁCH) ================= */}
+          {activeFormat === "DTHEN_34" && (
+            <>
+              <CardSection badgeNumber={1} title="SƠ ĐỒ GIẢI ĐẤU 34 VĐV (2 VĐV ĐẶC CÁCH)">
+                <div className="space-y-4 text-slate-700 dark:text-slate-300 text-sm leading-relaxed pl-2 sm:pl-11">
+                  <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 text-white border-2 border-amber-400/50 shadow-md">
+                    <h3 className="font-oswald font-black uppercase text-base sm:text-lg text-amber-400 flex items-center gap-2">
+                      <i className="fa-solid fa-shield-halved"></i>
+                      <span>NGUYÊN TẮC VÀ ĐẶC QUYỀN ĐẶC CÁCH</span>
+                    </h3>
+                    <ul className="mt-2 text-xs sm:text-sm space-y-1 text-slate-200">
+                      <li>• <strong>2 VĐV đặc cách: VĐV 1 – DTFx18 05 2024 (Phạm Quốc Minh) và VĐV 2 – ĐTFxGNOL04 (Phan Long)</strong> không thi đấu trước Top 16.</li>
+                      <li>• <strong>32 VĐV còn lại</strong> thi đấu qua Play-off và Vòng Loại để chọn 14 người vào Top 16.</li>
+                      <li>• <strong>Thắng 1 trận ở Top 16 là vào Top 8</strong>.</li>
+                    </ul>
+                  </div>
+
+                  {/* 6 Stages Breakdown */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2">
+                    {/* Stage 1 */}
+                    <div className="p-4 rounded-xl bg-orange-50 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-900 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-oswald font-black uppercase text-orange-700 dark:text-orange-400">
+                        <span>1. VÒNG PLAY-OFF (4 TRẬN)</span>
+                        <span className="px-2 py-0.5 rounded bg-orange-500 text-white">8 VĐV</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        8 VĐV thi đấu loại trực tiếp, lấy <strong>4 người thắng (W1, W2, W3, W4)</strong> tiến vào Vòng Loại.
+                      </p>
+                    </div>
+
+                    {/* Stage 2 */}
+                    <div className="p-4 rounded-xl bg-sky-50 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-900 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-oswald font-black uppercase text-sky-700 dark:text-sky-400">
+                        <span>2. VÒNG LOẠI (14 TRẬN)</span>
+                        <span className="px-2 py-0.5 rounded bg-sky-500 text-white">28 VĐV</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        24 VĐV theo bốc thăm (T1–T12) + 2 cặp thắng Play-off (T13: W1 vs W2, T14: W3 vs W4) ➔ lấy <strong>14 người thắng (A1–A14)</strong>.
+                      </p>
+                    </div>
+
+                    {/* Stage 3 */}
+                    <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-oswald font-black uppercase text-emerald-700 dark:text-emerald-400">
+                        <span>3. TOP 16 (8 TRẬN)</span>
+                        <span className="px-2 py-0.5 rounded bg-emerald-600 text-white">16 VĐV</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        2 VĐV đặc cách xuất quân: Trận 1 (VĐV 1 vs A1), Trận 8 (A14 vs VĐV 2), các trận 2–7 là các cặp A2–A13 đối đầu nhau. 8 người thắng vào Tứ Kết.
+                      </p>
+                    </div>
+
+                    {/* Stage 4 */}
+                    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-oswald font-black uppercase text-amber-700 dark:text-amber-400">
+                        <span>4. TOP 8 / TỨ KẾT (4 TRẬN)</span>
+                        <span className="px-2 py-0.5 rounded bg-amber-500 text-slate-950 font-bold">8 VĐV</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        Q1 (Thắng T1 vs Thắng T2), Q2 (Thắng T3 vs Thắng T4), Q3 (Thắng T5 vs Thắng T6), Q4 (Thắng T7 vs Thắng T8). 4 người thắng vào Top 4.
+                      </p>
+                    </div>
+
+                    {/* Stage 5 */}
+                    <div className="p-4 rounded-xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-oswald font-black uppercase text-indigo-700 dark:text-indigo-400">
+                        <span>5. TOP 4 / BÁN KẾT (2 TRẬN)</span>
+                        <span className="px-2 py-0.5 rounded bg-indigo-600 text-white">4 VĐV</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        Bán kết 1 (S1): Thắng Q1 vs Thắng Q2.<br />
+                        Bán kết 2 (S2): Thắng Q3 vs Thắng Q4.
+                      </p>
+                    </div>
+
+                    {/* Stage 6 */}
+                    <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-oswald font-black uppercase text-rose-700 dark:text-rose-400">
+                        <span>6. CHUNG KẾT (1 TRẬN)</span>
+                        <span className="px-2 py-0.5 rounded bg-rose-600 text-white">2 VĐV</span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-300">
+                        Thắng S1 vs Thắng S2. Tranh cúp vô địch danh giá ĐThén FCO ™!
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardSection>
+
+              <CardSection badgeNumber={2} title="XEM NHÁNH ĐẤU & LỊCH THI ĐẤU TRỰC TIẾP">
+                <div className="space-y-3 pl-2 sm:pl-11">
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+                    Toàn bộ danh sách 34 VĐV cùng các cặp thi đấu bốc thăm V1 và V2 đã được cập nhật trực quan trên sơ đồ tương tác 6 cột:
+                  </p>
+                  <a
+                    href="/dthen/ltd"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-oswald font-bold text-xs uppercase tracking-wider hover:from-blue-700 hover:to-indigo-700 shadow-md transition-all"
+                  >
+                    <i className="fa-solid fa-sitemap"></i>
+                    <span>Xem Sơ Đồ Nhánh Đấu Trực Tuyến (/dthen/ltd)</span>
+                  </a>
+                </div>
+              </CardSection>
+            </>
+          )}
 
           {/* ================= TAB 1: GROUP + KNOCKOUT ================= */}
           {activeFormat === "GROUP_KNOCKOUT" && (

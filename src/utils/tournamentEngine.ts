@@ -379,31 +379,26 @@ export function saveDthenTournamentData(data: TournamentData | null): void {
 export function loadDthenTournamentData(): TournamentData | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_DTHEN);
-    if (!raw) return null;
+    if (!raw) {
+      const fresh = createDefaultDthenTournament();
+      saveDthenTournamentData(fresh);
+      return fresh;
+    }
     const data: TournamentData = JSON.parse(raw);
 
-    // Tự động nâng cấp lên phiên bản 32 đội (8 bảng chuẩn World Cup) nếu người dùng còn lưu cấu hình 4 bảng cũ
-    if (data && data.id === 'tour_dthen_mua_1') {
-      if (!Array.isArray(data.groups) || data.groups.length !== 8) {
-        const fresh = createDefaultDthenTournament();
-        saveDthenTournamentData(fresh);
-        return fresh;
-      }
+    // Tự động nâng cấp lên phiên bản 34 VĐV với VĐV Đặc cách 1 là Phạm Quốc Minh, Đặc cách 2 là Phan Long
+    const isOldMockData = !data || (
+      data.format !== 'pure_knockout' ||
+      !data.knockoutStage?.rounds ||
+      data.knockoutStage.rounds.length < 6 ||
+      !data.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) ||
+      !data.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
+    );
 
-      // Đảm bảo nhánh đấu Knockout luôn có sẵn 16 đội chuẩn World Cup (Nhất A - Nhì B,...)
-      const r16Round = data.knockoutStage?.rounds?.[0];
-      const needsFreshKnockout =
-        !data.knockoutStage ||
-        !Array.isArray(data.knockoutStage.rounds) ||
-        data.knockoutStage.rounds.length !== 4 ||
-        !r16Round ||
-        r16Round.matches.length !== 8 ||
-        r16Round.matches[0].homeTeamName !== 'Nhất Bảng A';
-
-      if (needsFreshKnockout) {
-        data.knockoutStage = buildFIFABracketFromGroups(data.groups);
-        saveDthenTournamentData(data);
-      }
+    if (isOldMockData) {
+      const fresh = createDefaultDthenTournament();
+      saveDthenTournamentData(fresh);
+      return fresh;
     }
     return data;
   } catch (err) {
@@ -588,6 +583,18 @@ export async function fetchAndSyncDthenTournament(): Promise<TournamentData | nu
   try {
     const cloudData = await getTournamentFromFirestore<TournamentData>(CLOUD_KEYS.DTHEN);
     if (cloudData) {
+      const isOldCloud = (
+        cloudData.format !== 'pure_knockout' ||
+        !cloudData.knockoutStage?.rounds ||
+        cloudData.knockoutStage.rounds.length < 6 ||
+        !cloudData.knockoutStage.rounds[0]?.matches?.some(m => m.homeTeamName.includes('DTFxMP07')) ||
+        !cloudData.knockoutStage.rounds[2]?.matches?.[0]?.homeTeamName.includes('Phạm Quốc Minh')
+      );
+      if (isOldCloud) {
+        const fresh = createDefaultDthenTournament();
+        saveDthenTournamentData(fresh);
+        return fresh;
+      }
       localStorage.setItem(STORAGE_KEY_DTHEN, JSON.stringify(cloudData));
       return cloudData;
     }
@@ -1215,99 +1222,522 @@ export function createDefaultTournament(): TournamentData {
   };
 }
 
-// Generate default preset data for ĐThén FCO Mùa 1 (32 Đội - 8 Bảng Chuẩn World Cup)
-export function createDefaultDthenTournament(): TournamentData {
-  const groupNames = [
-    'BẢNG A',
-    'BẢNG B',
-    'BẢNG C',
-    'BẢNG D',
-    'BẢNG E',
-    'BẢNG F',
-    'BẢNG G',
-    'BẢNG H',
+// Generate default preset data for ĐThén FCO Mùa 1 (34 VĐV - 2 VĐV Đặc Cách Chuẩn Theo Bốc Thăm V1 & V2)
+export function createDthen34Tournament(): TournamentData {
+  // 1. VÒNG PLAY-OFF (8 VĐV thi đấu 4 trận P1 -> P4, lấy 4 người thắng W1 -> W4)
+  const playoffMatches: KnockoutMatch[] = [
+    {
+      id: 'ko_playoff_1',
+      roundName: 'VÒNG PLAY-OFF',
+      matchOrder: 1,
+      homeTeamName: 'DTFxMP07 (Mẫn Phương)',
+      homeTeamClub: 'Mẫn Phương',
+      awayTeamName: 'dtfxtintin (Nguyễn Phi Long)',
+      awayTeamClub: 'Nguyễn Phi Long',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_vongloai_13',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_playoff_2',
+      roundName: 'VÒNG PLAY-OFF',
+      matchOrder: 2,
+      homeTeamName: 'DTFxKarma (Tuấn Đạt)',
+      homeTeamClub: 'Tuấn Đạt',
+      awayTeamName: 'DTFxt4bin (Phamm Tungg Anhh)',
+      awayTeamClub: 'Phamm Tungg Anhh',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_vongloai_13',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_playoff_3',
+      roundName: 'VÒNG PLAY-OFF',
+      matchOrder: 3,
+      homeTeamName: 'DTFxSiuuperman (Minh Long)',
+      homeTeamClub: 'Minh Long',
+      awayTeamName: 'DTFxLamHTH2k12 (Huỳnh Tấn Hải)',
+      awayTeamClub: 'Huỳnh Tấn Hải',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_vongloai_14',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_playoff_4',
+      roundName: 'VÒNG PLAY-OFF',
+      matchOrder: 4,
+      homeTeamName: 'DTFxNavy (Hoàng Huy)',
+      homeTeamClub: 'Hoàng Huy',
+      awayTeamName: 'DTFxHoangViet (Hoang Nam)',
+      awayTeamClub: 'Hoang Nam',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_vongloai_14',
+      nextMatchSlot: 'away',
+    },
   ];
 
-  const defaultCoaches = [
-    // BẢNG A
-    [
-      { id: 'dt1', name: 'HLV ĐThén (BTC)', club: 'Real Madrid' },
-      { id: 'dt2', name: 'HLV Minh Quân', club: 'Man City' },
-      { id: 'dt3', name: 'HLV Hoàng Long', club: 'Chelsea' },
-      { id: 'dt4', name: 'HLV Tuấn Anh', club: 'Arsenal' },
-    ],
-    // BẢNG B
-    [
-      { id: 'dt5', name: 'HLV Hải Đăng', club: 'Bayern Munich' },
-      { id: 'dt6', name: 'HLV Quốc Cường', club: 'Barcelona' },
-      { id: 'dt7', name: 'HLV Thanh Tùng', club: 'Juventus' },
-      { id: 'dt8', name: 'HLV Bảo Long', club: 'Inter Milan' },
-    ],
-    // BẢNG C
-    [
-      { id: 'dt9', name: 'HLV Trọng Nghĩa', club: 'PSG' },
-      { id: 'dt10', name: 'HLV Hữu Đạt', club: 'Man United' },
-      { id: 'dt11', name: 'HLV Văn Đức', club: 'Tottenham' },
-      { id: 'dt12', name: 'HLV Thế Anh', club: 'Dortmund' },
-    ],
-    // BẢNG D
-    [
-      { id: 'dt13', name: 'HLV Hoàng Phúc', club: 'Atletico Madrid' },
-      { id: 'dt14', name: 'HLV Gia Huy', club: 'AS Roma' },
-      { id: 'dt15', name: 'HLV Tấn Tài', club: 'Napoli' },
-      { id: 'dt16', name: 'HLV Quang Minh', club: 'Bayer Leverkusen' },
-    ],
-    // BẢNG E
-    [
-      { id: 'dt17', name: 'HLV Thành Đạt', club: 'AC Milan' },
-      { id: 'dt18', name: 'HLV Nhật Minh', club: 'Sevilla' },
-      { id: 'dt19', name: 'HLV Văn Khánh', club: 'Aston Villa' },
-      { id: 'dt20', name: 'HLV Quốc Việt', club: 'Newcastle Utd' },
-    ],
-    // BẢNG F
-    [
-      { id: 'dt21', name: 'HLV Đình Trọng', club: 'Ajax Amsterdam' },
-      { id: 'dt22', name: 'HLV Hữu Thắng', club: 'Sporting CP' },
-      { id: 'dt23', name: 'HLV Đức Huy', club: 'SL Benfica' },
-      { id: 'dt24', name: 'HLV Việt Anh', club: 'FC Porto' },
-    ],
-    // BẢNG G
-    [
-      { id: 'dt25', name: 'HLV Văn Toàn', club: 'Villarreal' },
-      { id: 'dt26', name: 'HLV Công Phượng', club: 'Real Sociedad' },
-      { id: 'dt27', name: 'HLV Tuấn Kiệt', club: 'RB Leipzig' },
-      { id: 'dt28', name: 'HLV Hoàng Nam', club: 'SS Lazio' },
-    ],
-    // BẢNG H
-    [
-      { id: 'dt29', name: 'HLV Minh Đức', club: 'Olympique Lyon' },
-      { id: 'dt30', name: 'HLV Duy Anh', club: 'Marseille' },
-      { id: 'dt31', name: 'HLV Xuân Trường', club: 'Fiorentina' },
-      { id: 'dt32', name: 'HLV Ngọc Hải', club: 'West Ham' },
-    ],
+  // 2. VÒNG LOẠI (28 VĐV thi đấu 14 trận T1 -> T14, lấy 14 người thắng A1 -> A14)
+  const vongloaiMatches: KnockoutMatch[] = [
+    {
+      id: 'ko_vongloai_1',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 1,
+      homeTeamName: 'DTFx TONY (Nguyễn Hồng Đại Dương)',
+      homeTeamClub: 'Nguyễn Hồng Đại Dương',
+      awayTeamName: 'DTFx1515 (Le Tien Huy)',
+      awayTeamClub: 'Le Tien Huy',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_1',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_vongloai_2',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 2,
+      homeTeamName: 'DTFxNamB (Tống Duy Nam)',
+      homeTeamClub: 'Tống Duy Nam',
+      awayTeamName: 'DTFxZeRy (M. Hiển)',
+      awayTeamClub: 'M. Hiển',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_2',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_vongloai_3',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 3,
+      homeTeamName: 'DTFxNgminh08 (Minh Nguyễn)',
+      homeTeamClub: 'Minh Nguyễn',
+      awayTeamName: 'DTFxDPex09 (Phát Lù Danh)',
+      awayTeamClub: 'Phát Lù Danh',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_2',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_vongloai_4',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 4,
+      homeTeamName: 'DTFxMamyeuemm (Trần Tuấn)',
+      homeTeamClub: 'Trần Tuấn',
+      awayTeamName: 'DFTxNkhánh7zz (Nam Khánhh)',
+      awayTeamClub: 'Nam Khánhh',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_3',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_vongloai_5',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 5,
+      homeTeamName: 'DTF x t3xture (Triet Tran)',
+      homeTeamClub: 'Triet Tran',
+      awayTeamName: 'DTFx2207 (Nguyen Bao)',
+      awayTeamClub: 'Nguyen Bao',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_3',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_vongloai_6',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 6,
+      homeTeamName: 'DTFxDungLe (Dũng Lê)',
+      homeTeamClub: 'Dũng Lê',
+      awayTeamName: 'DTFxTrThaooo (Trường Thảo)',
+      awayTeamClub: 'Trường Thảo',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_4',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_vongloai_7',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 7,
+      homeTeamName: 'DTFxMhieu (Minh Hiếu)',
+      homeTeamClub: 'Minh Hiếu',
+      awayTeamName: 'DTFxHab75 (Bao Anh Nguyen)',
+      awayTeamClub: 'Bao Anh Nguyen',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_4',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_vongloai_8',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 8,
+      homeTeamName: 'ĐTFXhlanmeomeo (Hoàng Lân)',
+      homeTeamClub: 'Hoàng Lân',
+      awayTeamName: 'DTFxDante04 (Vĩnh Tường)',
+      awayTeamClub: 'Vĩnh Tường',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_5',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_vongloai_9',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 9,
+      homeTeamName: 'DTFxTanPhat (Nguyễn Tấn Phát)',
+      homeTeamClub: 'Nguyễn Tấn Phát',
+      awayTeamName: 'ĐTFxRùaBéo (Nhat Tung)',
+      awayTeamClub: 'Nhat Tung',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_5',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_vongloai_10',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 10,
+      homeTeamName: 'Dtfxtinbow (Long Nguyễn)',
+      homeTeamClub: 'Long Nguyễn',
+      awayTeamName: 'DTFxLBao (Le Bao)',
+      awayTeamClub: 'Le Bao',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_6',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_vongloai_11',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 11,
+      homeTeamName: 'DTFxHwng14 (Truong Phuoc Hung)',
+      homeTeamClub: 'Truong Phuoc Hung',
+      awayTeamName: 'ĐTFxBell05 (Huynh Le)',
+      awayTeamClub: 'Huynh Le',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_6',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_vongloai_12',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 12,
+      homeTeamName: 'ĐTFxSơnSợYêu (Sơn Hoàng)',
+      homeTeamClub: 'Sơn Hoàng',
+      awayTeamName: 'DTFxThanhDuong (Nguyễn Thanh Duong)',
+      awayTeamClub: 'Nguyễn Thanh Duong',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_7',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_vongloai_13',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 13,
+      homeTeamName: 'Thắng P1 (W1)',
+      homeSourceText: 'Thắng P1 (W1)',
+      awayTeamName: 'Thắng P2 (W2)',
+      awaySourceText: 'Thắng P2 (W2)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_7',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_vongloai_14',
+      roundName: 'VÒNG LOẠI',
+      matchOrder: 14,
+      homeTeamName: 'Thắng P3 (W3)',
+      homeSourceText: 'Thắng P3 (W3)',
+      awayTeamName: 'Thắng P4 (W4)',
+      awaySourceText: 'Thắng P4 (W4)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_top16_8',
+      nextMatchSlot: 'home',
+    },
   ];
 
-  const groups: Group[] = groupNames.map((name, idx) => {
-    const teams = defaultCoaches[idx];
-    return {
-      id: `dthen_group_${idx + 1}`,
-      name,
-      teams,
-      matches: [], // Xóa dữ liệu mẫu các trận đấu theo yêu cầu
-    };
-  });
+  // 3. TOP 16 (8 trận: Trận 1 -> Trận 8, kết hợp 14 người thắng + 2 VĐV đặc cách)
+  const top16Matches: KnockoutMatch[] = [
+    {
+      id: 'ko_top16_1',
+      roundName: 'TOP 16',
+      matchOrder: 1,
+      homeTeamName: '⭐ DTFx18 05 2024 (Phạm Quốc Minh)',
+      homeTeamClub: 'Phạm Quốc Minh',
+      homeSourceText: 'VĐV 1 Đặc cách Top 16',
+      awayTeamName: 'Thắng T1 (A1)',
+      awaySourceText: 'Thắng T1 (A1)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_1',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_top16_2',
+      roundName: 'TOP 16',
+      matchOrder: 2,
+      homeTeamName: 'Thắng T2 (A2)',
+      homeSourceText: 'Thắng T2 (A2)',
+      awayTeamName: 'Thắng T3 (A3)',
+      awaySourceText: 'Thắng T3 (A3)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_1',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_top16_3',
+      roundName: 'TOP 16',
+      matchOrder: 3,
+      homeTeamName: 'Thắng T4 (A4)',
+      homeSourceText: 'Thắng T4 (A4)',
+      awayTeamName: 'Thắng T5 (A5)',
+      awaySourceText: 'Thắng T5 (A5)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_2',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_top16_4',
+      roundName: 'TOP 16',
+      matchOrder: 4,
+      homeTeamName: 'Thắng T6 (A6)',
+      homeSourceText: 'Thắng T6 (A6)',
+      awayTeamName: 'Thắng T7 (A7)',
+      awaySourceText: 'Thắng T7 (A7)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_2',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_top16_5',
+      roundName: 'TOP 16',
+      matchOrder: 5,
+      homeTeamName: 'Thắng T8 (A8)',
+      homeSourceText: 'Thắng T8 (A8)',
+      awayTeamName: 'Thắng T9 (A9)',
+      awaySourceText: 'Thắng T9 (A9)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_3',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_top16_6',
+      roundName: 'TOP 16',
+      matchOrder: 6,
+      homeTeamName: 'Thắng T10 (A10)',
+      homeSourceText: 'Thắng T10 (A10)',
+      awayTeamName: 'Thắng T11 (A11)',
+      awaySourceText: 'Thắng T11 (A11)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_3',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_top16_7',
+      roundName: 'TOP 16',
+      matchOrder: 7,
+      homeTeamName: 'Thắng T12 (A12)',
+      homeSourceText: 'Thắng T12 (A12)',
+      awayTeamName: 'Thắng T13 (A13)',
+      awaySourceText: 'Thắng T13 (A13)',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_4',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_top16_8',
+      roundName: 'TOP 16',
+      matchOrder: 8,
+      homeTeamName: 'Thắng T14 (A14)',
+      homeSourceText: 'Thắng T14 (A14)',
+      awayTeamName: '⭐ ĐTFxGNOL04 (Phan Long)',
+      awayTeamClub: 'Phan Long',
+      awaySourceText: 'VĐV 2 Đặc cách Top 16',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_tuket_4',
+      nextMatchSlot: 'away',
+    },
+  ];
+
+  // 4. TOP 8 / TỨ KẾT (4 trận: Q1 -> Q4)
+  const tuKetMatches: KnockoutMatch[] = [
+    {
+      id: 'ko_tuket_1',
+      roundName: 'TỨ KẾT',
+      matchOrder: 1,
+      homeTeamName: 'Thắng Trận 1',
+      homeSourceText: 'Thắng Trận 1',
+      awayTeamName: 'Thắng Trận 2',
+      awaySourceText: 'Thắng Trận 2',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_banket_1',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_tuket_2',
+      roundName: 'TỨ KẾT',
+      matchOrder: 2,
+      homeTeamName: 'Thắng Trận 3',
+      homeSourceText: 'Thắng Trận 3',
+      awayTeamName: 'Thắng Trận 4',
+      awaySourceText: 'Thắng Trận 4',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_banket_1',
+      nextMatchSlot: 'away',
+    },
+    {
+      id: 'ko_tuket_3',
+      roundName: 'TỨ KẾT',
+      matchOrder: 3,
+      homeTeamName: 'Thắng Trận 5',
+      homeSourceText: 'Thắng Trận 5',
+      awayTeamName: 'Thắng Trận 6',
+      awaySourceText: 'Thắng Trận 6',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_banket_2',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_tuket_4',
+      roundName: 'TỨ KẾT',
+      matchOrder: 4,
+      homeTeamName: 'Thắng Trận 7',
+      homeSourceText: 'Thắng Trận 7',
+      awayTeamName: 'Thắng Trận 8',
+      awaySourceText: 'Thắng Trận 8',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_banket_2',
+      nextMatchSlot: 'away',
+    },
+  ];
+
+  // 5. TOP 4 / BÁN KẾT (2 trận: S1, S2)
+  const banKetMatches: KnockoutMatch[] = [
+    {
+      id: 'ko_banket_1',
+      roundName: 'BÁN KẾT',
+      matchOrder: 1,
+      homeTeamName: 'Thắng Q1',
+      homeSourceText: 'Thắng Q1',
+      awayTeamName: 'Thắng Q2',
+      awaySourceText: 'Thắng Q2',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_chungket_1',
+      nextMatchSlot: 'home',
+    },
+    {
+      id: 'ko_banket_2',
+      roundName: 'BÁN KẾT',
+      matchOrder: 2,
+      homeTeamName: 'Thắng Q3',
+      homeSourceText: 'Thắng Q3',
+      awayTeamName: 'Thắng Q4',
+      awaySourceText: 'Thắng Q4',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+      nextMatchId: 'ko_chungket_1',
+      nextMatchSlot: 'away',
+    },
+  ];
+
+  // 6. CHUNG KẾT (1 trận tìm nhà vô địch)
+  const chungKetMatches: KnockoutMatch[] = [
+    {
+      id: 'ko_chungket_1',
+      roundName: 'CHUNG KẾT',
+      matchOrder: 1,
+      homeTeamName: 'Thắng S1',
+      homeSourceText: 'Thắng S1',
+      awayTeamName: 'Thắng S2',
+      awaySourceText: 'Thắng S2',
+      homeScore: null,
+      awayScore: null,
+      played: false,
+    },
+  ];
 
   return {
     id: 'tour_dthen_mua_1',
     tournamentName: 'ĐTHÉN FCO ™',
-    season: 'MÙA 1',
-    numGroups: 8,
-    teamsPerGroup: 4,
-    legType: 'single', // Chuẩn World Cup: vòng bảng thi đấu vòng tròn 1 lượt
-    groups,
-    knockoutStage: buildFIFABracketFromGroups(groups),
+    season: 'MÙA 1 (34 VĐV)',
+    numGroups: 0,
+    teamsPerGroup: 0,
+    totalTeams: 34,
+    format: 'pure_knockout',
+    legType: 'single',
+    groups: [],
+    knockoutStage: {
+      isCompletedGroupStage: true,
+      rounds: [
+        { name: 'VÒNG PLAY-OFF', matches: playoffMatches },
+        { name: 'VÒNG LOẠI', matches: vongloaiMatches },
+        { name: 'TOP 16', matches: top16Matches },
+        { name: 'TỨ KẾT', matches: tuKetMatches },
+        { name: 'BÁN KẾT', matches: banKetMatches },
+        { name: 'CHUNG KẾT', matches: chungKetMatches },
+      ],
+    },
     createdAt: new Date().toISOString(),
     isVisible: true,
   };
 }
+
+export function createDefaultDthenTournament(): TournamentData {
+  return createDthen34Tournament();
+}
+
 

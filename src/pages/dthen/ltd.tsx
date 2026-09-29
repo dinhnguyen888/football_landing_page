@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, Link } from 'react-router-dom';
 import Banner from '../../components/banner';
 import Footer from '../../components/footer';
 import Body from '../../components/body';
@@ -64,7 +64,7 @@ const DthenLtd: React.FC = () => {
 
   const [activeGroupIndex, setActiveGroupIndex] = useState<number>(0);
   const [activeRoundFilter, setActiveRoundFilter] = useState<number | 'ALL'>('ALL');
-  const [koRoundFilter, setKoRoundFilter] = useState<'ALL' | 'R16' | 'QF' | 'SF' | 'FINAL'>('ALL');
+  const [koRoundFilter, setKoRoundFilter] = useState<string>('ALL');
   const [syncStatus, setSyncStatus] = useState<'cloud' | 'local'>('local');
 
   useEffect(() => {
@@ -193,11 +193,29 @@ const DthenLtd: React.FC = () => {
     tournament.knockoutStage || (hasGroups ? buildFIFABracketFromGroups(tournament.groups) : { isCompletedGroupStage: true, rounds: [] });
 
   const koRounds = knockoutStage.rounds || [];
-  const hasR16 = koRounds.length >= 4;
-  const r16Matches = hasR16 ? (koRounds[0]?.matches || []) : [];
-  const qfMatches = hasR16 ? (koRounds[1]?.matches || []) : (koRounds[0]?.matches || []);
-  const sfMatches = hasR16 ? (koRounds[2]?.matches || []) : (koRounds[1]?.matches || []);
-  const finalMatches = hasR16 ? (koRounds[3]?.matches || []) : (koRounds[2]?.matches || []);
+  const is34Format =
+    koRounds.length === 6 ||
+    koRounds.some((r) => r.name.includes('PLAY-OFF')) ||
+    tournament.totalTeams === 34;
+
+  const playoffMatches = is34Format
+    ? (koRounds.find((r) => r.name.includes('PLAY-OFF'))?.matches || [])
+    : [];
+  const vongloaiMatches = is34Format
+    ? (koRounds.find((r) => r.name.includes('LOẠI'))?.matches || [])
+    : [];
+  const top16Matches = is34Format
+    ? (koRounds.find((r) => r.name.includes('TOP 16') || r.name.includes('1/8'))?.matches || [])
+    : (koRounds.length >= 4 ? (koRounds[0]?.matches || []) : []);
+  const qfMatches = is34Format
+    ? (koRounds.find((r) => r.name.includes('TỨ KẾT'))?.matches || [])
+    : (koRounds.length >= 4 ? (koRounds[1]?.matches || []) : (koRounds[0]?.matches || []));
+  const sfMatches = is34Format
+    ? (koRounds.find((r) => r.name.includes('BÁN KẾT'))?.matches || [])
+    : (koRounds.length >= 4 ? (koRounds[2]?.matches || []) : (koRounds[1]?.matches || []));
+  const finalMatches = is34Format
+    ? (koRounds.find((r) => r.name.includes('CHUNG KẾT'))?.matches || [])
+    : (koRounds.length >= 4 ? (koRounds[3]?.matches || []) : (koRounds[2]?.matches || []));
 
   return (
     <>
@@ -462,40 +480,66 @@ const DthenLtd: React.FC = () => {
               </div>
             </>
           ) : (
-            /* Knockout Stage View: Full 16-Team FIFA World Cup Tree */
+            /* Knockout Stage View: Sơ Đồ Phân Nhánh 34 VĐV (2 VĐV Đặc Cách) */
             <div className="space-y-4 sm:space-y-6">
               {/* Header Box */}
-              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div className="space-y-1">
-                  <div className="flex items-center space-x-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/80 border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300 font-fco font-bold text-xs uppercase">
                       <i className="fa-solid fa-trophy mr-1.5 text-amber-500"></i>
-                      SƠ ĐỒ PHÂN NHÁNH TRỰC TIẾP (32 ĐỘI)
+                      {is34Format ? 'SƠ ĐỒ 34 VĐV (2 VĐV ĐẶC CÁCH)' : 'SƠ ĐỒ PHÂN NHÁNH TRỰC TIẾP'}
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full bg-blue-100 dark:bg-blue-950 text-blue-700 dark:text-blue-300 font-oswald text-[11px] font-bold uppercase">
+                      <i className="fa-solid fa-check-double mr-1 text-emerald-500"></i>
+                      ĐÃ BỐC THĂM VÒNG 1 & VÒNG 2
                     </span>
                   </div>
-                  <h3 className="font-oswald text-xl sm:text-3xl font-bold uppercase text-slate-900 dark:text-white">
-                    SƠ ĐỒ PHÂN NHÁNH VÒNG LOẠI TRỰC TIẾP
+                  <h3 className="font-oswald text-xl sm:text-2xl md:text-3xl font-black uppercase text-slate-900 dark:text-white">
+                    LỊCH THI ĐẤU & NHÁNH ĐẤU ĐTHÉN FCO ™
                   </h3>
+                  <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                    2 VĐV đặc cách vào thẳng Top 16 • 32 VĐV tranh 14 suất đi tiếp • Thắng 1 trận Top 16 là vào Top 8
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2.5 w-full md:w-auto">
+                  <Link
+                    to="/admin-portal"
+                    className="flex-1 md:flex-initial inline-flex items-center justify-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-oswald text-xs font-bold uppercase tracking-wider shadow-md hover:shadow-lg transition-all"
+                    title="Truy cập trang Quản lý giải đấu để nhập tỉ số các trận"
+                  >
+                    <i className="fa-solid fa-pen-to-square"></i>
+                    <span>CẬP NHẬT TỈ SỐ (ADMIN)</span>
+                  </Link>
+                  <Link
+                    to="/dthen/thethuc"
+                    className="inline-flex items-center justify-center px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-oswald text-xs font-bold uppercase transition-colors"
+                    title="Xem chi tiết thể thức thi đấu"
+                  >
+                    <i className="fa-solid fa-circle-question mr-1.5 text-blue-500"></i>
+                    <span>THỂ THỨC</span>
+                  </Link>
                 </div>
               </div>
 
-              {/* World Cup Bracket Tree View */}
-              <div className="w-full max-w-full overflow-hidden p-3 sm:p-7 md:p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4 sm:space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              {/* Main Knockout View Container */}
+              <div className="w-full max-w-full overflow-hidden p-3 sm:p-6 md:p-7 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 gap-2">
                   <div className="flex items-center space-x-2">
-                    <i className="fa-solid fa-code-branch text-blue-600 dark:text-blue-400"></i>
+                    <i className="fa-solid fa-sitemap text-blue-600 dark:text-blue-400"></i>
                     <span className="font-oswald text-sm sm:text-base font-bold uppercase text-slate-800 dark:text-slate-200">
-                      SƠ ĐỒ HỘI TỤ CHUNG KẾT CÚP (PATHWAYS TREE)
+                      SƠ ĐỒ HỘI TỤ CHUNG KẾT CÚP (TOURNAMENT BRACKET)
                     </span>
                   </div>
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-medium hidden sm:inline">
-                    <i className="fa-solid fa-arrows-left-right mr-1"></i>
-                    Kéo ngang để xem trọn vẹn 7 cột sơ đồ
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1.5">
+                    <i className="fa-solid fa-arrows-left-right"></i>
+                    <span>Kéo ngang để xem trọn vẹn 6 giai đoạn thi đấu</span>
                   </span>
                 </div>
 
                 {/* Mobile Knockout View: Round Selector & Vertical Cards */}
-                <div className="block md:hidden space-y-4">
+                <div className="block lg:hidden space-y-4">
                   {/* Round Selector Tabs */}
                   <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar p-1.5 bg-slate-100 dark:bg-slate-800 rounded-xl">
                     <button
@@ -507,506 +551,769 @@ const DthenLtd: React.FC = () => {
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                       }`}
                     >
-                      Tất cả
+                      Tất cả các vòng
                     </button>
-                    {hasR16 && (
-                      <button
-                        type="button"
-                        onClick={() => setKoRoundFilter('R16')}
-                        className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
-                          koRoundFilter === 'R16'
-                            ? 'bg-blue-600 text-white shadow-xs'
-                            : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
-                        }`}
-                      >
-                        Vòng 1/8 ({r16Matches.length} trận)
-                      </button>
+                    {is34Format && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setKoRoundFilter('PLAYOFF')}
+                          className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
+                            koRoundFilter === 'PLAYOFF'
+                              ? 'bg-orange-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                          }`}
+                        >
+                          1. Play-off (4 trận)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setKoRoundFilter('VONGLOAI')}
+                          className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
+                            koRoundFilter === 'VONGLOAI'
+                              ? 'bg-sky-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                          }`}
+                        >
+                          2. Vòng Loại (14 trận)
+                        </button>
+                      </>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => setKoRoundFilter('TOP16')}
+                      className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
+                        koRoundFilter === 'TOP16'
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
+                      }`}
+                    >
+                      3. Top 16 ({top16Matches.length} trận)
+                    </button>
                     <button
                       type="button"
                       onClick={() => setKoRoundFilter('QF')}
                       className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
                         koRoundFilter === 'QF'
-                          ? 'bg-blue-600 text-white shadow-xs'
+                          ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                       }`}
                     >
-                      Tứ Kết ({qfMatches.length} trận)
+                      4. Tứ Kết ({qfMatches.length} trận)
                     </button>
                     <button
                       type="button"
                       onClick={() => setKoRoundFilter('SF')}
                       className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
                         koRoundFilter === 'SF'
-                          ? 'bg-blue-600 text-white shadow-xs'
+                          ? 'bg-indigo-600 text-white shadow-xs'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                       }`}
                     >
-                      Bán Kết ({sfMatches.length} trận)
+                      5. Bán Kết ({sfMatches.length} trận)
                     </button>
                     <button
                       type="button"
                       onClick={() => setKoRoundFilter('FINAL')}
                       className={`px-3 py-1.5 rounded-lg font-oswald text-xs font-bold uppercase whitespace-nowrap transition-all ${
                         koRoundFilter === 'FINAL'
-                          ? 'bg-amber-500 text-slate-950 font-black shadow-xs'
+                          ? 'bg-rose-600 text-white font-black shadow-xs'
                           : 'text-slate-600 dark:text-slate-300 hover:text-slate-900'
                       }`}
                     >
-                      Chung Kết 🏆
+                      6. Chung Kết 🏆
                     </button>
                   </div>
 
-                  {/* Mobile Match Cards List */}
-                  <div className="space-y-4">
-                    {/* 1. Final */}
-                    {(koRoundFilter === 'ALL' || koRoundFilter === 'FINAL') && finalMatches.length > 0 && (
-                      <div className="space-y-2">
+                  {/* Mobile Match List */}
+                  <div className="space-y-6">
+                    {/* Play-off Matches */}
+                    {is34Format && (koRoundFilter === 'ALL' || koRoundFilter === 'PLAYOFF') && playoffMatches.length > 0 && (
+                      <div className="space-y-2.5">
                         <div className="flex items-center justify-between px-1">
-                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-amber-500 flex items-center gap-1.5">
-                            <i className="fa-solid fa-crown"></i>
-                            <span>CHUNG KẾT TRANH VÔ ĐỊCH</span>
+                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                            <i className="fa-solid fa-play"></i>
+                            <span>1. VÒNG PLAY-OFF (8 VĐV ➔ LẤY 4 NGƯỜI THẮNG)</span>
                           </span>
                         </div>
-                        {finalMatches.map((m) => {
-                          const isHomeWinner = m.winnerTeamName && m.winnerTeamName === m.homeTeamName;
-                          const isAwayWinner = m.winnerTeamName && m.winnerTeamName === m.awayTeamName;
-                          return (
-                            <div key={m.id} className="reveal-on-scroll p-3.5 rounded-2xl bg-gradient-to-b from-amber-500/10 via-white to-white dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 border-2 border-amber-400 dark:border-amber-600 shadow-md space-y-2">
-                              <div className="flex items-center justify-between text-[10px] font-oswald border-b border-amber-200 dark:border-amber-900/60 pb-1.5">
-                                <span className="font-bold text-amber-600 uppercase">🏆 CHUNG KẾT CÚP</span>
-                                <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] bg-amber-500 text-slate-950">
-                                  {m.played ? "ĐÃ KẾT THÚC" : "CHỜ TRANH CÚP"}
+                        <div className="space-y-2.5">
+                          {playoffMatches.map((m, idx) => (
+                            <div key={m.id} className="p-3.5 rounded-2xl bg-orange-50/50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900/50 shadow-xs space-y-2">
+                              <div className="flex items-center justify-between text-[11px] font-oswald border-b border-orange-200 dark:border-orange-900/40 pb-1.5">
+                                <span className="font-black text-orange-700 dark:text-orange-300 uppercase">CẶP P{idx + 1}</span>
+                                <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] bg-orange-500 text-white">
+                                  THẮNG VÀO T13/T14
                                 </span>
                               </div>
-                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isHomeWinner ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-bold border border-amber-300' : 'text-slate-800 dark:text-slate-200'}`}>
-                                <div className="flex items-center space-x-2 truncate pr-2">
-                                  {isHomeWinner && <i className="fa-solid fa-trophy text-amber-500 text-xs"></i>}
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.homeTeamName ? 'bg-orange-100 dark:bg-orange-900/60 font-bold border border-orange-400' : 'bg-white dark:bg-slate-800'}`}>
+                                <div className="flex items-center space-x-1.5 truncate">
+                                  {m.winnerTeamName === m.homeTeamName && <i className="fa-solid fa-check text-emerald-600"></i>}
                                   <span className="truncate">{m.homeTeamName}</span>
                                 </div>
-                                <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                  {m.homeScore !== null ? m.homeScore : "-"}
-                                </span>
+                                <span className="font-oswald font-black text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
                               </div>
-                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isAwayWinner ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-950 dark:text-amber-200 font-bold border border-amber-300' : 'text-slate-800 dark:text-slate-200'}`}>
-                                <div className="flex items-center space-x-2 truncate pr-2">
-                                  {isAwayWinner && <i className="fa-solid fa-trophy text-amber-500 text-xs"></i>}
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.awayTeamName ? 'bg-orange-100 dark:bg-orange-900/60 font-bold border border-orange-400' : 'bg-white dark:bg-slate-800'}`}>
+                                <div className="flex items-center space-x-1.5 truncate">
+                                  {m.winnerTeamName === m.awayTeamName && <i className="fa-solid fa-check text-emerald-600"></i>}
                                   <span className="truncate">{m.awayTeamName}</span>
                                 </div>
-                                <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                  {m.awayScore !== null ? m.awayScore : "-"}
-                                </span>
+                                <span className="font-oswald font-black text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
                               </div>
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
                     )}
 
-                    {/* 2. Semi-Finals */}
-                    {(koRoundFilter === 'ALL' || koRoundFilter === 'SF') && sfMatches.length > 0 && (
-                      <div className="space-y-2">
+                    {/* Vòng Loại Matches */}
+                    {is34Format && (koRoundFilter === 'ALL' || koRoundFilter === 'VONGLOAI') && vongloaiMatches.length > 0 && (
+                      <div className="space-y-2.5">
                         <div className="flex items-center justify-between px-1">
-                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                            <i className="fa-solid fa-fire text-blue-500"></i>
-                            <span>VÒNG BÁN KẾT ({sfMatches.length} trận)</span>
+                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-sky-600 dark:text-sky-400 flex items-center gap-1.5">
+                            <i className="fa-solid fa-filter"></i>
+                            <span>2. VÒNG LOẠI (28 VĐV ➔ LẤY 14 NGƯỜI VÀO TOP 16)</span>
                           </span>
                         </div>
-                        <div className="space-y-2.5">
-                          {sfMatches.map((m) => {
-                            const isHomeWinner = m.winnerTeamName && m.winnerTeamName === m.homeTeamName;
-                            const isAwayWinner = m.winnerTeamName && m.winnerTeamName === m.awayTeamName;
-                            return (
-                              <div key={m.id} className="reveal-on-scroll p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-                                <div className="flex items-center justify-between text-[10px] font-oswald border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                                  <span className="font-bold text-slate-500 uppercase">Trận #{m.matchOrder} - Bán Kết</span>
-                                  <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] ${m.played ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
-                                    {m.played ? "Đã đấu" : "Chờ đấu"}
-                                  </span>
-                                </div>
-                                <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isHomeWinner ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-950 dark:text-blue-200 font-bold border border-blue-300 dark:border-blue-700' : 'text-slate-800 dark:text-slate-200'}`}>
-                                  <div className="flex items-center space-x-2 truncate pr-2">
-                                    {isHomeWinner && <i className="fa-solid fa-check text-blue-600 text-xs"></i>}
-                                    <span className="truncate">{m.homeTeamName}</span>
-                                  </div>
-                                  <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                    {m.homeScore !== null ? m.homeScore : "-"}
-                                  </span>
-                                </div>
-                                <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isAwayWinner ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-950 dark:text-blue-200 font-bold border border-blue-300 dark:border-blue-700' : 'text-slate-800 dark:text-slate-200'}`}>
-                                  <div className="flex items-center space-x-2 truncate pr-2">
-                                    {isAwayWinner && <i className="fa-solid fa-check text-blue-600 text-xs"></i>}
-                                    <span className="truncate">{m.awayTeamName}</span>
-                                  </div>
-                                  <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                    {m.awayScore !== null ? m.awayScore : "-"}
-                                  </span>
-                                </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {vongloaiMatches.map((m, idx) => (
+                            <div key={m.id} className="p-3 rounded-2xl bg-sky-50/50 dark:bg-sky-950/20 border-2 border-sky-200 dark:border-sky-900/50 shadow-xs space-y-2">
+                              <div className="flex items-center justify-between text-[11px] font-oswald border-b border-sky-200 dark:border-sky-900/40 pb-1">
+                                <span className="font-black text-sky-700 dark:text-sky-300 uppercase">TRẬN T{idx + 1}</span>
+                                <span className="px-1.5 py-0.5 rounded font-bold uppercase text-[9px] bg-sky-600 text-white">
+                                  THẮNG ➔ A{idx + 1}
+                                </span>
                               </div>
-                            );
-                          })}
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.homeTeamName ? 'bg-sky-100 dark:bg-sky-900/60 font-bold border border-sky-400' : 'bg-white dark:bg-slate-800'}`}>
+                                <div className="flex items-center space-x-1.5 truncate">
+                                  {m.winnerTeamName === m.homeTeamName && <i className="fa-solid fa-check text-emerald-600"></i>}
+                                  <span className="truncate">{m.homeTeamName}</span>
+                                </div>
+                                <span className="font-oswald font-black text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.awayTeamName ? 'bg-sky-100 dark:bg-sky-900/60 font-bold border border-sky-400' : 'bg-white dark:bg-slate-800'}`}>
+                                <div className="flex items-center space-x-1.5 truncate">
+                                  {m.winnerTeamName === m.awayTeamName && <i className="fa-solid fa-check text-emerald-600"></i>}
+                                  <span className="truncate">{m.awayTeamName}</span>
+                                </div>
+                                <span className="font-oswald font-black text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
 
-                    {/* 3. Quarter-Finals */}
+                    {/* Top 16 Matches */}
+                    {(koRoundFilter === 'ALL' || koRoundFilter === 'TOP16' || koRoundFilter === 'R16') && top16Matches.length > 0 && (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                            <i className="fa-solid fa-shield-halved"></i>
+                            <span>3. VÒNG TOP 16 ({top16Matches.length} TRẬN ➔ TRANH VÉ VÀO TOP 8)</span>
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {top16Matches.map((m, idx) => (
+                            <div key={m.id} className="p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-200 dark:border-emerald-900/50 shadow-xs space-y-2">
+                              <div className="flex items-center justify-between text-[11px] font-oswald border-b border-emerald-200 dark:border-emerald-900/40 pb-1">
+                                <span className="font-black text-emerald-700 dark:text-emerald-300 uppercase">TRẬN #{idx + 1}</span>
+                                <span className="px-1.5 py-0.5 rounded font-bold uppercase text-[9px] bg-emerald-600 text-white">
+                                  VÀO TỨ KẾT
+                                </span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.homeTeamName.includes('Đặc cách') ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border border-rose-300 font-bold' : m.winnerTeamName === m.homeTeamName ? 'bg-emerald-100 dark:bg-emerald-900/60 font-bold border border-emerald-400' : 'bg-white dark:bg-slate-800'}`}>
+                                <div className="flex items-center space-x-1.5 truncate">
+                                  {m.homeTeamName.includes('Đặc cách') && <i className="fa-solid fa-star text-rose-500"></i>}
+                                  {m.winnerTeamName === m.homeTeamName && <i className="fa-solid fa-check text-emerald-600"></i>}
+                                  <span className="truncate">{m.homeTeamName}</span>
+                                </div>
+                                <span className="font-oswald font-black text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.awayTeamName.includes('Đặc cách') ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border border-rose-300 font-bold' : m.winnerTeamName === m.awayTeamName ? 'bg-emerald-100 dark:bg-emerald-900/60 font-bold border border-emerald-400' : 'bg-white dark:bg-slate-800'}`}>
+                                <div className="flex items-center space-x-1.5 truncate">
+                                  {m.awayTeamName.includes('Đặc cách') && <i className="fa-solid fa-star text-rose-500"></i>}
+                                  {m.winnerTeamName === m.awayTeamName && <i className="fa-solid fa-check text-emerald-600"></i>}
+                                  <span className="truncate">{m.awayTeamName}</span>
+                                </div>
+                                <span className="font-oswald font-black text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Quarter-Finals */}
                     {(koRoundFilter === 'ALL' || koRoundFilter === 'QF') && qfMatches.length > 0 && (
-                      <div className="space-y-2">
+                      <div className="space-y-2.5">
                         <div className="flex items-center justify-between px-1">
-                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                            <i className="fa-solid fa-shield text-indigo-500"></i>
-                            <span>VÒNG TỨ KẾT ({qfMatches.length} trận)</span>
+                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 flex items-center gap-1.5">
+                            <i className="fa-solid fa-chess-knight"></i>
+                            <span>4. VÒNG TỨ KẾT (4 TRẬN ➔ TRANH VÉ BÁN KẾT)</span>
                           </span>
                         </div>
-                        <div className="space-y-2.5">
-                          {qfMatches.map((m) => {
-                            const isHomeWinner = m.winnerTeamName && m.winnerTeamName === m.homeTeamName;
-                            const isAwayWinner = m.winnerTeamName && m.winnerTeamName === m.awayTeamName;
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {qfMatches.map((m, idx) => (
+                            <div key={m.id} className="p-3 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border-2 border-amber-200 dark:border-amber-900/50 shadow-xs space-y-2">
+                              <div className="flex items-center justify-between text-[11px] font-oswald border-b border-amber-200 dark:border-amber-900/40 pb-1">
+                                <span className="font-black text-amber-700 dark:text-amber-300 uppercase">TỨ KẾT Q{idx + 1}</span>
+                                <span className="px-1.5 py-0.5 rounded font-bold uppercase text-[9px] bg-amber-500 text-slate-950">
+                                  VÀO TOP 4
+                                </span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.homeTeamName ? 'bg-amber-200 dark:bg-amber-900/60 font-bold border border-amber-400 text-slate-950 dark:text-white' : 'bg-white dark:bg-slate-800'}`}>
+                                <span className="truncate">{m.homeTeamName}</span>
+                                <span className="font-oswald font-black text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.awayTeamName ? 'bg-amber-200 dark:bg-amber-900/60 font-bold border border-amber-400 text-slate-950 dark:text-white' : 'bg-white dark:bg-slate-800'}`}>
+                                <span className="truncate">{m.awayTeamName}</span>
+                                <span className="font-oswald font-black text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Semi-Finals */}
+                    {(koRoundFilter === 'ALL' || koRoundFilter === 'SF') && sfMatches.length > 0 && (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+                            <i className="fa-solid fa-fire"></i>
+                            <span>5. VÒNG BÁN KẾT (2 TRẬN ➔ TRANH VÉ CHUNG KẾT)</span>
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                          {sfMatches.map((m, idx) => (
+                            <div key={m.id} className="p-3.5 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 border-2 border-indigo-200 dark:border-indigo-900/50 shadow-xs space-y-2">
+                              <div className="flex items-center justify-between text-[11px] font-oswald border-b border-indigo-200 dark:border-indigo-900/40 pb-1">
+                                <span className="font-black text-indigo-700 dark:text-indigo-300 uppercase">BÁN KẾT S{idx + 1}</span>
+                                <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] bg-indigo-600 text-white">
+                                  VÀO CHUNG KẾT
+                                </span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.homeTeamName ? 'bg-indigo-200 dark:bg-indigo-900/60 font-bold border border-indigo-400 text-indigo-950 dark:text-white' : 'bg-white dark:bg-slate-800'}`}>
+                                <span className="truncate">{m.homeTeamName}</span>
+                                <span className="font-oswald font-black text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${m.winnerTeamName === m.awayTeamName ? 'bg-indigo-200 dark:bg-indigo-900/60 font-bold border border-indigo-400 text-indigo-950 dark:text-white' : 'bg-white dark:bg-slate-800'}`}>
+                                <span className="truncate">{m.awayTeamName}</span>
+                                <span className="font-oswald font-black text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Final Match */}
+                    {(koRoundFilter === 'ALL' || koRoundFilter === 'FINAL') && finalMatches.length > 0 && (
+                      <div className="space-y-2.5">
+                        <div className="flex items-center justify-between px-1">
+                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+                            <i className="fa-solid fa-crown text-amber-500"></i>
+                            <span>6. TRẬN CHUNG KẾT VÔ ĐỊCH ĐTHÉN FCO ™</span>
+                          </span>
+                        </div>
+                        {finalMatches.map((m) => (
+                          <div key={m.id} className="p-4 rounded-3xl bg-gradient-to-b from-amber-500/10 via-white to-white dark:from-amber-950/20 dark:via-slate-900 dark:to-slate-900 border-2 border-amber-400 dark:border-amber-500 shadow-xl space-y-3">
+                            <div className="flex items-center justify-between text-xs font-oswald border-b border-amber-200 dark:border-amber-900/60 pb-2">
+                              <span className="font-black text-amber-600 flex items-center gap-1.5">
+                                <i className="fa-solid fa-trophy text-amber-500"></i>
+                                <span>CHUNG KẾT ĐỈNH CAO</span>
+                              </span>
+                              <span className="px-2.5 py-0.5 rounded font-black uppercase text-[10px] bg-amber-500 text-slate-950">
+                                {m.played ? 'ĐÃ CÓ QUÁN QUÂN' : 'TRANH NGÔI VƯƠNG'}
+                              </span>
+                            </div>
+                            <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${m.winnerTeamName === m.homeTeamName ? 'bg-amber-200 dark:bg-amber-950 text-slate-950 dark:text-amber-200 font-black border border-amber-400' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                              <span className="truncate">{m.homeTeamName}</span>
+                              <span className="font-oswald font-black text-base">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className={`flex items-center justify-between text-sm px-3 py-2 rounded-xl ${m.winnerTeamName === m.awayTeamName ? 'bg-amber-200 dark:bg-amber-950 text-slate-950 dark:text-amber-200 font-black border border-amber-400' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                              <span className="truncate">{m.awayTeamName}</span>
+                              <span className="font-oswald font-black text-base">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                            {m.winnerTeamName && (
+                              <div className="p-2.5 rounded-xl bg-amber-100 dark:bg-amber-950/60 border border-amber-300 text-center font-oswald text-xs font-black uppercase text-amber-900 dark:text-amber-300">
+                                👑 NHÀ VÔ ĐỊCH: {m.winnerTeamName} 🏆
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Desktop 6-Stage Sơ Đồ 34 VĐV Interactive Tree */}
+                {is34Format ? (
+                  <div className="hidden lg:block overflow-x-auto pb-6 overscroll-x-contain">
+                    <div className="grid grid-cols-6 gap-3.5 min-w-[1550px] items-start text-center">
+                      
+                      {/* CỘT 1: 1. VÒNG PLAY-OFF (4 trận P1-P4) */}
+                      <div className="space-y-3 p-3 rounded-2xl bg-orange-50/40 dark:bg-orange-950/10 border-2 border-orange-200 dark:border-orange-900/40">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 text-white shadow-xs">
+                          <h4 className="font-oswald font-black text-xs uppercase tracking-wider">
+                            1. VÒNG PLAY-OFF
+                          </h4>
+                          <span className="text-[10px] block opacity-90 font-medium">8 VĐV thi đấu, lấy 4 người thắng</span>
+                        </div>
+
+                        <div className="space-y-2.5 pt-1">
+                          {playoffMatches.map((m, idx) => (
+                            <div key={m.id} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-900/50 shadow-2xs space-y-1.5 text-left hover:border-orange-400 transition-all">
+                              <div className="flex items-center justify-between text-[10px] font-oswald border-b border-orange-100 dark:border-orange-950 pb-1">
+                                <span className="font-black px-1.5 py-0.2 rounded bg-orange-500 text-white uppercase">P{idx + 1}</span>
+                                <span className="text-[9px] font-bold text-orange-600 dark:text-orange-400 uppercase">➔ W{idx + 1}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2 py-1 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 font-bold border border-emerald-300' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                                <span className="font-oswald font-black text-xs">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2 py-1 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 font-bold border border-emerald-300' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                                <span className="font-oswald font-black text-xs">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Callout Kết quả Play-off */}
+                        <div className="p-2.5 rounded-xl bg-orange-100/70 dark:bg-orange-950/40 border border-orange-300 dark:border-orange-900 text-left text-[10px] space-y-1">
+                          <span className="font-oswald font-black uppercase text-orange-900 dark:text-orange-300 block">KẾT QUẢ PLAY-OFF:</span>
+                          <p className="text-slate-700 dark:text-slate-300">• 4 người thắng (W1, W2, W3, W4)</p>
+                          <p className="text-slate-700 dark:text-slate-300">• Còn 28 VĐV đi tiếp (24 + 4 W)</p>
+                        </div>
+
+                        {/* Box 2 VĐV Đặc Cách */}
+                        <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border-2 border-emerald-400 dark:border-emerald-600 text-left space-y-1.5 shadow-xs">
+                          <div className="flex items-center space-x-1.5 text-emerald-800 dark:text-emerald-300 font-oswald font-black text-xs uppercase">
+                            <i className="fa-solid fa-crown text-amber-500"></i>
+                            <span>2 VĐV ĐẶC CÁCH VÀO TOP 16</span>
+                          </div>
+                          <div className="p-1.5 rounded bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-xs font-bold text-slate-800 dark:text-slate-200">
+                            👑 VĐV 1: <span className="text-emerald-700 dark:text-emerald-400 font-black">DTFx18 05 2024</span> (Phạm Quốc Minh)
+                          </div>
+                          <div className="p-1.5 rounded bg-white dark:bg-slate-900 border border-emerald-300 dark:border-emerald-700 text-xs font-bold text-slate-800 dark:text-slate-200">
+                            👑 VĐV 2: <span className="text-emerald-700 dark:text-emerald-400 font-black">ĐTFxGNOL04</span> (Phan Long)
+                          </div>
+                          <p className="text-[10px] text-emerald-800 dark:text-emerald-300 leading-tight pt-1">
+                            Không thi đấu Play-off & Vòng loại. Trận đầu tiên của họ là Top 16.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* CỘT 2: 2. VÒNG LOẠI (14 trận: T1-T14) */}
+                      <div className="space-y-3 p-3 rounded-2xl bg-sky-50/40 dark:bg-sky-950/10 border-2 border-sky-200 dark:border-sky-900/40">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white shadow-xs">
+                          <h4 className="font-oswald font-black text-xs uppercase tracking-wider">
+                            2. VÒNG LOẠI
+                          </h4>
+                          <span className="text-[10px] block opacity-90 font-medium">28 VĐV thi đấu, lấy 14 người thắng</span>
+                        </div>
+
+                        <div className="space-y-2 pt-1 max-h-[1050px] overflow-y-auto pr-1">
+                          {vongloaiMatches.map((m, idx) => (
+                            <div key={m.id} className="p-2 rounded-xl bg-white dark:bg-slate-900 border border-sky-200 dark:border-sky-900/50 shadow-2xs space-y-1 text-left hover:border-sky-400 transition-all">
+                              <div className="flex items-center justify-between text-[10px] font-oswald border-b border-sky-100 dark:border-sky-950 pb-0.5">
+                                <span className={`px-1.5 py-0.2 rounded font-black text-white uppercase ${idx >= 12 ? 'bg-orange-600' : 'bg-sky-600'}`}>
+                                  T{idx + 1}
+                                </span>
+                                <span className="text-[9px] font-bold text-sky-600 dark:text-sky-400 uppercase">➔ A{idx + 1}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2 py-0.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 font-bold border border-emerald-300' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                                <span className="font-oswald font-black text-xs">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2 py-0.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 font-bold border border-emerald-300' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                                <span className="font-oswald font-black text-xs">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        <div className="p-2.5 rounded-xl bg-sky-100/70 dark:bg-sky-950/40 border border-sky-300 dark:border-sky-900 text-left text-[10px] space-y-0.5">
+                          <span className="font-oswald font-black uppercase text-sky-900 dark:text-sky-300 block">KẾT QUẢ VÒNG LOẠI:</span>
+                          <p className="text-slate-700 dark:text-slate-300">• 14 người thắng (A1 – A14)</p>
+                          <p className="text-slate-700 dark:text-slate-300">• Cùng với 2 VĐV đặc cách tạo thành 16 VĐV</p>
+                        </div>
+                      </div>
+
+                      {/* CỘT 3: 3. TOP 16 (8 trận: Trận 1-8) */}
+                      <div className="space-y-3 p-3 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/10 border-2 border-emerald-200 dark:border-emerald-900/40">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-xs">
+                          <h4 className="font-oswald font-black text-xs uppercase tracking-wider">
+                            3. TOP 16
+                          </h4>
+                          <span className="text-[10px] block opacity-90 font-medium">8 trận, chọn 8 người vào Top 8</span>
+                        </div>
+
+                        <div className="space-y-3.5 pt-1 flex flex-col justify-around">
+                          {top16Matches.map((m, idx) => {
+                            const isSpecialH = m.homeTeamName.includes('Đặc cách');
+                            const isSpecialA = m.awayTeamName.includes('Đặc cách');
                             return (
-                              <div key={m.id} className="reveal-on-scroll p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-                                <div className="flex items-center justify-between text-[10px] font-oswald border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                                  <span className="font-bold text-slate-500 uppercase">Trận #{m.matchOrder} - Tứ Kết</span>
-                                  <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] ${m.played ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
-                                    {m.played ? "Đã đấu" : "Chờ đấu"}
+                              <div key={m.id} className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900/50 shadow-2xs space-y-1.5 text-left hover:border-emerald-400 transition-all">
+                                <div className="flex items-center justify-between text-[10px] font-oswald border-b border-emerald-100 dark:border-emerald-950 pb-1">
+                                  <span className="font-black px-1.5 py-0.2 rounded bg-emerald-600 text-white uppercase">TRẬN {idx + 1}</span>
+                                  <span className="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 uppercase">
+                                    ➔ TỨ KẾT {Math.floor(idx / 2) + 1}
                                   </span>
                                 </div>
-                                <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isHomeWinner ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-950 dark:text-blue-200 font-bold border border-blue-300 dark:border-blue-700' : 'text-slate-800 dark:text-slate-200'}`}>
-                                  <div className="flex items-center space-x-2 truncate pr-2">
-                                    {isHomeWinner && <i className="fa-solid fa-check text-blue-600 text-xs"></i>}
-                                    <span className="truncate">{m.homeTeamName}</span>
+                                <div className={`flex items-center justify-between text-xs px-2 py-1 rounded ${isSpecialH ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-black border border-rose-300' : m.winnerTeamName === m.homeTeamName ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 font-bold border border-emerald-300' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                  <div className="flex items-center space-x-1.5 truncate pr-1">
+                                    {isSpecialH && <i className="fa-solid fa-crown text-amber-500 text-[10px]"></i>}
+                                    <span className="truncate font-semibold">{m.homeTeamName}</span>
                                   </div>
-                                  <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                    {m.homeScore !== null ? m.homeScore : "-"}
-                                  </span>
+                                  <span className="font-oswald font-black text-xs">{m.homeScore !== null ? m.homeScore : '-'}</span>
                                 </div>
-                                <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isAwayWinner ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-950 dark:text-blue-200 font-bold border border-blue-300 dark:border-blue-700' : 'text-slate-800 dark:text-slate-200'}`}>
-                                  <div className="flex items-center space-x-2 truncate pr-2">
-                                    {isAwayWinner && <i className="fa-solid fa-check text-blue-600 text-xs"></i>}
-                                    <span className="truncate">{m.awayTeamName}</span>
+                                <div className={`flex items-center justify-between text-xs px-2 py-1 rounded ${isSpecialA ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-black border border-rose-300' : m.winnerTeamName === m.awayTeamName ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-900 dark:text-emerald-200 font-bold border border-emerald-300' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                  <div className="flex items-center space-x-1.5 truncate pr-1">
+                                    {isSpecialA && <i className="fa-solid fa-crown text-amber-500 text-[10px]"></i>}
+                                    <span className="truncate font-semibold">{m.awayTeamName}</span>
                                   </div>
-                                  <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                    {m.awayScore !== null ? m.awayScore : "-"}
-                                  </span>
+                                  <span className="font-oswald font-black text-xs">{m.awayScore !== null ? m.awayScore : '-'}</span>
                                 </div>
                               </div>
                             );
                           })}
                         </div>
                       </div>
-                    )}
 
-                    {/* 4. Round of 16 */}
-                    {(koRoundFilter === 'ALL' || koRoundFilter === 'R16') && hasR16 && r16Matches.length > 0 && (
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between px-1">
-                          <span className="font-oswald text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                            <i className="fa-solid fa-users text-cyan-500"></i>
-                            <span>VÒNG 1/8 ({r16Matches.length} trận)</span>
+                      {/* CỘT 4: 4. TOP 8 / TỨ KẾT (4 trận Q1-Q4) */}
+                      <div className="space-y-3 p-3 rounded-2xl bg-amber-50/40 dark:bg-amber-950/10 border-2 border-amber-200 dark:border-amber-900/40 h-full flex flex-col justify-around">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-yellow-600 text-slate-950 font-black shadow-xs">
+                          <h4 className="font-oswald font-black text-xs uppercase tracking-wider">
+                            4. TOP 8 (TỨ KẾT)
+                          </h4>
+                          <span className="text-[10px] block opacity-90 font-medium">4 trận, chọn 4 người vào Top 4</span>
+                        </div>
+
+                        <div className="space-y-12 py-6 flex flex-col justify-around">
+                          {qfMatches.map((m, idx) => (
+                            <div key={m.id} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-amber-900/50 shadow-2xs space-y-1.5 text-left hover:border-amber-400 transition-all">
+                              <div className="flex items-center justify-between text-[10px] font-oswald border-b border-amber-100 dark:border-amber-950 pb-1">
+                                <span className="font-black px-1.5 py-0.2 rounded bg-amber-400 text-slate-950 uppercase">TỨ KẾT {idx + 1} (Q{idx + 1})</span>
+                                <span className="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase">➔ BÁN KẾT {idx < 2 ? '1' : '2'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2 py-1 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-amber-100 dark:bg-amber-900/60 font-bold border border-amber-400 text-slate-950 dark:text-white' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                                <span className="font-oswald font-black text-xs">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2 py-1 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-amber-100 dark:bg-amber-900/60 font-bold border border-amber-400 text-slate-950 dark:text-white' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                                <span className="font-oswald font-black text-xs">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* CỘT 5: 5. TOP 4 / BÁN KẾT (2 trận S1-S2) */}
+                      <div className="space-y-3 p-3 rounded-2xl bg-indigo-50/40 dark:bg-indigo-950/10 border-2 border-indigo-200 dark:border-indigo-900/40 h-full flex flex-col justify-around">
+                        <div className="p-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-xs">
+                          <h4 className="font-oswald font-black text-xs uppercase tracking-wider">
+                            5. TOP 4 (BÁN KẾT)
+                          </h4>
+                          <span className="text-[10px] block opacity-90 font-medium">2 trận, chọn 2 người vào CK</span>
+                        </div>
+
+                        <div className="space-y-28 py-12 flex flex-col justify-around">
+                          {sfMatches.map((m, idx) => (
+                            <div key={m.id} className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-indigo-200 dark:border-indigo-900/50 shadow-md space-y-2 text-left hover:border-indigo-400 transition-all">
+                              <div className="flex items-center justify-between text-[11px] font-oswald border-b border-indigo-100 dark:border-indigo-950 pb-1">
+                                <span className="font-black px-2 py-0.5 rounded bg-indigo-600 text-white uppercase">BÁN KẾT {idx + 1} (S{idx + 1})</span>
+                                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">➔ CHUNG KẾT</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-indigo-200 dark:bg-indigo-900/70 font-bold border border-indigo-400 text-indigo-950 dark:text-white' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                                <span className="font-oswald font-black text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                              </div>
+                              <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-indigo-200 dark:bg-indigo-900/70 font-bold border border-indigo-400 text-indigo-950 dark:text-white' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                                <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                                <span className="font-oswald font-black text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* CỘT 6: 6. CHUNG KẾT (1 trận & Cúp) */}
+                      <div className="space-y-4 p-3.5 rounded-2xl bg-gradient-to-b from-rose-50/50 to-amber-50/50 dark:from-rose-950/20 dark:to-amber-950/20 border-2 border-rose-300 dark:border-rose-900/50 h-full flex flex-col justify-center items-center">
+                        <div className="w-full p-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-xs">
+                          <h4 className="font-oswald font-black text-xs uppercase tracking-wider">
+                            6. CHUNG KẾT
+                          </h4>
+                          <span className="text-[10px] block opacity-90 font-medium">1 trận • Tìm nhà vô địch</span>
+                        </div>
+
+                        {/* Golden Trophy Icon */}
+                        <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white flex items-center justify-center text-4xl shadow-xl shadow-amber-500/30 animate-float-slow my-3">
+                          <i className="fa-solid fa-trophy drop-shadow-md"></i>
+                        </div>
+
+                        {/* Final Match Card */}
+                        {finalMatches.slice(0, 1).map((m) => (
+                          <div
+                            key={m.id}
+                            className="w-full p-4 rounded-2xl bg-white dark:bg-slate-900 border-2 border-amber-400 dark:border-amber-500 shadow-xl space-y-2.5 text-left"
+                          >
+                            <div className="flex items-center justify-between text-[11px] font-oswald border-b border-amber-200 dark:border-amber-900/60 pb-1">
+                              <span className="font-black text-amber-700 dark:text-amber-400 flex items-center gap-1">
+                                <i className="fa-solid fa-crown text-amber-500"></i>
+                                <span>CHUNG KẾT CÚP</span>
+                              </span>
+                              <span className="px-2 py-0.5 rounded font-bold uppercase text-[9px] bg-amber-500 text-slate-950">
+                                {m.played ? 'KẾT THÚC' : 'BO3 CK'}
+                              </span>
+                            </div>
+                            <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded transition-all ${m.winnerTeamName === m.homeTeamName ? 'bg-amber-300 text-slate-950 font-black shadow-xs' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-sm text-amber-700 dark:text-amber-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded transition-all ${m.winnerTeamName === m.awayTeamName ? 'bg-amber-300 text-slate-950 font-black shadow-xs' : 'bg-slate-50 dark:bg-slate-800'}`}>
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-sm text-amber-700 dark:text-amber-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+
+                            {/* Podium Badge */}
+                            <div className="mt-2 p-2 rounded-xl bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 text-center font-oswald text-[11px] font-black uppercase border border-amber-300">
+                              🏆 NHÀ VÔ ĐỊCH ĐTHÉN FCO
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                    </div>
+                  </div>
+                ) : (
+                  /* Standard 7-Column World Cup Tree for legacy formats */
+                  <div className="hidden lg:block overflow-x-auto pb-4 overscroll-x-contain">
+                    <div className="grid grid-cols-7 gap-3 items-center min-w-[1240px] text-center">
+                      {/* COL 1: VÒNG 1/8 Nhánh Trái */}
+                      <div className="space-y-4">
+                        <div className="pb-1 border-b-2 border-blue-500">
+                          <span className="font-oswald font-bold text-xs uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                            VÒNG 1/8 (NHÁNH TRÁI)
                           </span>
                         </div>
-                        <div className="space-y-2.5">
-                          {r16Matches.map((m) => {
-                            const isHomeWinner = m.winnerTeamName && m.winnerTeamName === m.homeTeamName;
-                            const isAwayWinner = m.winnerTeamName && m.winnerTeamName === m.awayTeamName;
-                            return (
-                              <div key={m.id} className="reveal-on-scroll p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-2">
-                                <div className="flex items-center justify-between text-[10px] font-oswald border-b border-slate-100 dark:border-slate-800 pb-1.5">
-                                  <span className="font-bold text-slate-500 uppercase">Trận #{m.matchOrder} - Vòng 1/8</span>
-                                  <span className={`px-2 py-0.5 rounded font-bold uppercase text-[9px] ${m.played ? "bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300" : "bg-slate-100 dark:bg-slate-800 text-slate-500"}`}>
-                                    {m.played ? "Đã đấu" : "Chờ đấu"}
-                                  </span>
-                                </div>
-                                <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isHomeWinner ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-950 dark:text-blue-200 font-bold border border-blue-300 dark:border-blue-700' : 'text-slate-800 dark:text-slate-200'}`}>
-                                  <div className="flex items-center space-x-2 truncate pr-2">
-                                    {isHomeWinner && <i className="fa-solid fa-check text-blue-600 text-xs"></i>}
-                                    <span className="truncate">{m.homeTeamName}</span>
-                                  </div>
-                                  <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                    {m.homeScore !== null ? m.homeScore : "-"}
-                                  </span>
-                                </div>
-                                <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-xl ${isAwayWinner ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-950 dark:text-blue-200 font-bold border border-blue-300 dark:border-blue-700' : 'text-slate-800 dark:text-slate-200'}`}>
-                                  <div className="flex items-center space-x-2 truncate pr-2">
-                                    {isAwayWinner && <i className="fa-solid fa-check text-blue-600 text-xs"></i>}
-                                    <span className="truncate">{m.awayTeamName}</span>
-                                  </div>
-                                  <span className="font-oswald font-black text-sm text-slate-900 dark:text-white shrink-0 min-w-[20px] text-right">
-                                    {m.awayScore !== null ? m.awayScore : "-"}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
+                        {top16Matches.slice(0, 4).map((m) => (
+                          <div key={m.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 shadow-xs space-y-1.5 text-left">
+                            <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-blue-700 dark:text-blue-400 border-b border-blue-100 pb-1">
+                              <span>TRẬN #{m.matchOrder}</span>
+                              <span className="bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-semibold">{m.played ? 'ĐÃ ĐẤU' : 'BO3'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* COL 2: TỨ KẾT 1 & 2 */}
+                      <div className="space-y-8 flex flex-col justify-around h-full py-4">
+                        <div className="pb-1 border-b-2 border-indigo-500">
+                          <span className="font-oswald font-bold text-xs uppercase tracking-wider text-indigo-800 dark:text-indigo-300">
+                            TỨ KẾT 1 & 2
+                          </span>
                         </div>
+                        {qfMatches.slice(0, 2).map((m) => (
+                          <div key={m.id} className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border-2 border-indigo-200 dark:border-indigo-800/60 shadow-xs space-y-1.5 text-left">
+                            <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-indigo-800 border-b border-indigo-100 pb-1">
+                              <span>TỨ KẾT #{m.matchOrder}</span>
+                              <span className="bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded font-semibold">{m.played ? 'ĐÃ ĐẤU' : 'BO3'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                    )}
-                  </div>
-                </div>
 
-                {/* 7-Column World Cup Symmetrical Tree with Horizontal Scroll (Desktop Only) */}
-                <div className="hidden md:block overflow-x-auto pb-4 overscroll-x-contain">
-                  <div className="grid grid-cols-7 gap-3 items-center min-w-[1240px] text-center">
-                    {/* COL 1: VÒNG 1/8 (Nhánh Trái - 4 trận) */}
-                    <div className="space-y-4">
-                      <div className="pb-1 border-b-2 border-blue-500">
-                        <span className="font-oswald font-bold text-xs uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                          VÒNG 1/8 (NHÁNH TRÁI)
-                        </span>
-                      </div>
-                      {r16Matches.slice(0, 4).map((m) => (
-                        <div
-                          key={m.id}
-                          className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 shadow-xs space-y-1.5 hover:border-blue-500 hover:shadow-md transition-all text-left"
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-blue-700 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900/40 pb-1">
-                            <span>TRẬN #{m.matchOrder}</span>
-                            <span className="bg-blue-100/80 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-1.5 py-0.2 rounded font-semibold">
-                              {m.played ? 'ĐÃ ĐẤU' : 'BO3'}
-                            </span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-950 dark:text-blue-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-blue-700 dark:text-blue-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-950 dark:text-blue-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-blue-700 dark:text-blue-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
-                          </div>
+                      {/* COL 3: BÁN KẾT 1 */}
+                      <div className="space-y-4 flex flex-col justify-center h-full">
+                        <div className="pb-1 border-b-2 border-teal-500">
+                          <span className="font-oswald font-bold text-xs uppercase tracking-wider text-teal-800 dark:text-teal-300">
+                            BÁN KẾT 1
+                          </span>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* COL 2: TỨ KẾT 1 & 2 (Nhánh Trái - 2 trận) */}
-                    <div className="space-y-8 flex flex-col justify-around h-full py-4">
-                      <div className="pb-1 border-b-2 border-indigo-500">
-                        <span className="font-oswald font-bold text-xs uppercase tracking-wider text-indigo-800 dark:text-indigo-300">
-                          TỨ KẾT 1 & 2
-                        </span>
+                        {sfMatches.slice(0, 1).map((m) => (
+                          <div key={m.id} className="p-3.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border-2 border-teal-300 dark:border-teal-700 shadow-md space-y-2 text-left">
+                            <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-teal-800 border-b border-teal-100 pb-1">
+                              <span>BÁN KẾT 1</span>
+                              <span className="bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded font-semibold">{m.played ? 'ĐÃ ĐẤU' : 'BO3'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      {qfMatches.slice(0, 2).map((m) => (
-                        <div
-                          key={m.id}
-                          className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border-2 border-indigo-200 dark:border-indigo-800/60 shadow-xs space-y-1.5 hover:border-indigo-400 transition-all text-left"
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-indigo-800 dark:text-indigo-300 border-b border-indigo-100 dark:border-indigo-900/40 pb-1">
-                            <span>TỨ KẾT #{m.matchOrder}</span>
-                            <span className="bg-indigo-100/80 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 px-1.5 py-0.2 rounded font-semibold">
-                              {m.played ? 'ĐÃ ĐẤU' : 'BO3'}
-                            </span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-indigo-200 dark:bg-indigo-900 text-indigo-950 dark:text-indigo-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-indigo-700 dark:text-indigo-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-indigo-200 dark:bg-indigo-900 text-indigo-950 dark:text-indigo-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-indigo-700 dark:text-indigo-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
-                          </div>
+
+                      {/* COL 4: CHUNG KẾT */}
+                      <div className="space-y-4 flex flex-col justify-center items-center py-2">
+                        <div className="w-full pb-1 border-b-2 border-amber-500">
+                          <span className="font-oswald font-bold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300">
+                            CHUNG KẾT CÚP
+                          </span>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* COL 3: BÁN KẾT 1 (Nhánh Trái - 1 trận) */}
-                    <div className="space-y-4 flex flex-col justify-center h-full">
-                      <div className="pb-1 border-b-2 border-teal-500">
-                        <span className="font-oswald font-bold text-xs uppercase tracking-wider text-teal-800 dark:text-teal-300">
-                          BÁN KẾT 1
-                        </span>
-                      </div>
-                      {sfMatches.slice(0, 1).map((m) => (
-                        <div
-                          key={m.id}
-                          className="p-3.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border-2 border-teal-300 dark:border-teal-700 shadow-md space-y-2 hover:border-teal-400 transition-all text-left"
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-teal-800 dark:text-teal-300 border-b border-teal-100 dark:border-teal-900/40 pb-1">
-                            <span>BÁN KẾT 1</span>
-                            <span className="bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 px-1.5 py-0.2 rounded font-semibold">
-                              {m.played ? 'ĐÃ ĐẤU' : 'BO3'}
-                            </span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-teal-200 dark:bg-teal-900 text-teal-950 dark:text-teal-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-teal-700 dark:text-teal-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-teal-200 dark:bg-teal-900 text-teal-950 dark:text-teal-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-teal-700 dark:text-teal-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
-                          </div>
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 text-white flex items-center justify-center text-3xl shadow-xl shadow-amber-500/30">
+                          <i className="fa-solid fa-trophy"></i>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* COL 4: TRUNG TÂM - CHUNG KẾT CÚP VÀNG */}
-                    <div className="space-y-4 flex flex-col justify-center items-center py-2">
-                      <div className="w-full pb-1 border-b-2 border-amber-500">
-                        <span className="font-oswald font-bold text-xs uppercase tracking-wider text-amber-900 dark:text-amber-300 flex items-center justify-center space-x-1">
-                          <i className="fa-solid fa-crown text-amber-500"></i>
-                          <span>CHUNG KẾT CÚP</span>
-                        </span>
+                        {finalMatches.slice(0, 1).map((m) => (
+                          <div key={m.id} className="w-full p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/50 border-2 border-amber-400 space-y-2.5 text-left">
+                            <div className="flex items-center justify-between text-[11px] font-oswald text-amber-900 border-b border-amber-200 pb-1">
+                              <span className="font-black">TRANH NGÔI VƯƠNG</span>
+                              <span className="bg-amber-100 text-amber-900 px-2 py-0.5 rounded font-bold">{m.played ? 'KẾT THÚC' : 'BO3 CK'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-base text-amber-700">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2.5 py-1.5 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-base text-amber-700">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
 
-                      {/* Golden Trophy Icon */}
-                      <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-amber-400 via-amber-500 to-orange-500 text-white flex items-center justify-center text-3xl sm:text-4xl shadow-xl shadow-amber-500/30 animate-float-slow">
-                        <i className="fa-solid fa-trophy drop-shadow-md"></i>
-                      </div>
-
-                      {/* Final Match Card */}
-                      {finalMatches.slice(0, 1).map((m) => (
-                        <div
-                          key={m.id}
-                          className="w-full p-4 rounded-2xl bg-gradient-to-b from-amber-50 to-orange-50/70 dark:from-amber-950/50 dark:to-slate-900 border-2 border-amber-400 dark:border-amber-500 shadow-xl neon-ring-pulse card-hover-fx space-y-2.5 text-left"
-                        >
-                          <div className="flex items-center justify-between text-[11px] font-oswald text-amber-900 dark:text-amber-300 border-b border-amber-200 dark:border-amber-800/60 pb-1">
-                            <span className="font-black flex items-center space-x-1">
-                              <i className="fa-solid fa-crown text-amber-500 animate-bounce"></i>
-                              <span>TRANH NGÔI VƯƠNG</span>
-                            </span>
-                            <span className="bg-amber-100 dark:bg-amber-950 text-amber-900 dark:text-amber-200 px-2 py-0.5 rounded font-bold">
-                              {m.played ? 'KẾT THÚC' : 'BO3 CHUNG KẾT'}
-                            </span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg transition-all ${m.winnerTeamName === m.homeTeamName ? 'bg-amber-400 text-slate-950 font-black shadow-xs' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
-                            <span className="font-oswald font-bold text-base text-amber-700 dark:text-amber-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2.5 py-1.5 rounded-lg transition-all ${m.winnerTeamName === m.awayTeamName ? 'bg-amber-400 text-slate-950 font-black shadow-xs' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
-                            <span className="font-oswald font-bold text-base text-amber-700 dark:text-amber-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
-                          </div>
+                      {/* COL 5: BÁN KẾT 2 */}
+                      <div className="space-y-4 flex flex-col justify-center h-full">
+                        <div className="pb-1 border-b-2 border-teal-500">
+                          <span className="font-oswald font-bold text-xs uppercase tracking-wider text-teal-800 dark:text-teal-300">
+                            BÁN KẾT 2
+                          </span>
                         </div>
-                      ))}
-                    </div>
-
-                    {/* COL 5: BÁN KẾT 2 (Nhánh Phải - 1 trận) */}
-                    <div className="space-y-4 flex flex-col justify-center h-full">
-                      <div className="pb-1 border-b-2 border-teal-500">
-                        <span className="font-oswald font-bold text-xs uppercase tracking-wider text-teal-800 dark:text-teal-300">
-                          BÁN KẾT 2
-                        </span>
+                        {sfMatches.slice(1, 2).map((m) => (
+                          <div key={m.id} className="p-3.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border-2 border-teal-300 dark:border-teal-700 shadow-md space-y-2 text-left">
+                            <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-teal-800 border-b border-teal-100 pb-1">
+                              <span>BÁN KẾT 2</span>
+                              <span className="bg-teal-100 text-teal-800 px-1.5 py-0.2 rounded font-semibold">{m.played ? 'ĐÃ ĐẤU' : 'BO3'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
                       </div>
-                      {sfMatches.slice(1, 2).map((m) => (
-                        <div
-                          key={m.id}
-                          className="p-3.5 rounded-xl bg-teal-50/70 dark:bg-teal-950/40 border-2 border-teal-300 dark:border-teal-700 shadow-md space-y-2 hover:border-teal-400 transition-all text-left"
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-teal-800 dark:text-teal-300 border-b border-teal-100 dark:border-teal-900/40 pb-1">
-                            <span>BÁN KẾT 2</span>
-                            <span className="bg-teal-100 dark:bg-teal-950 text-teal-800 dark:text-teal-300 px-1.5 py-0.2 rounded font-semibold">
-                              {m.played ? 'ĐÃ ĐẤU' : 'BO3'}
-                            </span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-teal-200 dark:bg-teal-900 text-teal-950 dark:text-teal-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-teal-700 dark:text-teal-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-teal-200 dark:bg-teal-900 text-teal-950 dark:text-teal-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-teal-700 dark:text-teal-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
 
-                    {/* COL 6: TỨ KẾT 3 & 4 (Nhánh Phải - 2 trận) */}
-                    <div className="space-y-8 flex flex-col justify-around h-full py-4">
-                      <div className="pb-1 border-b-2 border-indigo-500">
-                        <span className="font-oswald font-bold text-xs uppercase tracking-wider text-indigo-800 dark:text-indigo-300">
-                          TỨ KẾT 3 & 4
-                        </span>
-                      </div>
-                      {qfMatches.slice(2, 4).map((m) => (
-                        <div
-                          key={m.id}
-                          className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border-2 border-indigo-200 dark:border-indigo-800/60 shadow-xs space-y-1.5 hover:border-indigo-400 transition-all text-left"
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-indigo-800 dark:text-indigo-300 border-b border-indigo-100 dark:border-indigo-900/40 pb-1">
-                            <span>TỨ KẾT #{m.matchOrder}</span>
-                            <span className="bg-indigo-100/80 dark:bg-indigo-950 text-indigo-800 dark:text-indigo-300 px-1.5 py-0.2 rounded font-semibold">
-                              {m.played ? 'ĐÃ ĐẤU' : 'BO3'}
-                            </span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-indigo-200 dark:bg-indigo-900 text-indigo-950 dark:text-indigo-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-indigo-700 dark:text-indigo-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-indigo-200 dark:bg-indigo-900 text-indigo-950 dark:text-indigo-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-indigo-700 dark:text-indigo-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
-                          </div>
+                      {/* COL 6: TỨ KẾT 3 & 4 */}
+                      <div className="space-y-8 flex flex-col justify-around h-full py-4">
+                        <div className="pb-1 border-b-2 border-indigo-500">
+                          <span className="font-oswald font-bold text-xs uppercase tracking-wider text-indigo-800 dark:text-indigo-300">
+                            TỨ KẾT 3 & 4
+                          </span>
                         </div>
-                      ))}
-                    </div>
+                        {qfMatches.slice(2, 4).map((m) => (
+                          <div key={m.id} className="p-3.5 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border-2 border-indigo-200 dark:border-indigo-800/60 shadow-xs space-y-1.5 text-left">
+                            <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-indigo-800 border-b border-indigo-100 pb-1">
+                              <span>TỨ KẾT #{m.matchOrder}</span>
+                              <span className="bg-indigo-100 text-indigo-800 px-1.5 py-0.2 rounded font-semibold">{m.played ? 'ĐÃ ĐẤU' : 'BO3'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
 
-                    {/* COL 7: VÒNG 1/8 (Nhánh Phải - 4 trận) */}
-                    <div className="space-y-4">
-                      <div className="pb-1 border-b-2 border-blue-500">
-                        <span className="font-oswald font-bold text-xs uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                          VÒNG 1/8 (NHÁNH PHẢI)
-                        </span>
-                      </div>
-                      {r16Matches.slice(4, 8).map((m) => (
-                        <div
-                          key={m.id}
-                          className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 shadow-xs space-y-1.5 hover:border-blue-500 hover:shadow-md transition-all text-left"
-                        >
-                          <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-blue-700 dark:text-blue-400 border-b border-blue-100 dark:border-blue-900/40 pb-1">
-                            <span>TRẬN #{m.matchOrder}</span>
-                            <span className="bg-blue-100/80 dark:bg-blue-950 text-blue-800 dark:text-blue-300 px-1.5 py-0.2 rounded font-semibold">
-                              {m.played ? 'ĐÃ ĐẤU' : 'BO3'}
-                            </span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.homeTeamName ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-950 dark:text-blue-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-blue-700 dark:text-blue-400">{m.homeScore !== null ? m.homeScore : '-'}</span>
-                          </div>
-                          <div className={`flex items-center justify-between text-xs px-2 py-1.5 rounded ${m.winnerTeamName === m.awayTeamName ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-950 dark:text-blue-100 font-bold' : 'bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700'}`}>
-                            <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
-                            <span className="font-oswald font-bold text-sm text-blue-700 dark:text-blue-400">{m.awayScore !== null ? m.awayScore : '-'}</span>
-                          </div>
+                      {/* COL 7: VÒNG 1/8 Nhánh Phải */}
+                      <div className="space-y-4">
+                        <div className="pb-1 border-b-2 border-blue-500">
+                          <span className="font-oswald font-bold text-xs uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                            VÒNG 1/8 (NHÁNH PHẢI)
+                          </span>
                         </div>
-                      ))}
+                        {top16Matches.slice(4, 8).map((m) => (
+                          <div key={m.id} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-blue-200 dark:border-blue-900/60 shadow-xs space-y-1.5 text-left">
+                            <div className="flex items-center justify-between text-[10px] font-fco font-bold uppercase text-blue-700 pb-1">
+                              <span>TRẬN #{m.matchOrder}</span>
+                              <span className="bg-blue-100 text-blue-800 px-1.5 py-0.2 rounded font-semibold">{m.played ? 'ĐÃ ĐẤU' : 'BO3'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.homeTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.homeScore !== null ? m.homeScore : '-'}</span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs px-2 py-1 rounded bg-white dark:bg-slate-800">
+                              <span className="truncate pr-1 font-semibold">{m.awayTeamName}</span>
+                              <span className="font-oswald font-bold text-sm">{m.awayScore !== null ? m.awayScore : '-'}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
-              {/* BẢNG QUY TẮC PHÂN CẶP WORLD CUP - ĐƯỢC ĐƯA XUỐNG DƯỚI CÂY THEO YÊU CẦU */}
-              <div className="p-4 sm:p-6 rounded-2xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-800/80 shadow-sm space-y-3 sm:space-y-4">
-                <div className="flex items-center space-x-2.5 border-b border-blue-100 dark:border-blue-900/40 pb-2.5 sm:pb-3">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center flex-shrink-0 text-sm sm:text-base shadow-xs">
-                    <i className="fa-solid fa-circle-info"></i>
+              {/* TÓM TẮT THỂ THỨC SƠ ĐỒ 34 VĐV (2 VĐV ĐẶC CÁCH) */}
+              <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-r from-blue-950 via-slate-900 to-indigo-950 text-white border-2 border-blue-400/40 shadow-xl space-y-3 sm:space-y-4">
+                <div className="flex items-center space-x-2.5 border-b border-blue-500/30 pb-2.5 sm:pb-3">
+                  <div className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center flex-shrink-0 text-base font-black shadow-md">
+                    <i className="fa-solid fa-list-check"></i>
                   </div>
-                  <h4 className="font-oswald font-bold uppercase text-sm sm:text-lg text-blue-950 dark:text-blue-200 leading-tight">
-                    BẢNG QUY TẮC BỐC THĂM PHÂN CẶP VÒNG 1/8
+                  <h4 className="font-oswald font-black uppercase text-base sm:text-lg text-amber-300 leading-tight">
+                    TÓM TẮT THỂ THỨC THI ĐẤU ĐTHÉN FCO ™ (34 VĐV)
                   </h4>
                 </div>
-                <div className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed space-y-2.5 sm:space-y-3 pl-0 sm:pl-10">
-                  <p>
-                    Khi chưa kết thúc vòng bảng, sơ đồ cây hiển thị trước quy tắc phân nhánh trực tiếp: <strong>Nhất bảng này gặp Nhì bảng kia</strong>.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 text-xs">
-                    <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-1.5">
-                      <span className="font-bold text-blue-900 dark:text-blue-300 block text-sm">🔷 Nhánh Đấu Trái:</span>
-                      <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
-                        <li>Trận 1: <strong>Nhất Bảng A</strong> vs <strong>Nhì Bảng B</strong></li>
-                        <li>Trận 2: <strong>Nhất Bảng C</strong> vs <strong>Nhì Bảng D</strong></li>
-                        <li>Trận 3: <strong>Nhất Bảng E</strong> vs <strong>Nhì Bảng F</strong></li>
-                        <li>Trận 4: <strong>Nhất Bảng G</strong> vs <strong>Nhì Bảng H</strong></li>
-                      </ul>
-                    </div>
-                    <div className="p-3.5 rounded-xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-1.5">
-                      <span className="font-bold text-blue-900 dark:text-blue-300 block text-sm">🔷 Nhánh Đấu Phải:</span>
-                      <ul className="list-disc list-inside space-y-1 text-slate-700 dark:text-slate-300">
-                        <li>Trận 5: <strong>Nhất Bảng B</strong> vs <strong>Nhì Bảng A</strong></li>
-                        <li>Trận 6: <strong>Nhất Bảng D</strong> vs <strong>Nhì Bảng C</strong></li>
-                        <li>Trận 7: <strong>Nhất Bảng F</strong> vs <strong>Nhì Bảng E</strong></li>
-                        <li>Trận 8: <strong>Nhất Bảng H</strong> vs <strong>Nhì Bảng G</strong></li>
-                      </ul>
-                    </div>
-                  </div>
-                  <p className="text-[12px] text-blue-800 dark:text-blue-400 italic pt-1">
-                    * Tên chính thức của Huấn luyện viên và CLB sẽ tự động cập nhật ngay khi các bảng đấu kết thúc toàn bộ lượt trận!
-                  </p>
+                <div className="text-xs sm:text-sm text-slate-200 leading-relaxed grid grid-cols-1 md:grid-cols-2 gap-3 pl-0 sm:pl-10">
+                  <ul className="space-y-2 list-none">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span><strong>34 VĐV tham dự</strong>, trong đó có <strong>2 VĐV được đặc cách</strong> (VĐV 1 & VĐV 2).</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span><strong>Vòng Play-off:</strong> 8 VĐV thi đấu 4 trận (P1 – P4) ➔ lấy 4 người thắng (W1 – W4).</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span><strong>Vòng Loại:</strong> 28 VĐV (24 VĐV bốc thăm trực tiếp + 4 người thắng Play-off) thi đấu 14 trận (T1 – T14) ➔ lấy 14 người thắng (A1 – A14).</span>
+                    </li>
+                  </ul>
+                  <ul className="space-y-2 list-none">
+                    <li className="flex items-start space-x-2">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span><strong>Top 16:</strong> 14 người thắng Vòng loại cùng 2 VĐV đặc cách tạo thành 16 VĐV xuất sắc nhất.</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span>VĐV 1 và VĐV 2 chỉ cần thắng 1 trận ở Top 16 là thẳng tiến vào <strong>Top 8 (Tứ Kết)</strong>.</span>
+                    </li>
+                    <li className="flex items-start space-x-2">
+                      <span className="text-amber-400 font-bold">•</span>
+                      <span>Lộ trình hội tụ đỉnh cao: <strong>Top 8 (Tứ Kết) ➔ Top 4 (Bán Kết) ➔ Chung Kết tranh Cúp Vàng</strong>.</span>
+                    </li>
+                  </ul>
                 </div>
               </div>
             </div>
