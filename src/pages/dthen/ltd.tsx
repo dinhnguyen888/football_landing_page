@@ -162,11 +162,6 @@ const DthenLtd: React.FC = () => {
             if (match) {
               setTournament(match);
             }
-          } else {
-            const vis = archiveData.find((t) => isOfficialDthen34(t) && t.isVisible !== false);
-            if (vis) {
-              setTournament(vis);
-            }
           }
         }
       }
