@@ -19,19 +19,19 @@ const Footer: React.FC = () => {
 
       {/* 2. Stadium Floodlights & Pitch Radial Lighting */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-80 animate-floodlight"
+        className="absolute inset-0 pointer-events-none opacity-80 animate-floodlight-soft"
         style={{
           background: `
-            radial-gradient(ellipse 90% 60% at 50% 0%, rgba(0, 229, 117, 0.25), transparent 75%),
-            radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.12), transparent 40%),
-            radial-gradient(circle at 85% 10%, rgba(245, 158, 11, 0.12), transparent 40%),
-            linear-gradient(180deg, transparent 0%, rgba(1, 10, 6, 0.8) 100%)
+            radial-gradient(ellipse 90% 60% at 50% 0%, rgba(16, 185, 129, 0.20), transparent 75%),
+            radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.08), transparent 40%),
+            radial-gradient(circle at 85% 10%, rgba(217, 119, 6, 0.10), transparent 40%),
+            linear-gradient(180deg, transparent 0%, rgba(2, 10, 6, 0.85) 100%)
           `,
         }}
       />
 
-      {/* 3. Glowing Neon LED Top Line with Flowing Animation */}
-      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#00e575] via-[#0ea5e9] to-[#f59e0b] animate-gradient-flow shadow-[0_0_15px_rgba(0,229,117,0.5)]" />
+      {/* 3. Natural Stadium Grass & Gold Top Line */}
+      <div className="absolute top-0 left-0 right-0 h-[2.5px] bg-gradient-to-r from-emerald-600 via-teal-400 to-amber-500 opacity-90" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-24 lg:pb-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">

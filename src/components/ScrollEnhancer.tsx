@@ -48,24 +48,19 @@ export const ScrollEnhancer: React.FC = () => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
 
     // Set up observer for elements that should animate into view
-    const observerCallback: IntersectionObserverCallback = (entries) => {
+    const observerCallback: IntersectionObserverCallback = (entries, obs) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add("is-visible");
-        } else {
-          // If the element scrolled off the screen downward or upward, allow re-animating on scroll
-          const rect = entry.boundingClientRect;
-          if (rect.top > window.innerHeight + 150 || rect.bottom < -250) {
-            entry.target.classList.remove("is-visible");
-          }
+          obs.unobserve(entry.target); // Keep visible once revealed for smooth natural browsing
         }
       });
     };
 
     const observer = new IntersectionObserver(observerCallback, {
       root: null,
-      rootMargin: "0px 0px -15px 0px",
-      threshold: [0.01, 0.08],
+      rootMargin: "0px 0px -20px 0px",
+      threshold: 0.05,
     });
 
     // Auto-discover elements to animate
@@ -75,21 +70,10 @@ export const ScrollEnhancer: React.FC = () => {
         ".reveal-left",
         ".reveal-right",
         ".reveal-zoom",
-        ".portal-card",
-        "main > section",
-        ".tournament-card",
-        ".card-hover-fx",
-        "main > div > div",
       ];
       
       const elements = document.querySelectorAll(selectors.join(", "));
       elements.forEach((el) => {
-        if (!el.classList.contains("reveal-on-scroll") &&
-            !el.classList.contains("reveal-left") &&
-            !el.classList.contains("reveal-right") &&
-            !el.classList.contains("reveal-zoom")) {
-          el.classList.add("reveal-on-scroll");
-        }
         observer.observe(el);
       });
     };
@@ -122,7 +106,7 @@ export const ScrollEnhancer: React.FC = () => {
     <>
       {/* Top Scroll Progress Indicator */}
       <div
-        className="fixed top-0 left-0 h-[3.5px] bg-gradient-to-r from-[#00e575] via-[#0ea5e9] to-[#f59e0b] z-[70] pointer-events-none transition-all duration-100 ease-out shadow-[0_0_12px_rgba(0,229,117,0.85)]"
+        className="fixed top-0 left-0 h-[3px] bg-gradient-to-r from-emerald-600 via-teal-500 to-amber-500 z-[70] pointer-events-none transition-all duration-100 ease-out shadow-[0_1px_6px_rgba(16,185,129,0.5)]"
         style={{ width: `${scrollProgress}%` }}
         role="progressbar"
         aria-valuenow={Math.round(scrollProgress)}
@@ -136,11 +120,11 @@ export const ScrollEnhancer: React.FC = () => {
         onClick={scrollToTop}
         aria-label="Cuộn lên đầu trang"
         title="Cuộn lên đầu trang"
-        className={`back-to-top-btn fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/90 dark:bg-slate-900/90 text-slate-800 dark:text-slate-100 shadow-xl border border-slate-200 dark:border-slate-800 backdrop-blur-md flex items-center justify-center cursor-pointer transition-all duration-300 ${
+        className={`back-to-top-btn fixed bottom-20 right-3 sm:bottom-6 sm:right-6 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-white/95 dark:bg-slate-900/95 text-slate-800 dark:text-slate-100 shadow-xl border border-slate-200 dark:border-slate-800 backdrop-blur-md flex items-center justify-center cursor-pointer transition-all duration-300 ${
           showScrollTop
             ? "opacity-100 scale-100 translate-y-0 pointer-events-auto"
             : "opacity-0 scale-75 translate-y-4 pointer-events-none"
-        } hover:scale-110 active:scale-95 hover:border-emerald-400 group`}
+        } hover:scale-105 active:scale-95 hover:border-emerald-500 group`}
       >
         {/* SVG Circular Progress Track */}
         <svg className="absolute inset-0 w-full h-full -rotate-90 p-1 pointer-events-none" viewBox="0 0 36 36">
@@ -166,8 +150,8 @@ export const ScrollEnhancer: React.FC = () => {
           />
           <defs>
             <linearGradient id="scrollGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="#00e575" />
-              <stop offset="100%" stopColor="#0ea5e9" />
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#f59e0b" />
             </linearGradient>
           </defs>
         </svg>

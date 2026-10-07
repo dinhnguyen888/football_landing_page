@@ -16,197 +16,73 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
   return (
     <div
       className={`w-full ${
-        isDthen ? "bg-[#050f1f] border-b-2 border-blue-500/80" : "bg-[#051410] border-b-2 border-emerald-500/80"
-      } text-white py-8 sm:py-11 md:py-14 px-4 sm:px-6 relative overflow-hidden`}
+        isDthen
+          ? "bg-[#040e1f] border-b-2 border-blue-600/80"
+          : "bg-[#03170f] border-b-2 border-emerald-600/80"
+      } text-white py-8 sm:py-12 md:py-14 px-4 sm:px-6 relative overflow-hidden`}
     >
-      {/* 1. Dynamic Stadium Pitch Night Gradient */}
+      {/* 1. Natural Stadium Pitch Lighting & Atmospheric Floodlights */}
       <div
-        className="absolute inset-0 pointer-events-none animate-floodlight"
+        className="absolute inset-0 pointer-events-none animate-floodlight-soft"
         style={{
           background: isDthen
             ? `
-              radial-gradient(ellipse 75% 65% at 50% -15%, rgba(14, 165, 233, 0.35), transparent 75%),
-              radial-gradient(circle at 12% 85%, rgba(99, 102, 241, 0.2), transparent 50%),
-              radial-gradient(circle at 88% 85%, rgba(245, 158, 11, 0.2), transparent 50%),
-              linear-gradient(180deg, #07172d 0%, #030a14 100%)
+              radial-gradient(ellipse 70% 60% at 50% -10%, rgba(2, 132, 199, 0.35), transparent 75%),
+              radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.15), transparent 45%),
+              radial-gradient(circle at 90% 20%, rgba(245, 158, 11, 0.12), transparent 45%),
+              linear-gradient(180deg, #05152e 0%, #020914 100%)
             `
             : `
-              radial-gradient(ellipse 75% 65% at 50% -15%, rgba(0, 229, 117, 0.35), transparent 75%),
-              radial-gradient(circle at 12% 85%, rgba(14, 165, 233, 0.18), transparent 50%),
-              radial-gradient(circle at 88% 85%, rgba(245, 158, 11, 0.18), transparent 50%),
-              linear-gradient(180deg, #071f18 0%, #030e0b 100%)
+              radial-gradient(ellipse 75% 65% at 50% -10%, rgba(16, 185, 129, 0.30), transparent 75%),
+              radial-gradient(circle at 10% 20%, rgba(5, 150, 105, 0.18), transparent 45%),
+              radial-gradient(circle at 90% 20%, rgba(217, 119, 6, 0.15), transparent 45%),
+              linear-gradient(180deg, #041c13 0%, #020c08 100%)
             `,
         }}
       />
 
-      {/* 2. Tactical Pitch Field Lines & Grid */}
+      {/* 2. Realistic Stadium Grass Turf & Subtle Chalk Field Lines */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-20"
+        className="absolute inset-0 pointer-events-none opacity-25"
         style={{
           backgroundImage: `
-            radial-gradient(circle at 50% 50%, transparent 85px, rgba(255, 255, 255, 0.6) 86px, rgba(255, 255, 255, 0.6) 88px, transparent 89px),
-            linear-gradient(90deg, transparent 49.8%, rgba(255, 255, 255, 0.5) 50%, transparent 50.2%),
-            repeating-linear-gradient(90deg, transparent 0px, transparent 48px, rgba(255, 255, 255, 0.03) 48px, rgba(255, 255, 255, 0.03) 96px)
+            repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.02) 0px, rgba(255, 255, 255, 0.02) 60px, transparent 60px, transparent 120px),
+            radial-gradient(circle at 50% 120%, transparent 140px, rgba(255, 255, 255, 0.25) 141px, rgba(255, 255, 255, 0.25) 143px, transparent 144px),
+            linear-gradient(90deg, transparent 49.8%, rgba(255, 255, 255, 0.2) 50%, transparent 50.2%)
           `,
-          backgroundSize: "100% 100%, 100% 100%, 100% 100%",
         }}
       />
 
-      {/* 3. HIGH-END 3D ESPORTS HOLOGRAPHIC TACTICAL MATCH ENGINE */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-5 opacity-15 sm:opacity-55 transition-opacity">
-        
-        {/* Left Goal Post Frame */}
-        <div className="absolute bottom-2 left-1 w-3 sm:w-4 h-12 border-r-2 border-y-2 border-emerald-400/40 rounded-r-lg bg-emerald-500/10 flex items-center justify-center opacity-70">
-          <span className="text-[7px] font-black text-emerald-400/60 -rotate-90">GOAL</span>
-        </div>
-
-        {/* Right Goal Post Frame */}
-        <div className="absolute bottom-2 right-1 w-3 sm:w-4 h-12 border-l-2 border-y-2 border-amber-400/40 rounded-l-lg bg-amber-500/10 flex items-center justify-center opacity-70">
-          <span className="text-[7px] font-black text-amber-400/60 rotate-90">GOAL</span>
-        </div>
-
-        {/* ================= TEAM A (HOME - EMERALD / CYAN) ================= */}
-        {/* GK A: Goalkeeper (#1) */}
-        <div className="absolute bottom-2 left-[4%] sm:left-[6%] animate-gk-a flex flex-col items-center">
-          <div className="relative animate-token-bob">
-            {/* Tactical Ring Aura */}
-            <div className="absolute -inset-1 rounded-full bg-emerald-400/30 blur-xs animate-ring-pulse" />
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-600 via-slate-900 to-slate-950 border-2 border-emerald-400 shadow-[0_0_12px_rgba(0,229,117,0.7)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-hands text-[10px] sm:text-xs text-emerald-300"></i>
-              <span className="text-[7px] sm:text-[8px] font-black font-oswald text-emerald-300">#1 GK</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CB A: Center Back (#3) */}
-        <div className="absolute bottom-3 left-[16%] sm:left-[18%] animate-team-a-move flex flex-col items-center">
-          <div className="relative animate-token-bob" style={{ animationDelay: "0.4s" }}>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-teal-700 via-slate-900 to-slate-950 border border-teal-400 shadow-[0_0_8px_rgba(45,212,191,0.6)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-shield-halved text-[9px] sm:text-[10px] text-teal-300"></i>
-              <span className="text-[6px] sm:text-[7px] font-black font-oswald text-teal-200">#3 CB</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CM A: Central Midfielder (#8) */}
-        <div className="absolute bottom-2 left-[28%] sm:left-[30%] animate-team-a-move flex flex-col items-center">
-          <div className="relative animate-token-bob" style={{ animationDelay: "0.8s" }}>
-            <div className="absolute -inset-1 rounded-full bg-cyan-400/30 blur-xs animate-ring-pulse" />
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-cyan-600 via-slate-900 to-slate-950 border-2 border-cyan-400 shadow-[0_0_12px_rgba(6,182,212,0.7)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-bolt text-[10px] sm:text-xs text-cyan-300"></i>
-              <span className="text-[7px] sm:text-[8px] font-black font-oswald text-cyan-200">#8 CM</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ST A: Star Striker (#9) */}
-        <div className="absolute bottom-1 left-[50%] sm:left-[52%] animate-team-a-move flex flex-col items-center">
-          <div className="relative animate-token-bob" style={{ animationDelay: "1.2s" }}>
-            <div className="absolute -inset-1.5 rounded-full bg-emerald-400/40 blur-xs animate-ring-pulse" />
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-emerald-500 via-teal-700 to-slate-950 border-2 border-amber-400 shadow-[0_0_16px_rgba(0,229,117,0.9)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-star text-[10px] sm:text-xs text-amber-300 animate-spin-slow"></i>
-              <span className="text-[7px] sm:text-[9px] font-black font-oswald text-amber-300">#9 ST</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ================= TEAM B (AWAY - ROSE / AMBER) ================= */}
-        {/* ST B: Star Striker (#11) */}
-        <div className="absolute bottom-2 left-[40%] sm:left-[42%] animate-team-b-move flex flex-col items-center">
-          <div className="relative animate-token-bob" style={{ animationDelay: "0.6s" }}>
-            <div className="absolute -inset-1.5 rounded-full bg-rose-500/40 blur-xs animate-ring-pulse" />
-            <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-full bg-gradient-to-br from-rose-600 via-red-800 to-slate-950 border-2 border-rose-400 shadow-[0_0_16px_rgba(244,63,94,0.9)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-fire text-[10px] sm:text-xs text-rose-300"></i>
-              <span className="text-[7px] sm:text-[9px] font-black font-oswald text-rose-200">#11 ST</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CM B: Playmaker Midfielder (#10) */}
-        <div className="absolute bottom-2 left-[68%] sm:left-[70%] animate-team-b-move flex flex-col items-center">
-          <div className="relative animate-token-bob" style={{ animationDelay: "1.0s" }}>
-            <div className="absolute -inset-1 rounded-full bg-orange-400/30 blur-xs animate-ring-pulse" />
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-orange-600 via-amber-800 to-slate-950 border-2 border-orange-400 shadow-[0_0_12px_rgba(249,115,22,0.7)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-crown text-[10px] sm:text-xs text-amber-300"></i>
-              <span className="text-[7px] sm:text-[8px] font-black font-oswald text-amber-200">#10 CAM</span>
-            </div>
-          </div>
-        </div>
-
-        {/* CB B: Center Back (#4) */}
-        <div className="absolute bottom-4 right-[16%] sm:right-[18%] animate-team-b-move flex flex-col items-center">
-          <div className="relative animate-token-bob" style={{ animationDelay: "1.4s" }}>
-            <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-gradient-to-br from-amber-700 via-slate-900 to-slate-950 border border-amber-400 shadow-[0_0_8px_rgba(245,158,11,0.6)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-shield text-[9px] sm:text-[10px] text-amber-300"></i>
-              <span className="text-[6px] sm:text-[7px] font-black font-oswald text-amber-200">#4 CB</span>
-            </div>
-          </div>
-        </div>
-
-        {/* GK B: Goalkeeper (#1) */}
-        <div className="absolute bottom-2 right-[4%] sm:right-[6%] animate-gk-b flex flex-col items-center">
-          <div className="relative animate-token-bob" style={{ animationDelay: "0.2s" }}>
-            <div className="absolute -inset-1 rounded-full bg-amber-400/30 blur-xs animate-ring-pulse" />
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-amber-600 via-slate-900 to-slate-950 border-2 border-amber-400 shadow-[0_0_12px_rgba(245,158,11,0.7)] flex flex-col items-center justify-center text-white">
-              <i className="fa-solid fa-hands text-[10px] sm:text-xs text-amber-300"></i>
-              <span className="text-[7px] sm:text-[8px] font-black font-oswald text-amber-300">#1 GK</span>
-            </div>
-          </div>
-        </div>
-
-        {/* ================= THE LIVE RALLY FOOTBALL ================= */}
-        <div className="absolute animate-rally-ball pointer-events-none z-20">
-          <div className="relative">
-            <div className="w-5 h-5 sm:w-7 sm:h-7 rounded-full bg-white text-slate-950 border border-slate-300 flex items-center justify-center text-[10px] sm:text-sm shadow-[0_0_20px_rgba(255,255,255,1)]">
-              <i className="fa-solid fa-futbol"></i>
-            </div>
-            <div className="absolute -inset-1.5 rounded-full bg-gradient-to-r from-[#00e575] via-amber-400 to-rose-400 opacity-80 blur-xs -z-10" />
-          </div>
-        </div>
-      </div>
-
-      {/* 4. Floating Esports Decors (hidden on small mobile to avoid text overlapping) */}
-      <div className="hidden sm:flex absolute top-1/2 left-3 sm:left-10 -translate-y-1/2 flex-col items-center space-y-3 pointer-events-none opacity-30 sm:opacity-50 animate-float-slow">
-        <div
-          className={`w-10 h-10 sm:w-12 sm:h-12 rounded-2xl ${
-            isDthen
-              ? "bg-blue-950/80 border border-blue-500/50 text-blue-400"
-              : "bg-emerald-950/80 border border-emerald-500/50 text-emerald-400"
-          } flex items-center justify-center text-lg sm:text-xl shadow-xl backdrop-blur-md`}
-        >
-          <i className="fa-solid fa-gamepad"></i>
-        </div>
-      </div>
-
-      <div className="hidden sm:flex absolute top-1/2 right-6 sm:right-20 -translate-y-1/2 flex-col items-center space-y-3 pointer-events-none opacity-30 sm:opacity-50 animate-float-reverse">
-        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-amber-950/80 border border-amber-500/50 text-amber-400 flex items-center justify-center text-lg sm:text-xl shadow-xl backdrop-blur-md">
-          <i className="fa-solid fa-trophy"></i>
-        </div>
-      </div>
+      {/* 3. Subtle Organic Floodlight Cones (Left & Right Stadium Towers) */}
+      <div className="absolute -top-10 left-4 sm:left-12 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -top-10 right-4 sm:right-12 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Banner Main Content */}
-      <div className="max-w-4xl mx-auto text-center space-y-2 sm:space-y-3 relative z-20">
+      <div className="max-w-4xl mx-auto text-center space-y-3 sm:space-y-4 relative z-20">
+        {/* Live / Official Status Badge */}
         {badge && (
           <div
-            className={`inline-flex items-center space-x-1.5 sm:space-x-2 px-3 py-0.5 sm:px-3.5 sm:py-1 rounded-full ${
+            className={`inline-flex items-center space-x-2 px-3.5 py-1 rounded-full ${
               isDthen
-                ? "bg-blue-900/80 border border-blue-400/60 text-blue-300"
-                : "bg-emerald-900/80 border border-emerald-400/60 text-emerald-300"
+                ? "bg-blue-900/60 border border-blue-400/40 text-blue-200"
+                : "bg-emerald-900/60 border border-emerald-400/40 text-emerald-200"
             } text-[10px] sm:text-xs font-fco font-bold uppercase tracking-widest backdrop-blur-md shadow-sm transition-transform hover:scale-105`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                isDthen ? "bg-[#0ea5e9]" : "bg-[#00e575]"
-              } animate-ping`}
-            ></span>
+              className={`w-2 h-2 rounded-full ${
+                isDthen ? "bg-sky-400" : "bg-emerald-400"
+              } animate-live-pulse`}
+            />
             <span>{badge}</span>
           </div>
         )}
 
-        <h1 className="font-fco font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl uppercase tracking-wider text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.7)] leading-tight px-1">
+        {/* Tournament Title */}
+        <h1 className="font-fco font-black text-2xl sm:text-3xl md:text-4xl lg:text-5xl uppercase tracking-wider text-white drop-shadow-[0_2px_14px_rgba(0,0,0,0.8)] leading-tight px-1">
           {displayTitle}
         </h1>
 
+        {/* Subtitle */}
         {subtitle && (
           <p
             className={`${
@@ -217,39 +93,74 @@ const Banner: React.FC<BannerProps> = ({ title, subtitle, text, badge }) => {
           </p>
         )}
 
+        {/* Breadcrumbs Navigation */}
         <div
           className={`pt-1 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs ${
-            isDthen ? "text-blue-400/90" : "text-emerald-400/90"
+            isDthen ? "text-blue-300" : "text-emerald-300"
           } font-medium tracking-wide`}
         >
           <Link
             to="/"
-            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors flex items-center space-x-1"
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition-colors flex items-center space-x-1.5"
           >
-            <i className="fa-solid fa-layer-group text-[9px] text-amber-400"></i>
-            <span>Hub</span>
+            <i className="fa-solid fa-house text-[9px] text-amber-400"></i>
+            <span>Trang Chủ</span>
           </Link>
           <span className="text-slate-500">/</span>
           <Link
             to={isDthen ? "/dthen" : "/saovang"}
-            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors"
+            className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white transition-colors"
           >
             {isDthen ? "ĐThén FCO" : "Sao Vàng Cup"}
           </Link>
           <span className="text-slate-500">/</span>
-          <span className={`px-2.5 py-1 rounded-lg ${isDthen ? "bg-blue-500/20 text-blue-300" : "bg-emerald-500/20 text-emerald-300"} font-semibold truncate max-w-[200px] sm:max-w-none`}>
+          <span
+            className={`px-2.5 py-1 rounded-lg ${
+              isDthen
+                ? "bg-blue-500/25 text-blue-200 border border-blue-400/30"
+                : "bg-emerald-500/25 text-emerald-200 border border-emerald-400/30"
+            } font-semibold truncate max-w-[220px] sm:max-w-none`}
+          >
             {displayTitle}
           </span>
         </div>
+
+        {/* Tournament Quick Facts Strip (UEFA / Sports Broadcast style) */}
+        {!isDthen && (
+          <div className="pt-3 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-[11px] sm:text-xs">
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs text-slate-200">
+              <span className="text-amber-400">🏆</span>
+              <span className="font-oswald font-bold">32 VẬN ĐỘNG VIÊN</span>
+              <span className="text-slate-400 hidden sm:inline">• 1vs1</span>
+            </div>
+
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs text-slate-200">
+              <span className="text-emerald-400">⚡</span>
+              <span className="font-oswald font-bold">SWISS FVPL</span>
+              <span className="text-slate-400 hidden sm:inline">• 2 Nhánh</span>
+            </div>
+
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs text-slate-200">
+              <span className="text-amber-300">💰</span>
+              <span className="font-oswald font-bold">TỔNG THƯỞNG 860K</span>
+            </div>
+
+            <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-xl bg-white/5 border border-white/10 backdrop-blur-xs text-slate-200">
+              <span className="text-emerald-300">⚽</span>
+              <span className="font-oswald font-bold">VPL 60K</span>
+              <span className="text-slate-400 hidden sm:inline">• Từ Knockout</span>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Bottom Animated Glowing Flow Line */}
+      {/* Bottom Natural Gradient Accent Line */}
       <div
         className={`absolute bottom-0 left-0 right-0 h-[2.5px] bg-gradient-to-r ${
           isDthen
-            ? "from-blue-500 via-indigo-300 to-amber-400"
-            : "from-emerald-500 via-teal-300 to-amber-400"
-        } animate-gradient-flow`}
+            ? "from-blue-600 via-sky-400 to-amber-500"
+            : "from-emerald-600 via-teal-400 to-amber-500"
+        } opacity-90`}
       />
     </div>
   );
