@@ -17,7 +17,7 @@ const Cacnhomgiai: React.FC = () => {
       title: "BOX GIẢI ĐẤU TRÊN MESSENGER",
       name: "BOX KẾT NỐI HẸN ĐẤU & KẾT QUẢ",
       desc: "Kênh chat để các HLV chủ động liên hệ hẹn giờ thi đấu và nộp ảnh chụp kết quả cho BTC.",
-      link: "https://m.me/j/AbZDVIVQ5tc8dOpg/",
+      link: "https://m.me/j/yproyGQNtIeg-Qic/?send_source=gc%3Acopy_invite_link_c",
       btnText: "Vào Box Chat Messenger",
       btnColor: "bg-cyan-600 hover:bg-cyan-700",
     },

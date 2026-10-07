@@ -1,9 +1,7 @@
 import React from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "./utils/themeContext";
-import HomeHub from "./pages/homehub";
 import Trangchu from "./pages/trangchu";
-import BocthamPage from "./pages/boctham";
 
 import Navbar from "./components/navbar";
 import ScrollEnhancer from "./components/ScrollEnhancer";
@@ -12,76 +10,32 @@ import NoiQuy from "./pages/noiquy";
 import Quydinh from "./pages/quydinh";
 import Admin from "./pages/admin";
 import Cacnhomgiai from "./pages/cacnhomgiai";
-import Topmua from "./pages/topcacmua";
 import Xephang from "./pages/xephangthoidai";
 import Tieudiem from "./pages/tieudiem";
 import Danhsachhlv from "./pages/danhsachhlv";
-import Ltd from "./pages/ltd";
 import Thethuc from "./pages/thethuc";
 import Giaithuong from "./pages/giaithuong";
-import Taogiaidau from "./pages/taogiaidau";
-import AdminPortal from "./pages/adminPortal";
-
-// ĐThén FCO Pages
-import DthenTrangchu from "./pages/dthen/trangchu";
-import DthenNoiQuy from "./pages/dthen/noiquy";
-import DthenTheThuc from "./pages/dthen/thethuc";
-import DthenQuyDinh from "./pages/dthen/quydinh";
-import DthenDieuKien from "./pages/dthen/dieukien";
-import DthenGiaiThuong from "./pages/dthen/giaithuong";
-import DthenLtd from "./pages/dthen/ltd";
-import DthenXephang from "./pages/dthen/xephangthoidai";
-import DthenAdmin from "./pages/dthen/admin";
 
 export default function App() {
-  const location = useLocation();
-  const isStandalonePage =
-    location.pathname.startsWith("/boctham") ||
-    location.pathname.startsWith("/draw");
-
   return (
     <ThemeProvider>
       <ScrollEnhancer />
-      {!isStandalonePage && <Navbar />}
+      <Navbar />
       <Routes>
-        {/* Dedicated Standalone Tournament Draw Stages */}
-        <Route path="/boctham" element={<BocthamPage />} />
-        <Route path="/draw" element={<BocthamPage />} />
-
-        {/* Hub Selection Portal */}
-        <Route path="/" element={<HomeHub />} />
-
         {/* Sao Vàng Cup Tournament Routes */}
+        <Route path="/" element={<Trangchu />} />
         <Route path="/saovang" element={<Trangchu />} />
         <Route path="/dieukienthamdu" element={<Dieukien />} />
         <Route path="/noiquy" element={<NoiQuy />} />
         <Route path="/quydinh" element={<Quydinh />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/cacnhomgiai" element={<Cacnhomgiai />} />
-        <Route path="/topcacmua" element={<Topmua />} />
+        <Route path="/topcacmua" element={<Navigate to="/xephang" replace />} />
         <Route path="/xephang" element={<Xephang />} />
         <Route path="/tieudiem" element={<Tieudiem />} />
         <Route path="/danhsachhlv" element={<Danhsachhlv />} />
-        <Route path="/ltd" element={<Ltd />} />
         <Route path="/thethuc" element={<Thethuc />} />
         <Route path="/giaithuong" element={<Giaithuong />} />
-        
-        {/* Dedicated Admin Portal Routes */}
-        <Route path="/admin-portal" element={<AdminPortal />} />
-        <Route path="/quanlygiaidau" element={<AdminPortal />} />
-        <Route path="/taogiaidau" element={<Taogiaidau />} />
-
-        {/* ĐThén FCO Tournament Routes */}
-        <Route path="/dthen" element={<DthenTrangchu />} />
-        <Route path="/dthenfco" element={<DthenTrangchu />} />
-        <Route path="/dthen/noiquy" element={<DthenNoiQuy />} />
-        <Route path="/dthen/thethuc" element={<DthenTheThuc />} />
-        <Route path="/dthen/quydinh" element={<DthenQuyDinh />} />
-        <Route path="/dthen/dieukienthamdu" element={<DthenDieuKien />} />
-        <Route path="/dthen/giaithuong" element={<DthenGiaiThuong />} />
-        <Route path="/dthen/ltd" element={<DthenLtd />} />
-        <Route path="/dthen/xephang" element={<DthenXephang />} />
-        <Route path="/dthen/admin" element={<DthenAdmin />} />
       </Routes>
     </ThemeProvider>
   );

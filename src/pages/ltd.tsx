@@ -258,7 +258,7 @@ const Ltd: React.FC = () => {
                 Group Facebook
               </a>
               <a
-                href="https://m.me/j/AbZDVIVQ5tc8dOpg/"
+                href="https://m.me/j/yproyGQNtIeg-Qic/?send_source=gc%3Acopy_invite_link_c"
                 target="_blank"
                 rel="noreferrer"
                 className="px-4 py-2 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white font-oswald text-xs font-bold uppercase tracking-wider transition-colors"

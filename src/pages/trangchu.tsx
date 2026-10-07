@@ -15,24 +15,17 @@ const Trangchu: React.FC = () => {
     },
     {
       title: "THỂ THỨC THI ĐẤU",
-      desc: "Tìm hiểu cách chia bảng, nguyên tắc tính điểm vòng tròn và quy định nhánh đấu loại trực tiếp để tranh vé đi tiếp.",
+      desc: "Thể thức Vòng Swiss FVPL (32 VĐV chia 2 nhánh), chạm 3 ván thắng giành vé đi tiếp và Vòng Knockout 16 tuyển thủ.",
       link: "/thethuc",
       icon: "fa-sitemap",
       btnText: "XEM THỂ THỨC",
     },
     {
       title: "QUY ĐỊNH ĐỘI HÌNH",
-      desc: "Hướng dẫn xây dựng đội hình chuẩn mực, thiết lập sơ đồ chiến thuật hợp lệ và các nguyên tắc thi đấu công bằng.",
+      desc: "Đội hình tự do; giới hạn mùa UC, ITM tối đa +6; WS, WG, FAC, CH, 26TS, 26TY tối đa +7; cấm Prime & Infinity Prime.",
       link: "/quydinh",
       icon: "fa-users-gear",
       btnText: "XEM QUY ĐỊNH",
-    },
-    {
-      title: "LỊCH THI ĐẤU & BXH",
-      desc: "Theo dõi kết quả các trận đấu vừa diễn ra, lịch thi đấu vòng tiếp theo và thứ hạng điểm số của từng HLV theo thời gian thực.",
-      link: "/ltd",
-      icon: "fa-table-list",
-      btnText: "XEM BẢNG ĐIỂM",
     },
     {
       title: "BẢNG VÀNG VÔ ĐỊCH",
@@ -138,31 +131,7 @@ const Trangchu: React.FC = () => {
               </div>
             </Link>
 
-            {/* Card 2: Lịch thi đấu */}
-            <Link
-              to="/ltd"
-              className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border-2 border-sky-200/90 dark:border-sky-800/60 shadow-sm space-y-3 hover:border-sky-500 hover:shadow-xl card-hover-fx transition-all group block relative overflow-hidden"
-            >
-              <div className="flex items-center justify-between">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-700 text-white flex items-center justify-center text-xl shadow-md shadow-sky-500/20 group-hover:scale-110 transition-transform">
-                  <i className="fa-solid fa-calendar-days"></i>
-                </div>
-                <span className="text-[10px] font-oswald font-black px-2.5 py-1 rounded-full bg-sky-50 dark:bg-sky-950/80 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-700 uppercase tracking-wider group-hover:bg-sky-600 group-hover:text-white transition-colors">
-                  LIVE FIXTURES
-                </span>
-              </div>
-              <div>
-                <h3 className="font-fco font-black text-slate-900 dark:text-white text-base uppercase tracking-wide group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors flex items-center justify-between">
-                  <span>LỊCH THI ĐẤU & BXH</span>
-                  <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform text-sky-600 dark:text-sky-400"></i>
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
-                  Theo dõi kết quả các trận cầu nảy lửa, lịch đấu từng lượt trận và cập nhật bảng điểm các bảng theo thời gian thực.
-                </p>
-              </div>
-            </Link>
-
-            {/* Card 3: Thể thức thi đấu */}
+            {/* Card 2: Thể thức thi đấu */}
             <Link
               to="/thethuc"
               className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border-2 border-amber-200/90 dark:border-amber-800/60 shadow-sm space-y-3 hover:border-amber-500 hover:shadow-xl card-hover-fx transition-all group block relative overflow-hidden"
@@ -182,6 +151,30 @@ const Trangchu: React.FC = () => {
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
                   Quy định chia bảng thi đấu vòng tròn 2 lượt tính điểm và cơ chế phân nhánh trực tiếp Knockout BO3 phân định thứ hạng.
+                </p>
+              </div>
+            </Link>
+
+            {/* Card 3: Bảng Vàng Vô Địch */}
+            <Link
+              to="/xephang"
+              className="p-6 rounded-2xl bg-white dark:bg-slate-900/80 border-2 border-amber-300/90 dark:border-amber-700/60 shadow-sm space-y-3 hover:border-amber-500 hover:shadow-xl card-hover-fx transition-all group block relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-yellow-600 text-white flex items-center justify-center text-xl shadow-md shadow-amber-500/20 group-hover:scale-110 transition-transform">
+                  <i className="fa-solid fa-crown"></i>
+                </div>
+                <span className="text-[10px] font-oswald font-black px-2.5 py-1 rounded-full bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700 uppercase tracking-wider group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                  HALL OF FAME
+                </span>
+              </div>
+              <div>
+                <h3 className="font-fco font-black text-slate-900 dark:text-white text-base uppercase tracking-wide group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors flex items-center justify-between">
+                  <span>BẢNG VÀNG VÔ ĐỊCH</span>
+                  <i className="fa-solid fa-arrow-right text-xs transform group-hover:translate-x-1.5 transition-transform text-amber-600 dark:text-amber-400"></i>
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mt-1.5">
+                  Khám phá phòng truyền thống Hall of Fame – nơi ghi danh và tôn vinh các nhà vô địch xuất sắc nhất qua từng mùa giải.
                 </p>
               </div>
             </Link>
@@ -269,12 +262,13 @@ const Trangchu: React.FC = () => {
               Group Facebook
             </a>
             <a
-              href="https://m.me/j/AbZDVIVQ5tc8dOpg/"
+              href="https://m.me/j/yproyGQNtIeg-Qic/?send_source=gc%3Acopy_invite_link_c"
               target="_blank"
               rel="noreferrer"
-              className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-oswald text-xs font-bold uppercase tracking-wider transition-all shadow-sm shadow-cyan-600/30 hover:scale-105"
+              className="px-5 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-oswald text-xs font-bold uppercase tracking-wider transition-all shadow-sm shadow-cyan-600/30 hover:scale-105 inline-flex items-center space-x-1.5"
             >
-              Box Messenger
+              <i className="fa-brands fa-facebook-messenger"></i>
+              <span>Box Messenger</span>
             </a>
           </div>
         </div>

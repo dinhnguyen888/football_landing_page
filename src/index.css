@@ -110,19 +110,19 @@
 }
 
 /* Typography styles inside cards for crisp high-contrast readability */
-.portal-card p, .portal-card li {
+.portal-card p:not([class*="text-"]), .portal-card li:not([class*="text-"]) {
   color: #334155;
 }
 
-.dark .portal-card p, .dark .portal-card li {
+.dark .portal-card p:not([class*="text-"]), .dark .portal-card li:not([class*="text-"]) {
   color: #cbd5e1;
 }
 
-.portal-card h1, .portal-card h2, .portal-card h3, .portal-card h4, .portal-card strong {
+.portal-card h1:not([class*="text-"]), .portal-card h2:not([class*="text-"]), .portal-card h3:not([class*="text-"]), .portal-card h4:not([class*="text-"]) {
   color: #0f172a;
 }
 
-.dark .portal-card h1, .dark .portal-card h2, .dark .portal-card h3, .dark .portal-card h4, .dark .portal-card strong {
+.dark .portal-card h1:not([class*="text-"]), .dark .portal-card h2:not([class*="text-"]), .dark .portal-card h3:not([class*="text-"]), .dark .portal-card h4:not([class*="text-"]) {
   color: #ffffff;
 }
 

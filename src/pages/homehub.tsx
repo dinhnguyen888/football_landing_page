@@ -73,7 +73,6 @@ const HomeHub: React.FC = () => {
       season: "MÙA GIẢI 2 (2024 - 2025)",
       logo: require("../img/logo02.svg").default,
       link: "/saovang",
-      ltdLink: "/ltd",
       bxhLink: "/xephang",
       rulesLink: "/quydinh",
       subtitle: "Giải bóng đá trực tuyến thường niên quy mô lớn, tôn vinh kỹ thuật cá nhân và lối đá cống hiến.",
@@ -83,7 +82,7 @@ const HomeHub: React.FC = () => {
       mode: "Vòng Bảng & Cúp Loại Trực Tiếp (Knockout)",
       prize: "Cúp Vàng Danh Giá + Tiền Thưởng BTC",
       playersCount: "32 Huấn Luyện Viên",
-      highlights: ["⚽ Thể thức Vòng Bảng & Cúp Knockout", "🏆 Cúp vàng khắc tên HLV", "⚡ Cập nhật kết quả tức thì"],
+      highlights: ["⚽ Thể thức Vòng Bảng & Cúp Knockout", "🏆 Cúp vàng khắc tên HLV", "⚡ Đấu trường công bằng & văn minh"],
     },
     {
       id: "dthen",
@@ -95,7 +94,6 @@ const HomeHub: React.FC = () => {
       logo: null,
       customIcon: "fa-trophy",
       link: "/dthen",
-      ltdLink: "/dthen/ltd",
       bxhLink: "/dthen/xephang",
       rulesLink: "/dthen/quydinh",
       subtitle: "Đấu trường sân cỏ phong trào do Admin ĐThén sáng lập, đề cao tinh thần Fair-play và sự gắn kết cộng đồng.",
@@ -105,7 +103,7 @@ const HomeHub: React.FC = () => {
       mode: "Vòng Bảng & Cúp Loại Trực Tiếp (Knockout)",
       prize: "Cúp Lưu Niệm + Tiền Thưởng Nóng",
       playersCount: "32 Huấn Luyện Viên",
-      highlights: ["⚡ Quy mô linh hoạt từ 8 đến 32 đội", "🔥 Bốc thăm 3D hoặc ghép cặp ngẫu nhiên", "🛡️ Giám sát đội hình nghiêm ngặt"],
+      highlights: ["⚡ Quy mô linh hoạt từ 8 đến 32 đội", "🔥 Thể thức thi đấu hấp dẫn & kịch tính", "🛡️ Giám sát đội hình nghiêm ngặt"],
     },
   ];
 
@@ -392,11 +390,11 @@ const HomeHub: React.FC = () => {
                       {/* Quick Secondary Links for Mobile / Fast Navigation */}
                       <div className="grid grid-cols-2 gap-2 pt-0.5">
                         <Link
-                          to={tour.ltdLink}
+                          to={tour.bxhLink}
                           className="min-h-[44px] py-2.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800/90 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-oswald text-xs font-bold uppercase tracking-wider text-center flex items-center justify-center space-x-1.5 transition-colors border border-slate-200 dark:border-slate-700"
                         >
-                          <i className="fa-solid fa-calendar-days text-[11px] text-amber-500"></i>
-                          <span>Lịch Đấu &amp; BXH</span>
+                          <i className="fa-solid fa-award text-[11px] text-amber-500"></i>
+                          <span>Bảng Vàng Vô Địch</span>
                         </Link>
                         <Link
                           to={tour.rulesLink}

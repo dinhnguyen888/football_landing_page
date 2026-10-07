@@ -1,27 +1,19 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 const Footer: React.FC = () => {
-  const location = useLocation();
-  const isDthen = location.pathname.startsWith("/dthen");
-
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
-    <footer
-      className={`mt-20 relative ${
-        isDthen ? "bg-[#030c18] border-blue-500" : "bg-[#04130d] border-emerald-500"
-      } text-slate-300 border-t-2 overflow-hidden`}
-    >
+    <footer className="mt-20 relative bg-[#04130d] border-emerald-500 text-slate-300 border-t-2 overflow-hidden">
       {/* 1. Football Pitch Mowed Grass Stripes */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
-          background: isDthen
-            ? "repeating-linear-gradient(90deg, #051429 0px, #051429 60px, #020a16 60px, #020a16 120px)"
-            : "repeating-linear-gradient(90deg, #051911 0px, #051911 60px, #03120c 60px, #03120c 120px)",
+          background:
+            "repeating-linear-gradient(90deg, #051911 0px, #051911 60px, #03120c 60px, #03120c 120px)",
         }}
       />
 
@@ -29,85 +21,54 @@ const Footer: React.FC = () => {
       <div
         className="absolute inset-0 pointer-events-none opacity-80 animate-floodlight"
         style={{
-          background: isDthen
-            ? `
-              radial-gradient(ellipse 90% 60% at 50% 0%, rgba(14, 165, 233, 0.25), transparent 75%),
-              radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.15), transparent 40%),
-              radial-gradient(circle at 85% 10%, rgba(245, 158, 11, 0.15), transparent 40%),
-              linear-gradient(180deg, transparent 0%, rgba(1, 6, 15, 0.8) 100%)
-            `
-            : `
-              radial-gradient(ellipse 90% 60% at 50% 0%, rgba(0, 229, 117, 0.25), transparent 75%),
-              radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.12), transparent 40%),
-              radial-gradient(circle at 85% 10%, rgba(245, 158, 11, 0.12), transparent 40%),
-              linear-gradient(180deg, transparent 0%, rgba(1, 10, 6, 0.8) 100%)
-            `,
+          background: `
+            radial-gradient(ellipse 90% 60% at 50% 0%, rgba(0, 229, 117, 0.25), transparent 75%),
+            radial-gradient(circle at 15% 10%, rgba(255, 255, 255, 0.12), transparent 40%),
+            radial-gradient(circle at 85% 10%, rgba(245, 158, 11, 0.12), transparent 40%),
+            linear-gradient(180deg, transparent 0%, rgba(1, 10, 6, 0.8) 100%)
+          `,
         }}
       />
 
       {/* 3. Glowing Neon LED Top Line with Flowing Animation */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r ${
-          isDthen
-            ? "from-[#0ea5e9] via-[#6366f1] to-[#f59e0b]"
-            : "from-[#00e575] via-[#0ea5e9] to-[#f59e0b]"
-        } animate-gradient-flow shadow-[0_0_15px_rgba(0,229,117,0.5)]`}
-      />
+      <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#00e575] via-[#0ea5e9] to-[#f59e0b] animate-gradient-flow shadow-[0_0_15px_rgba(0,229,117,0.5)]" />
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-12 pb-24 lg:pb-8 relative z-10">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
           {/* Col 1: Brand Info */}
           <div className="md:col-span-1 space-y-4">
-            <Link
-              to={isDthen ? "/dthen" : "/saovang"}
-              className="inline-flex items-center space-x-3.5 group flex-shrink-0"
-            >
+            <Link to="/" className="inline-flex items-center space-x-3.5 group flex-shrink-0">
               <div className="w-14 h-14 sm:w-16 sm:h-16 flex items-center justify-center group-hover:scale-105 transition-transform flex-shrink-0">
-                {isDthen ? (
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-800 text-white flex items-center justify-center text-2xl shadow-lg">
-                    <i className="fa-solid fa-trophy text-amber-400"></i>
-                  </div>
-                ) : (
-                  <img
-                    src={require("../img/logo02.svg").default}
-                    alt="Sao Vàng Cup Logo"
-                    className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(0,229,117,0.6)]"
-                  />
-                )}
+                <img
+                  src={require("../img/logo02.svg").default}
+                  alt="Sao Vàng Cup Logo"
+                  className="w-full h-full object-contain drop-shadow-[0_0_12px_rgba(0,229,117,0.6)]"
+                />
               </div>
               <div className="whitespace-nowrap">
                 <span className="font-fco text-xl font-black uppercase tracking-wider text-white block leading-none whitespace-nowrap">
-                  {isDthen ? "ĐTHÉN" : "SAO VÀNG"}{" "}
-                  <span className="text-amber-400">{isDthen ? "FCO™" : "CUP™"}</span>
+                  SAO VÀNG <span className="text-amber-400">CUP™</span>
                 </span>
-                <span
-                  className={`text-[10px] font-fco font-bold uppercase tracking-widest ${
-                    isDthen ? "text-blue-400" : "text-emerald-400"
-                  } block mt-1.5 whitespace-nowrap`}
-                >
+                <span className="text-[10px] font-fco font-bold uppercase tracking-widest text-emerald-400 block mt-1.5 whitespace-nowrap">
                   FC ONLINE ESPORTS HUB
                 </span>
               </div>
             </Link>
 
             <p className="text-xs text-slate-400 leading-relaxed">
-              Cổng thông tin, bảng điểm và cẩm nang điều lệ giải đấu bóng đá điện tử FC Online uy tín & chuyên nghiệp dành cho cộng đồng game thủ.
+              Cổng thông tin và cẩm nang điều lệ giải đấu bóng đá điện tử FC Online uy tín & chuyên nghiệp dành cho cộng đồng game thủ.
             </p>
           </div>
 
           {/* Col 2: Quick Rules */}
           <div className="space-y-3">
-            <span
-              className={`font-fco text-xs font-bold uppercase tracking-widest ${
-                isDthen ? "text-blue-400" : "text-emerald-400"
-              } block pb-1 border-b border-slate-800`}
-            >
+            <span className="font-fco text-xs font-bold uppercase tracking-widest text-emerald-400 block pb-1 border-b border-slate-800">
               QUY ĐỊNH & THỂ THỨC
             </span>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link
-                  to={isDthen ? "/dthen/noiquy" : "/noiquy"}
+                  to="/noiquy"
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
                   <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
@@ -116,7 +77,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to={isDthen ? "/dthen/dieukienthamdu" : "/dieukienthamdu"}
+                  to="/dieukienthamdu"
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
                   <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
@@ -125,33 +86,29 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to={isDthen ? "/dthen/quydinh" : "/quydinh"}
+                  to="/quydinh"
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
                   <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
-                  <span>Quy định squad lương 305</span>
+                  <span>Quy định đội hình thi đấu</span>
                 </Link>
               </li>
               <li>
                 <Link
-                  to={isDthen ? "/dthen/thethuc" : "/thethuc"}
+                  to="/thethuc"
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
                   <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
-                  <span>Thể thức thi đấu & BXH</span>
+                  <span>Thể thức thi đấu</span>
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Col 3: Tournament Hub */}
+          {/* Col 3: Tournament Sections */}
           <div className="space-y-3">
-            <span
-              className={`font-fco text-xs font-bold uppercase tracking-widest ${
-                isDthen ? "text-blue-400" : "text-emerald-400"
-              } block pb-1 border-b border-slate-800`}
-            >
-              TRUNG TÂM GIẢI ĐẤU
+            <span className="font-fco text-xs font-bold uppercase tracking-widest text-emerald-400 block pb-1 border-b border-slate-800">
+              THÔNG TIN GIẢI ĐẤU
             </span>
             <ul className="space-y-2 text-xs">
               <li>
@@ -159,22 +116,13 @@ const Footer: React.FC = () => {
                   to="/"
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
-                  <i className="fa-solid fa-layer-group text-[9px] text-amber-400 group-hover:scale-110 transition-transform"></i>
-                  <span className="font-semibold text-white">Hub Cổng Chọn Giải Đấu</span>
+                  <i className="fa-solid fa-house text-[9px] text-amber-400 group-hover:scale-110 transition-transform"></i>
+                  <span className="font-semibold text-white">Trang Chủ Sao Vàng Cup</span>
                 </Link>
               </li>
               <li>
                 <Link
-                  to={isDthen ? "/dthen/ltd" : "/ltd"}
-                  className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
-                >
-                  <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
-                  <span>Lịch thi đấu & BXH trực tiếp</span>
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to={isDthen ? "/dthen/giaithuong" : "/giaithuong"}
+                  to="/giaithuong"
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
                   <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
@@ -183,7 +131,7 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link
-                  to={isDthen ? "/dthen/xephang" : "/xephang"}
+                  to="/xephang"
                   className="text-slate-400 hover:text-white transition-colors flex items-center space-x-1.5 group"
                 >
                   <i className="fa-solid fa-chevron-right text-[9px] text-emerald-500 group-hover:translate-x-1 transition-transform"></i>
@@ -195,11 +143,7 @@ const Footer: React.FC = () => {
 
           {/* Col 4: Community & Scroll to Top */}
           <div className="space-y-3">
-            <span
-              className={`font-fco text-xs font-bold uppercase tracking-widest ${
-                isDthen ? "text-blue-400" : "text-emerald-400"
-              } block pb-1 border-b border-slate-800`}
-            >
+            <span className="font-fco text-xs font-bold uppercase tracking-widest text-emerald-400 block pb-1 border-b border-slate-800">
               KÊNH CỘNG ĐỒNG
             </span>
 
@@ -221,30 +165,26 @@ const Footer: React.FC = () => {
                 </div>
               </a>
 
-              {isDthen && (
-                <a
-                  href="https://www.tiktok.com/@duck.thens2601?_r=1&_t=ZS-99ZvOx8OVFM"
-                  target="_blank"
-                  rel="noreferrer"
-                  className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-amber-400/60 flex items-center space-x-3 transition-all group card-hover-fx"
-                >
-                  <div className="w-8 h-8 rounded-lg bg-pink-600/20 text-pink-400 flex items-center justify-center text-sm group-hover:bg-pink-600 group-hover:text-white transition-colors">
-                    <i className="fa-brands fa-tiktok"></i>
-                  </div>
-                  <div>
-                    <span className="font-fco text-xs font-bold text-white block leading-tight">
-                      TikTok Đức Thén
-                    </span>
-                    <span className="text-[10px] text-slate-400">@duck.thens2601</span>
-                  </div>
-                </a>
-              )}
+              <a
+                href="https://m.me/j/yproyGQNtIeg-Qic/?send_source=gc%3Acopy_invite_link_c"
+                target="_blank"
+                rel="noreferrer"
+                className="p-2.5 rounded-xl bg-slate-900/90 hover:bg-cyan-600/30 border border-slate-800 hover:border-cyan-500/60 flex items-center space-x-3 transition-all group card-hover-fx"
+              >
+                <div className="w-8 h-8 rounded-lg bg-cyan-600/20 text-cyan-400 flex items-center justify-center text-sm group-hover:bg-cyan-600 group-hover:text-white transition-colors">
+                  <i className="fa-brands fa-facebook-messenger"></i>
+                </div>
+                <div>
+                  <span className="font-fco text-xs font-bold text-white block leading-tight">
+                    Box Messenger
+                  </span>
+                  <span className="text-[10px] text-slate-400">Hẹn đấu & Nhận kết quả</span>
+                </div>
+              </a>
 
               <button
                 onClick={scrollToTop}
-                className={`w-full p-2.5 rounded-xl ${
-                  isDthen ? "bg-blue-900/60 border-blue-500/40 text-blue-300" : "bg-emerald-900/60 border-emerald-500/40 text-emerald-300"
-                } border hover:border-amber-400 font-oswald text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 transition-all hover:scale-105 btn-shimmer`}
+                className="w-full p-2.5 rounded-xl bg-emerald-900/60 border-emerald-500/40 text-emerald-300 border hover:border-amber-400 font-oswald text-xs font-bold uppercase tracking-wider flex items-center justify-center space-x-2 transition-all hover:scale-105 btn-shimmer cursor-pointer"
               >
                 <i className="fa-solid fa-arrow-up text-amber-400"></i>
                 <span>LÊN ĐẦU TRANG</span>
@@ -258,17 +198,13 @@ const Footer: React.FC = () => {
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
             <p>
-              © 2024 - 2026{" "}
-              <strong className="text-white font-fco">
-                {isDthen ? "ĐTHÉN FCO ™" : "SAO VÀNG CUP ™"}
-              </strong>{" "}
-              (FC ONLINE). ALL RIGHTS RESERVED.
+              © 2024 - 2026 <strong className="text-white font-fco">SAO VÀNG CUP ™</strong> (FC ONLINE). ALL RIGHTS RESERVED.
             </p>
           </div>
           <p className="text-center sm:text-right">
             BAN TỔ CHỨC:{" "}
-            <strong className={isDthen ? "text-blue-400" : "text-emerald-400"}>
-              {isDthen ? "ADMIN ĐTHÉN & TỔ TRỌNG TÀI PHAN LONG" : "ADMIN PHAN LONG & BẠCH MINH QUANG"}
+            <strong className="text-emerald-400">
+              ADMIN PHAN LONG & BẠCH MINH QUANG
             </strong>
           </p>
         </div>
